@@ -47,7 +47,7 @@ def dictify_from_body(body):
 
 # input : string, dict
 # output : bytes
-def make_packet(header, body):
+def make_msg_data(header, body):
     import copy
     data = copy.deepcopy(body) 
 
@@ -71,7 +71,7 @@ def make_packet(header, body):
 
 # input : bytes
 # output : (string, dict)
-def parse_packet(packet):
+def parse_msg_data(packet):
     msg = arr_proto.Message()
     msg.ParseFromString(packet)
     return msg.WhichOneof('body'), dictify_from_body(msg.__getattribute__(msg.WhichOneof('body')))
