@@ -1,6 +1,7 @@
 from .proto import any_result_receiver_pb2 as arr_proto
 from .exceptions import *
 
+
 message_table = {
         'task_result_req' : {
             'this': arr_proto.TaskResultRequest,
@@ -15,6 +16,7 @@ message_table = {
         },
     }
 
+
 def handle_extra(data, key, cls):
     if key == 'result':
         data[data[key + '_type']] = cls[data[key + '_type']](**data[key])
@@ -23,6 +25,7 @@ def handle_extra(data, key, cls):
         data.pop(key)
     else:
         raise HandleError('%s is not valid key' % key)
+
 
 def dictify_from_body(body):
     field_list = body.ListFields()
@@ -42,6 +45,8 @@ def dictify_from_body(body):
     return field_dict
 
 
+# input : string, dict
+# output : bytes
 def make_packet(header, body):
     import copy
     data = copy.deepcopy(body) 
@@ -64,7 +69,10 @@ def make_packet(header, body):
     msg = { header: message_table[header]['this'](**data) }
     return arr_proto.Message(**msg).SerializeToString()
 
+# input : bytes
+# output : (string, dict)
 def parse_packet(packet):
     msg = arr_proto.Message()
     msg.ParseFromString(packet)
     return msg.WhichOneof('body'), dictify_from_body(msg.__getattribute__(msg.WhichOneof('body')))
+

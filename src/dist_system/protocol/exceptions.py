@@ -1,13 +1,14 @@
 class HeaderError(Exception):
     def __init__(self, msg):
-        self.msg = msg
+        self._msg = msg
 
     def __str__(self):
-        print("HeaderError : %s" % msg)
+        print("HeaderError : %s" % self._msg)
 
-class UnknownExtraError(Exception):
+
+class HandleError(Exception):
     def __init__(self, msg):
-        self.msg = msg
+        self._msg = msg
 
     def __str__(self):
-        print("UnknownExtraError : %s" % msg)
+        print("HandleError : %s" % self._msg)

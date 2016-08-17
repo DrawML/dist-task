@@ -1,6 +1,7 @@
 from .proto import slave_worker_pb2 as sw_proto
 from .exceptions import *
 
+
 #class TaskRegisterCMD:
 #    @staticmethod
 #    def serialize(data):
@@ -27,8 +28,10 @@ message_table = {
         },
     }
 
+
 def handle_extra(data, key, cls):
     pass
+
 
 def dictify_from_body(body):
     field_list = body.ListFields()
@@ -48,6 +51,8 @@ def dictify_from_body(body):
     return field_dict
 
 
+# input : string, dict
+# output : bytes
 def make_packet(header, body):
     import copy
     data = copy.deepcopy(body) 
@@ -70,7 +75,11 @@ def make_packet(header, body):
     msg = { header: message_table[header]['this'](**data) }
     return sw_proto.Message(**msg).SerializeToString()
 
+
+# input : bytes
+# output : (string, dict)
 def parse_packet(packet):
     msg = sw_proto.Message()
     msg.ParseFromString(packet)
     return msg.WhichOneof('body'), dictify_from_body(msg.__getattribute__(msg.WhichOneof('body')))
+

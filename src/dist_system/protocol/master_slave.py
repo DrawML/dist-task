@@ -1,6 +1,7 @@
 from .proto import master_slave_pb2 as ms_proto
 from .exceptions import *
 
+
 message_table = {
         'heart_beat_req': {
             'this': ms_proto.HeartBeatRequest,
@@ -40,6 +41,7 @@ message_table = {
         },
     }
 
+
 def handle_extra(data, key, cls):
     if key == 'task':
         data[data[key + '_type']] = cls[data[key + '_type']](**data[key])
@@ -48,6 +50,7 @@ def handle_extra(data, key, cls):
         data.pop(key)
     else:
         raise HandleError('%s is not valid key' % key)
+
 
 def dictify_from_body(body):
     field_list = body.ListFields()
@@ -67,7 +70,9 @@ def dictify_from_body(body):
     return field_dict
 
 
-def make_packet(header, body):
+# input : string, dict
+# output : bytes
+def make_msg_data(header, body):
     import copy
     data = copy.deepcopy(body) 
 
@@ -89,7 +94,11 @@ def make_packet(header, body):
     msg = { header: message_table[header]['this'](**data) }
     return ms_proto.Message(**msg).SerializeToString()
 
-def parse_packet(packet):
+
+# input : bytes
+# output : (string, dict)
+def parse_msg_data(packet):
     msg = ms_proto.Message()
     msg.ParseFromString(packet)
     return msg.WhichOneof('body'), dictify_from_body(msg.__getattribute__(msg.WhichOneof('body')))
+
