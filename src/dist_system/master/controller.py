@@ -32,3 +32,5 @@ class Scheduler(metaclass=SingletonMeta):
 
             slave.assign_task(task)
             task_manager.change_task_status(task, TaskStatus.STATUS_PROCESSING)
+
+            # send task_request to slave.

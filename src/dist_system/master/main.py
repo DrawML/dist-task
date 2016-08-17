@@ -37,6 +37,7 @@ class ClientRouter(object):
 
     def dispatch_msg(self, addr, data, async=True):
 
+        # need to modify. same bugs exist in several files.
         def _dispatch_msg_sync(msg):
             self._router.send_multipart(msg)
 

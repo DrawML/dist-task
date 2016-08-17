@@ -16,6 +16,11 @@ class SlaveMessageHandler(metaclass=SingletonMeta):
         SlaveMessageHandler.__handler_dict[msg_name](self, body)
 
     def _h_worker_register_res(self, body):
+
+        # if success
+        pass
+
+        # if fail
         import sys
         sys.exit(0)
 
