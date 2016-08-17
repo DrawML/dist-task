@@ -1,0 +1,101 @@
+syntax = "proto3";
+
+
+message HeartBeatRequest 
+{
+}
+
+message HeartBeatResponse 
+{
+}
+
+message SlaveRegisterRequest
+{
+}
+
+message SlaveRegisterResponse
+{
+	string status = 1;
+	string error_code = 2;
+}
+
+message TaskRegisterRequest
+{
+	message ResultReceiverAddress
+	{
+		string type = 1;
+		string ip = 2;
+		int32 port = 3;
+	}
+
+	message SleepTask
+	{
+		int32 seconds = 1;
+	}
+	
+	message TensorflowLearningTask
+	{
+	}
+
+	message TensorflowTestTask 
+	{
+	}
+
+	ResultReceiverAddress result_receiver_address = 1;
+	bytes task_token = 2;
+	oneof task
+	{
+		SleepTask sleep_task = 10;
+		TensorflowLearningTask tensorflow_learning_task = 11;
+		TensorflowTestTask tensorflow_test_task = 12;
+	}
+}
+
+message TaskRegisterResponse
+{
+	string status = 1;
+	string error_code = 2;
+	bytes task_token = 3;
+}
+
+message TaskCancelRequest
+{
+	bytes task_token = 1;
+}
+
+message TaskCancelResponse
+{
+	string status = 1;
+	string error_code = 2;
+	bytes task_token = 3;
+}
+
+message TaskFinishRequest
+{
+	bytes task_token = 1;
+}
+
+message TaskFinishResponse
+{
+	string status = 1;
+	string error_code = 2;
+	bytes task_token = 3;
+}
+
+message Message 
+{
+	oneof body
+	{
+		HeartBeatRequest heart_beat_req = 1;
+		HeartBeatResponse heart_beat_res = 2;
+		SlaveRegisterRequest slave_register_req = 3;
+		SlaveRegisterResponse slave_register_res = 4;
+		TaskRegisterRequest task_register_req = 5;
+		TaskRegisterResponse task_register_res = 6;
+		TaskCancelRequest task_cancel_req = 7;
+		TaskCancelResponse task_cancel_res = 8;
+		TaskFinishRequest task_finish_req = 9;
+		TaskFinishResponse task_finish_res = 10;
+	}
+}
+

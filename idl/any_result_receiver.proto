@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+
+message TaskResultRequest
+{
+	message SleepTask
+	{
+		string comment = 1;
+	}
+	
+	message TensorflowLearningTask
+	{
+	}
+
+	message TensorflowTestTask 
+	{
+	}
+
+	string status = 1;
+	string error_code = 2;
+	bytes task_token = 3;
+	oneof result 
+	{
+		SleepTask sleep_task = 10;
+		TensorflowLearningTask tensorflow_learning_task = 11;
+		TensorflowTestTask tensorflow_test_task = 12;
+	}
+}
+
+message TaskResultResponse
+{
+	string status = 1;
+	string error_code = 2;
+}
+
+message Message 
+{
+	oneof body
+	{
+		TaskResultRequest task_result_req = 1;
+		TaskResultResponse task_result_res = 2;
+	}
+}
+

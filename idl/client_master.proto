@@ -1,0 +1,69 @@
+syntax = "proto3";
+
+
+message TaskRegisterRequest
+{
+	message ResultReceiverAddress
+	{
+		string type = 1;
+		string ip = 2;
+		int32 port = 3;
+	}
+
+	message SleepTask
+	{
+		int32 seconds = 1;
+	}
+	
+	message TensorflowLearningTask
+	{
+	}
+
+	message TensorflowTestTask 
+	{
+	}
+
+	ResultReceiverAddress result_receiver_address = 1;
+	oneof task
+	{
+		SleepTask sleep_task = 10;
+		TensorflowLearningTask tensorflow_learning_task = 11;
+		TensorflowTestTask tensorflow_test_task = 12;
+	}
+}
+
+message TaskRegisterResponse
+{
+	string status = 1;
+	string error_code = 2;
+	bytes task_token = 3;
+}
+
+message TaskRegisterACK
+{
+}
+
+message TaskCancelRequest
+{
+	bytes task_token = 1;
+}
+
+message TaskCancelResponse
+{
+	string status = 1;
+	string error_code = 2;
+	bytes task_token = 3;
+}
+
+message Message 
+{
+	oneof body
+	{
+		TaskRegisterRequest task_register_req = 1;
+		TaskRegisterResponse task_register_res = 2;
+		TaskRegisterACK task_register_ack = 3;
+		TaskCancelRequest task_cancel_req = 4;
+		TaskCancelResponse task_cancel_res = 5;
+	}
+}
+
