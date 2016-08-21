@@ -1,6 +1,14 @@
 from ..library import SingletonMeta
 
 
+class ClientSessionValueError(ValueError):
+    def __init__(self, msg):
+        self._msg = msg
+
+    def __str__(self):
+        return "ClientSessionValueError : %s" % self._msg
+
+
 class ClientSessionIdentity(object):
     def __init__(self, addr):
         self._addr = addr
@@ -38,7 +46,7 @@ class ClientSessionManager(metaclass=SingletonMeta):
 
     def add_session(self, client_sesssion):
         if self.check_session_existence(client_sesssion):
-            raise ValueError("Duplicated Client Session.")
+            raise ClientSessionValueError("Duplicated Client Session")
         else:
             self._sessions.append(client_sesssion)
 
@@ -64,7 +72,7 @@ class ClientSessionManager(metaclass=SingletonMeta):
         exists, targets = self.check_session_existence(client_session_identity, find_flag=True)
         if exists:
             if len(targets) > 1:
-                raise ValueError("Same Client Sessions exist.")
+                raise ClientSessionValueError("Same Client Sessions exist.")
             return targets[0]
         else:
-            raise ValueError("Non-existent Client Session.")
+            raise ClientSessionValueError("Non-existent Client Session.")

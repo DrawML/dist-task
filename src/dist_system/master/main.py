@@ -2,11 +2,15 @@ import sys
 import zmq
 from zmq.asyncio import Context, ZMQEventLoop
 import asyncio
-from .msg_handler import ClientMessageHandler, SlaveMessageHandler
+from .msg_handler import (ClientMessageHandler, SlaveMessageHandler)
+from .msg_dispatcher import *
 from .controller import run_heartbeat
+from ..protocol import master_slave, client_master
+from ..library import SingletonMeta
+from functools import partial
 
 
-class ClientRouter(object):
+class ClientRouter(metaclass=SingletonMeta):
 
     def __init__(self, context, addr, msg_handler):
         self._context = context
@@ -24,7 +28,7 @@ class ClientRouter(object):
     async def _process(self, msg):
         # separate data into header and body using protocol.*
         addr, data = self._resolve_msg(msg)
-        header, body = ("dummy", "dummy")
+        header, body = client_master.parse_msg_data(data)
 
         # handle message
         self._msg_handler.handle_msg(addr, header, body)
@@ -35,7 +39,7 @@ class ClientRouter(object):
 
         return addr, data
 
-    def dispatch_msg(self, addr, data, async=True):
+    def dispatch_msg(self, session_identity, header, body, async=True):
 
         # need to modify. same bugs exist in several files.
         def _dispatch_msg_sync(msg):
@@ -46,6 +50,8 @@ class ClientRouter(object):
                 await self._router.send_multipart(msg)
             asyncio.ensure_future(_dispatch_msg(msg))
 
+        addr = session_identity.addr
+        data = master_slave.make_msg_data(header, body)
         msg = [addr, data]
         if async:
             _dispatch_msg_async(msg)
@@ -53,7 +59,8 @@ class ClientRouter(object):
             _dispatch_msg_sync(msg)
 
 
-class SlaveRouter(object):
+class SlaveRouter(metaclass=SingletonMeta):
+
     def __init__(self, context, addr, msg_handler):
         self._context = context
         self._addr = addr
@@ -70,7 +77,7 @@ class SlaveRouter(object):
     async def _process(self, msg):
         # separate data into header and body using protocol.*
         addr, data = self._resolve_msg(msg)
-        header, body = ("dummy", "dummy")
+        header, body = master_slave.parse_msg_data(data)
 
         # handle message
         self._msg_handler.handle_msg(addr, header, body)
@@ -81,7 +88,7 @@ class SlaveRouter(object):
 
         return addr, data
 
-    def dispatch_msg(self, addr, data, async=True):
+    def dispatch_msg(self, slave_identity, header, body, async=True):
 
         def _dispatch_msg_sync(msg):
             self._router.send_multipart(msg)
@@ -92,6 +99,8 @@ class SlaveRouter(object):
 
             asyncio.ensure_future(_dispatch_msg(msg))
 
+        addr = slave_identity.addr
+        data = master_slave.make_msg_data(header, body)
         msg = [addr, data]
         if async:
             _dispatch_msg_async(msg)
@@ -103,6 +112,9 @@ async def run_master(context : Context, client_router_addr, slave_router_addr):
 
     client_router = ClientRouter(context, client_router_addr, ClientMessageHandler())
     slave_router = SlaveRouter(context, slave_router_addr, SlaveMessageHandler())
+
+    ClientMessageDispatcher(partial(client_router.dispatch_msg, client_router))
+    SlaveMessageDispatcher(partial(slave_router.dispatch_msg, slave_router))
 
     asyncio.wait([
         asyncio.ensure_future(client_router.run()),

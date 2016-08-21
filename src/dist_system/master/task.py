@@ -2,6 +2,13 @@ from ..library import (AutoIncrementEnum, SingletonMeta)
 from ..task.task import *
 
 
+class TaskStatusValueError(ValueError):
+    def __init__(self, msg):
+        self._msg = msg
+
+    def __str__(self):
+        return "TaskStatusValueError : %s" % self._msg
+
 class TaskStatus(AutoIncrementEnum):
     STATUS_PENDING_ACK = ()
     STATUS_WAITING = ()

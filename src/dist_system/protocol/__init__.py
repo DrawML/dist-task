@@ -12,6 +12,10 @@ class ResultReceiverAddress(object):
             'port' : self._port
         }
 
+    @staticmethod
+    def from_dict(self, dict_ : dict):
+        ResultReceiverAddress(dict_['type'], dict_['ip'], dict_['port'])
+
     def to_zeromq_addr(self):
         # need to refine.
         return "{0}//{1}:{2}".format(self._type, self._ip, self._port)

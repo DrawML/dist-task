@@ -1,6 +1,22 @@
 from ..library import SingletonMeta
 
 
+class SlaveValueError(ValueError):
+    def __init__(self, msg):
+        self._msg = msg
+
+    def __str__(self):
+        return "SlaveValueError : %s" % self._msg
+
+
+class NotAvailableSlaveError(Exception):
+    def __init__(self, msg):
+        self._msg = msg
+
+    def __str__(self):
+        return "NotAvailableSlaveError : %s" % self._msg
+
+
 class SlaveIdentity(object):
 
     def __init__(self, addr):
@@ -64,9 +80,13 @@ class SlaveManager(metaclass=SingletonMeta):
     def count(self):
         return len(self._slaves)
 
+    @property
+    def slaves(self):
+        return tuple(self._slaves)
+
     def add_slave(self, slave):
         if self.check_slave_existence(slave):
-            raise ValueError("Duplicated Slave.")
+            raise SlaveValueError("Duplicated Slave.")
         else:
             self._slaves.append(slave)
 
@@ -92,16 +112,16 @@ class SlaveManager(metaclass=SingletonMeta):
         exists, targets = self.check_slave_existence(slave_identity, find_flag=True)
         if exists:
             if len(targets) > 1:
-                raise ValueError("Same Slaves exist.")
+                raise SlaveValueError("Same Slaves exist.")
             return targets[0]
         else:
-            raise ValueError("Non-existent Slave.")
+            raise SlaveValueError("Non-existent Slave.")
 
     def find_slave_having_task(self, task):
         for slave in self._slaves:
             if task in slave.tasks:
                 return slave
-        raise ValueError("Non-existent Slave.")
+        raise SlaveValueError("Non-existent Slave.")
 
     # Get proper slave for task.
     def get_proper_slave(self, task):
@@ -115,7 +135,7 @@ class SlaveManager(metaclass=SingletonMeta):
                 proper_slave = slave
 
         if proper_slave is None:
-            raise Exception("Not available Slaves.")
+            raise NotAvailableSlaveError("Not available Slaves.")
         else:
             return proper_slave
 

@@ -3,7 +3,7 @@ class HeaderError(Exception):
         self._msg = msg
 
     def __str__(self):
-        print("HeaderError : %s" % self._msg)
+        return "HeaderError : %s" % self._msg
 
 
 class HandleError(Exception):
@@ -11,4 +11,4 @@ class HandleError(Exception):
         self._msg = msg
 
     def __str__(self):
-        print("HandleError : %s" % self._msg)
+        return "HandleError : %s" % self._msg

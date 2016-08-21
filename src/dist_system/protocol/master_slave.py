@@ -97,8 +97,8 @@ def make_msg_data(header, body):
 
 # input : bytes
 # output : (string, dict)
-def parse_msg_data(packet):
+def parse_msg_data(msg_data):
     msg = ms_proto.Message()
-    msg.ParseFromString(packet)
+    msg.ParseFromString(msg_data)
     return msg.WhichOneof('body'), dictify_from_body(msg.__getattribute__(msg.WhichOneof('body')))
 

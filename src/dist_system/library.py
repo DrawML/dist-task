@@ -15,3 +15,4 @@ class SingletonMeta(type):
         if cls not in cls.__instances:
             cls.__instances[cls] = super(SingletonMeta, cls).__call__(*args, **kwargs)
         return cls.__instances[cls]
+

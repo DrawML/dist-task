@@ -2,9 +2,10 @@ from .client import *
 from .slave import *
 from .task import *
 from ..task.sleep_task import *
-from .controller import Scheduler
+from .controller import *
 from ..protocol import ResultReceiverAddress
 from ..library import SingletonMeta
+from .msg_dispatcher import *
 
 
 class ClientMessageHandler(metaclass=SingletonMeta):
@@ -17,40 +18,103 @@ class ClientMessageHandler(metaclass=SingletonMeta):
         ClientMessageHandler.__handler_dict[msg_name](self, session_identity, body)
 
     def _h_task_register_req(self, session_identity, body):
-        # extract some data from body using protocol.
-        result_receiver_address = ResultReceiverAddress('tcp', 'ip', 12345)
-        task_token = TaskToken(b"__THIS_IS_TASK_TOKEN__")
-        task_type = TaskType.TYPE_SLEEP_TASK
-        task = SleepTask(task_token, result_receiver_address, SleepTaskJob(10))
+        try:
+            result_receiver_address = ResultReceiverAddress.from_dict(body['result_receiver_address'])
+            task_token = TaskToken.generate_random_token()
+            task_type = TaskType.from_str(body['task_type'])
 
-        TaskManager().add_task(task)
-        session = ClientSession.make_session_from_identity(session_identity, task)
-        ClientSessionManager().add_session(session)
+            if task_type == TaskType.TYPE_SLEEP_TASK:
+                task = SleepTask(task_token, result_receiver_address, SleepTaskJob.from_dict(body['task']))
+            else:
+                raise NotImplementedError("Not implemented Task Type.")
 
-        # send "Task Register Res" to client using protocol.
+            try:
+                session = ClientSession.make_session_from_identity(session_identity, task)
+                ClientSessionManager().add_session(session)
+                try:
+                    TaskManager().add_task(task)
+                except TaskValueError as e:
+                    ClientSessionManager().del_session(session)
+                    raise
+            except ClientSessionValueError as e:
+                raise
+
+            res_body_ = {
+                'status' : 'success',
+                'task_token' : task_token.to_bytes()
+            }
+        except TaskTypeValueError as e:
+            # invalid message
+            print('[!]', e)
+            res_body_ = {
+                'status': 'fail',
+                'error_code': 'invalid_task'
+            }
+        except TaskValueError as e:
+            # invalid message
+            print('[!]', e)
+            res_body_ = {
+                'status': 'fail',
+                'error_code': 'invalid_task'
+            }
+        except Exception as e:
+            # invalid message
+            print('[!]', e)
+            res_body_ = {
+                'status' : 'fail',
+                'error_code' : 'unknown'
+            }
+
+        ClientMessageDispatcher().dispatch_msg(session_identity, 'task_register_res', res_body_)
+
 
     def _h_task_register_ack(self, session_identity, body):
-        session = ClientSessionManager().find_session(session_identity)
-        task = session.task
-        TaskManager().change_task_status(task, TaskStatus.STATUS_WAITING)
-        ClientSessionManager().del_session(session)
+        try:
+            session = ClientSessionManager().find_session(session_identity)
+            task = session.task
+            TaskManager().change_task_status(task, TaskStatus.STATUS_WAITING)
+            ClientSessionManager().del_session(session)
+        except ClientSessionValueError as e:
+            # invalid message
+            print('[!]', e)
 
         Scheduler().invoke()
 
     def _h_task_cancel_req(self, session_identity, body):
-        # extract some data from body using protocol.
-        task_token = b"__THIS_IS_TASK_TOKEN__"
-
-        task = TaskManager().find_task(task_token)
-        TaskManager().del_task(task)
         try:
-            slave = SlaveManager().find_slave_having_task(task)
-            slave.delete_task(task)
-            # send "Task Cancel Req" to slave using protocol
-        except ValueError:
-            pass
+            task_token = TaskToken.from_bytes(body['task_token'])
 
-        # send "Task Cancel Res" to client using protocol.
+            task = TaskManager().find_task(task_token)
+            TaskManager().del_task(task)
+            try:
+                slave = SlaveManager().find_slave_having_task(task)
+                slave.delete_task(task)
+
+                SlaveMessageDispatcher().dispatch_msg(slave, 'task_cancel_req', {
+                    'task_token' : task_token
+                })
+            except SlaveValueError as e:
+                pass
+
+            res_body_ = {
+                'status' : 'success'
+            }
+        except TaskValueError as e:
+            # invalid message
+            print('[!]', e)
+            res_body_ = {
+                'status': 'fail',
+                'error_code': 'invalid_token'
+            }
+        except Exception as e:
+            # invalid message
+            print('[!]', e)
+            res_body_ = {
+                'status': 'fail',
+                'error_code': 'unknown'
+            }
+
+        ClientMessageDispatcher().dispatch_msg(session_identity, 'task_cancel_res', res_body_)
 
     __handler_dict = {
         "task_register_req": _h_task_register_req,
@@ -69,56 +133,102 @@ class SlaveMessageHandler(metaclass=SingletonMeta):
         SlaveMessageHandler.__handler_dict[msg_name](self, slave_identity, body)
 
     def _h_heart_beat_res(self, slave_identity, body):
-        SlaveManager().find_slave(slave_identity).heartbeat()
+        try:
+            SlaveManager().find_slave(slave_identity).heartbeat()
+        except SlaveValueError as e:
+            # invalid message
+            print('[!]', e)
+            pass
 
     def _h_slave_register_req(self, slave_identity, body):
-        SlaveManager().add_slave(Slave.make_slave_from_identity(slave_identity))
+        try:
+            SlaveManager().add_slave(Slave.make_slave_from_identity(slave_identity))
+            res_body_ = {
+                'status' : 'success'
+            }
+        except Exception as e:
+            # invalid message
+            print('[!]', e)
+            res_body_ = {
+                'status': 'fail',
+                'error_code' : 'unknown'
+            }
 
+        SlaveMessageDispatcher().dispatch_msg(slave_identity, 'slave_register_res', res_body_)
         Scheduler().invoke()
 
-        # send "Slave Register Res" to slave using protocol.
-
     def _h_task_register_res(self, slave_identity, body):
-        slave = SlaveManager().find_slave(slave_identity)
 
-        # extract some data from body using protocol.
-        task_token = b"__THIS_IS_TASK_TOKEN__"
-        status = 'success'
-        error_code = None
+        try:
+            slave = SlaveManager().find_slave(slave_identity)
+            task_token = TaskToken.from_bytes(body['task_token'])
+            status = body['status']
+            error_code = body['error_code']
+            task = TaskManager().find_task(task_token)
 
-        task = TaskManager().find_task(task_token)
-        if status == 'success':
             # check if task's status == TaskStatus.STATUS_WAITING
             # or(and)
             # check task register req가 갔었는지 올바른 res인지 check가 필요.
             # 여기부분외에도 여러부분에서 이런 처리가 필요할 것이다.
             # 그러나 일단 이부분은 후순위로 두고 일단 빠른 구현을 목표로 한다.
             # 추후에 구현완료 후 보완하도록 하자.
-            pass
-        elif status == 'fail':
-            slave.delete_task(task)
-            TaskManager().redo_leak_task(task)
-            Scheduler().invoke()
-        else:
+            # ...
+            # status 검사정도면 충분할 것 같다. (그 외의 경우는 보안상 이슈가 없다.)
+            if task.status != TaskStatus.STATUS_WAITING:
+                raise TaskStatusValueError('Invalid Task Status')
+
+            if status == 'success':
+                pass
+            elif status == 'fail':
+                slave.delete_task(task)
+                TaskManager().redo_leak_task(task)
+                Scheduler().invoke()
+            else:
+                # invalid message
+                pass
+        except Exception as e:
+            # invalid message
+            print('[!]', e)
             pass
 
 
     def _h_task_cancel_res(self, slave_identity, body):
-        # 뭘 해야하지... 흠.. 그냥 프로토콜에서 뺄까?
+        # no specific handling.
         pass
 
     def _h_task_finish_req(self, slave_identity, body):
-        slave = SlaveManager().find_slave(slave_identity)
 
-        # extract some data from body using protocol.
-        task_token = b"__THIS_IS_TASK_TOKEN__"
+        task_token = TaskToken.from_bytes(body['task_token'])
+        try:
+            slave = SlaveManager().find_slave(slave_identity)
+            task = TaskManager().find_task(task_token)
 
-        task = TaskManager().find_task(task_token)
-        slave.delete_task(task)
-        TaskManager().change_task_status(task, TaskStatus.STATUS_COMPLETE)  # yes, there is no need of this code.
-        TaskManager().del_task(task)
+            TaskManager().change_task_status(task, TaskStatus.STATUS_COMPLETE)  # yes, there is no need of this code.
+            TaskManager().del_task(task)
+            slave.delete_task(task)
 
-        # send "Task Finish Res" to slave using protocol. 근데 이거 굳히 필요한가..? 흠..
+            res_body_ = {
+                'task_token': task_token,
+                'status': 'success'
+            }
+        except TaskValueError as e:
+            # invalid message
+            print('[!]', e)
+            res_body_ = {
+                'task_token': task_token,
+                'status': 'fail',
+                'error_code': 'invalid_token'
+            }
+        except Exception as e:
+            # invalid message
+            print('[!]', e)
+            res_body_ = {
+                'task_token' : task_token,
+                'status' : 'fail',
+                'error_code' : 'unknown'
+            }
+
+        SlaveMessageDispatcher().dispatch_msg(slave_identity, 'slave_finish_res', res_body_)
 
     __handler_dict = {
         "heart_beat_res": _h_heart_beat_res,

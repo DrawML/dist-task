@@ -9,10 +9,81 @@ from ..protocol import ResultReceiverAddress
 from ..library import SingletonMeta
 
 
+class TaskTypeValueError(ValueError):
+    def __init__(self, msg):
+        self._msg = msg
+
+    def __str__(self):
+        return "TaskTypeValueError : %s" % self._msg
+
+
+class TaskValueError(ValueError):
+    def __init__(self, msg):
+        self._msg = msg
+
+    def __str__(self):
+        return "TaskValueError : %s" % self._msg
+
+
 class TaskType(AutoIncrementEnum):
     TYPE_SLEEP_TASK = ()
     #TYPE_TENSORFLOW_LEARNING = ()
     #TYPE_TENSORFLOW_TEST = ()
+
+    @staticmethod
+    def from_str(task_type_str : str):
+        if task_type_str == 'sleep_task':
+            return TaskType.TYPE_SLEEP_TASK
+        else:
+            return TaskTypeValueError(task_type_str + ' is invalid task type.')
+
+
+class TaskJob(metaclass = ABCMeta):
+    @abstractmethod
+    def _to_dict(self):
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def _from_dict(bytes_ : bytes):
+        pass
+
+    def to_dict(self):
+        try:
+            return self._to_dict()
+        except Exception as e:
+            raise TaskValueError(str(e))
+
+    @staticmethod
+    def from_dict(bytes_: bytes):
+        try:
+            return TaskJob._from_dict(bytes_)
+        except Exception as e:
+            raise TaskValueError(str(e))
+
+
+class TaskResult(metaclass = ABCMeta):
+    @abstractmethod
+    def _to_dict(self):
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def _from_dict(bytes_ : bytes):
+        pass
+
+    def to_dict(self):
+        try:
+            return self._to_dict()
+        except Exception as e:
+            raise TaskValueError(str(e))
+
+    @staticmethod
+    def from_dict(bytes_: bytes):
+        try:
+            return TaskResult._from_dict(bytes_)
+        except Exception as e:
+            raise TaskValueError(str(e))
 
 
 class TaskToken(object):
@@ -23,20 +94,29 @@ class TaskToken(object):
         return self._token == other._token
 
     @staticmethod
-    def generate_random_token(size : int = 512, chars : str = string.ascii_uppercase + string.digits) -> 'TaskToken':
-        # this must be modified!!
-        raise NotImplementedError("This must be implemented!")
-        return TaskToken(''.join(random.choice(chars) for _ in range(size)))
+    def generate_random_token(bytes_size : int = 512/8) -> 'TaskToken':
+        return TaskToken(bytes(random.getrandbits(8) for _ in range(bytes_size)))
+
+    def to_bytes(self):
+        return self._token
+
+    @staticmethod
+    def from_bytes(self, bytes_ : bytes) -> 'TaskToken':
+        return TaskToken(bytes_)
 
 
 class Task(metaclass = ABCMeta):
-    def __init__(self, task_token : TaskToken, result_receiver_address : ResultReceiverAddress):
+    def __init__(self, task_token : TaskToken, result_receiver_address : ResultReceiverAddress, job : TaskJob):
         self._task_token = task_token
         self._result_receiver_address = result_receiver_address
+        self._job = job
 
     def __eq__(self, other : 'Task'):
         return self._task_token == other._task_token
 
+    @property
+    def result_receiver_address(self):
+        return self._result_receiver_address
 
     @property
     def task_token(self):
@@ -51,41 +131,16 @@ class Task(metaclass = ABCMeta):
         self._status = status
 
     @property
-    @abstractmethod
-    def job(self):
-        pass
+    def job(self) -> TaskJob:
+        return self._job
 
     @property
-    @abstractmethod
-    def result(self):
-        pass
+    def result(self) -> TaskResult:
+        return self._result
 
     @result.setter
-    @abstractmethod
-    def result(self, result):
-        pass
-
-
-class TaskJob(metaclass = ABCMeta):
-    @abstractmethod
-    def to_bytes(self):
-        pass
-
-    @staticmethod
-    @abstractmethod
-    def from_bytes(bytes_ : bytes) -> 'TaskJob':
-        pass
-
-
-class TaskResult(metaclass = ABCMeta):
-    @abstractmethod
-    def to_bytes(self):
-        pass
-
-    @staticmethod
-    @abstractmethod
-    def from_bytes(bytes_: bytes) -> 'TaskResult':
-        pass
+    def result(self, result : TaskResult):
+        self._result = result
 
 
 class CommonTaskManager(metaclass=SingletonMeta):
@@ -110,10 +165,10 @@ class CommonTaskManager(metaclass=SingletonMeta):
     def add_task(self, task, status = None):
         if status is None: status = self._initial_status
         if self.check_task_existence(task.task_token):
-            raise ValueError("Duplicated Task.")
+            raise TaskValueError("Duplicated Task.")
         else:
-            task.status = status
             self._dic_status_queue[status].append(task)
+            task.status = status
             self._all_tasks.append(task)
 
     def del_task(self, task_token_or_task):
@@ -131,9 +186,11 @@ class CommonTaskManager(metaclass=SingletonMeta):
     def change_task_status(self, task_token_or_task, new_status):
         task = self._from_generic_to_task(task_token_or_task)
         cur_status = task.status
-        self._dic_status_queue[cur_status].remove(task)
-        self._dic_status_queue[new_status].append(task)
-        task.status = new_status
+        if cur_status != new_status:
+            # the statements' order is important because of strong guarantee for exception.
+            self._dic_status_queue[new_status].append(task)
+            self._dic_status_queue[cur_status].remove(task)
+            task.status = new_status
 
     def check_task_existence(self, task_token, find_flag = False):
         targets = [task for task in self._all_tasks if task.task_token == task_token]
@@ -147,7 +204,7 @@ class CommonTaskManager(metaclass=SingletonMeta):
         exists, targets = self.check_task_existence(task_token, find_flag=True)
         if exists:
             if len(targets) > 1:
-                raise ValueError("Same Tasks exist.")
+                raise TaskValueError("Same Tasks exist.")
             return targets[0]
         else:
-            raise ValueError("Non-existent Task.")
+            raise TaskValueError("Non-existent Task.")
