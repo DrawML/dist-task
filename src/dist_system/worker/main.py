@@ -18,12 +18,12 @@ class SlaveConnection(object):
         self._msg_handler = msg_handler
 
     async def run(self):
-        self._router = self._context.socket(zmq.DEALER)
-        self._router.connect(self._slave_addr)
+        self._dealer = self._context.socket(zmq.DEALER)
+        self._dealer.connect(self._slave_addr)
         self._register()
 
         while True:
-            msg = await self._router.recv_multipart()
+            msg = await self._dealer.recv_multipart()
             self._process(msg)
 
     def _register(self):
@@ -43,14 +43,10 @@ class SlaveConnection(object):
     def dispatch_msg(self, data, async=True):
 
         def _dispatch_msg_sync(msg):
-
-            self._router.send_multipart(msg)
+            asyncio.wait([self._dealer.send_multipart(msg)])
 
         def _dispatch_msg_async(msg):
-            async def _dispatch_msg(msg):
-                await self._router.send_multipart(msg)
-
-            asyncio.ensure_future(_dispatch_msg(msg))
+            asyncio.ensure_future(self._dealer.send_multipart(msg))
 
         msg = [data]
         if async:
@@ -63,7 +59,7 @@ async def run_worker(context : Context, slave_addr, serialized_data : bytes):
 
     slave_conn = SlaveConnection(context, slave_addr, SlaveMessageHandler())
 
-    asyncio.wait([
+    await asyncio.wait([
         asyncio.ensure_future(slave_conn.run()),
         asyncio.ensure_future(do_task(context, TaskInformation.from_bytes(serialized_data)))
     ])

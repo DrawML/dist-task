@@ -5,6 +5,14 @@ from ..library import SingletonMeta
 import subprocess
 
 
+class WorkerValueError(ValueError):
+    def __init__(self, msg):
+        self._msg = msg
+
+    def __str__(self):
+        return "WorkerValueError : %s" % self._msg
+
+
 class WorkerIdentity(object):
     def __init__(self, addr = None):
         self._addr = addr
@@ -64,7 +72,7 @@ class WorkerManager(metaclass=SingletonMeta):
 
     def add_worker(self, worker):
         if self.check_worker_existence(worker):
-            raise ValueError("Duplicated Worker.")
+            raise WorkerValueError("Duplicated Worker.")
         else:
             self._workers.append(worker)
 
@@ -92,16 +100,16 @@ class WorkerManager(metaclass=SingletonMeta):
         exists, targets = self.check_worker_existence(worker_identity, find_flag=True)
         if exists:
             if len(targets) > 1:
-                raise ValueError("Same Workers exist.")
+                raise WorkerValueError("Same Workers exist.")
             return targets[0]
         else:
-            raise ValueError("Non-existent Worker.")
+            raise WorkerValueError("Non-existent Worker.")
 
     def find_worker_having_task(self, task):
         try:
             self._dic_task_worker[task]
         except KeyError:
-            raise ValueError("Non-existent Worker.")
+            raise WorkerValueError("Non-existent Worker.")
 
     def purge(self):
         expired_workers = []

@@ -26,7 +26,6 @@ class ClientRouter(metaclass=SingletonMeta):
             await self._process(msg)
 
     async def _process(self, msg):
-        # separate data into header and body using protocol.*
         addr, data = self._resolve_msg(msg)
         header, body = client_master.parse_msg_data(data)
 
@@ -41,17 +40,14 @@ class ClientRouter(metaclass=SingletonMeta):
 
     def dispatch_msg(self, session_identity, header, body, async=True):
 
-        # need to modify. same bugs exist in several files.
         def _dispatch_msg_sync(msg):
-            self._router.send_multipart(msg)
+            asyncio.wait([self._router.send_multipart(msg)])
 
         def _dispatch_msg_async(msg):
-            async def _dispatch_msg(msg):
-                await self._router.send_multipart(msg)
-            asyncio.ensure_future(_dispatch_msg(msg))
+            asyncio.ensure_future(self._router.send_multipart(msg))
 
         addr = session_identity.addr
-        data = master_slave.make_msg_data(header, body)
+        data = client_master.make_msg_data(header, body)
         msg = [addr, data]
         if async:
             _dispatch_msg_async(msg)
@@ -75,7 +71,6 @@ class SlaveRouter(metaclass=SingletonMeta):
             await self._process(msg)
 
     async def _process(self, msg):
-        # separate data into header and body using protocol.*
         addr, data = self._resolve_msg(msg)
         header, body = master_slave.parse_msg_data(data)
 
@@ -91,13 +86,10 @@ class SlaveRouter(metaclass=SingletonMeta):
     def dispatch_msg(self, slave_identity, header, body, async=True):
 
         def _dispatch_msg_sync(msg):
-            self._router.send_multipart(msg)
+            asyncio.wait([self._router.send_multipart(msg)])
 
         def _dispatch_msg_async(msg):
-            async def _dispatch_msg(msg):
-                await self._router.send_multipart(msg)
-
-            asyncio.ensure_future(_dispatch_msg(msg))
+            asyncio.ensure_future(self._router.send_multipart(msg))
 
         addr = slave_identity.addr
         data = master_slave.make_msg_data(header, body)
@@ -116,7 +108,7 @@ async def run_master(context : Context, client_router_addr, slave_router_addr):
     ClientMessageDispatcher(partial(client_router.dispatch_msg, client_router))
     SlaveMessageDispatcher(partial(slave_router.dispatch_msg, slave_router))
 
-    asyncio.wait([
+    await asyncio.wait([
         asyncio.ensure_future(client_router.run()),
         asyncio.ensure_future(slave_router.run()),
         asyncio.ensure_future(run_heartbeat())

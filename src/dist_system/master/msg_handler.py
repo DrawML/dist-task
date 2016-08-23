@@ -3,7 +3,7 @@ from .slave import *
 from .task import *
 from ..task.sleep_task import *
 from .controller import *
-from ..protocol import ResultReceiverAddress
+from ..result_receiver import ResultReceiverAddress
 from ..library import SingletonMeta
 from .msg_dispatcher import *
 
@@ -39,33 +39,33 @@ class ClientMessageHandler(metaclass=SingletonMeta):
             except ClientSessionValueError as e:
                 raise
 
-            res_body_ = {
+            res_body = {
                 'status' : 'success',
                 'task_token' : task_token.to_bytes()
             }
         except TaskTypeValueError as e:
             # invalid message
             print('[!]', e)
-            res_body_ = {
+            res_body = {
                 'status': 'fail',
                 'error_code': 'invalid_task'
             }
         except TaskValueError as e:
             # invalid message
             print('[!]', e)
-            res_body_ = {
+            res_body = {
                 'status': 'fail',
                 'error_code': 'invalid_task'
             }
         except Exception as e:
             # invalid message
             print('[!]', e)
-            res_body_ = {
+            res_body = {
                 'status' : 'fail',
                 'error_code' : 'unknown'
             }
 
-        ClientMessageDispatcher().dispatch_msg(session_identity, 'task_register_res', res_body_)
+        ClientMessageDispatcher().dispatch_msg(session_identity, 'task_register_res', res_body)
 
 
     def _h_task_register_ack(self, session_identity, body):
@@ -96,25 +96,25 @@ class ClientMessageHandler(metaclass=SingletonMeta):
             except SlaveValueError as e:
                 pass
 
-            res_body_ = {
+            res_body = {
                 'status' : 'success'
             }
         except TaskValueError as e:
             # invalid message
             print('[!]', e)
-            res_body_ = {
+            res_body = {
                 'status': 'fail',
                 'error_code': 'invalid_token'
             }
         except Exception as e:
             # invalid message
             print('[!]', e)
-            res_body_ = {
+            res_body = {
                 'status': 'fail',
                 'error_code': 'unknown'
             }
 
-        ClientMessageDispatcher().dispatch_msg(session_identity, 'task_cancel_res', res_body_)
+        ClientMessageDispatcher().dispatch_msg(session_identity, 'task_cancel_res', res_body)
 
     __handler_dict = {
         "task_register_req": _h_task_register_req,
@@ -138,23 +138,22 @@ class SlaveMessageHandler(metaclass=SingletonMeta):
         except SlaveValueError as e:
             # invalid message
             print('[!]', e)
-            pass
 
     def _h_slave_register_req(self, slave_identity, body):
         try:
             SlaveManager().add_slave(Slave.make_slave_from_identity(slave_identity))
-            res_body_ = {
+            res_body = {
                 'status' : 'success'
             }
         except Exception as e:
             # invalid message
             print('[!]', e)
-            res_body_ = {
+            res_body = {
                 'status': 'fail',
                 'error_code' : 'unknown'
             }
 
-        SlaveMessageDispatcher().dispatch_msg(slave_identity, 'slave_register_res', res_body_)
+        SlaveMessageDispatcher().dispatch_msg(slave_identity, 'slave_register_res', res_body)
         Scheduler().invoke()
 
     def _h_task_register_res(self, slave_identity, body):
@@ -163,7 +162,6 @@ class SlaveMessageHandler(metaclass=SingletonMeta):
             slave = SlaveManager().find_slave(slave_identity)
             task_token = TaskToken.from_bytes(body['task_token'])
             status = body['status']
-            error_code = body['error_code']
             task = TaskManager().find_task(task_token)
 
             # check if task's status == TaskStatus.STATUS_WAITING
@@ -180,6 +178,7 @@ class SlaveMessageHandler(metaclass=SingletonMeta):
             if status == 'success':
                 pass
             elif status == 'fail':
+                error_code = body['error_code']
                 slave.delete_task(task)
                 TaskManager().redo_leak_task(task)
                 Scheduler().invoke()
@@ -189,7 +188,6 @@ class SlaveMessageHandler(metaclass=SingletonMeta):
         except Exception as e:
             # invalid message
             print('[!]', e)
-            pass
 
 
     def _h_task_cancel_res(self, slave_identity, body):
@@ -207,14 +205,14 @@ class SlaveMessageHandler(metaclass=SingletonMeta):
             TaskManager().del_task(task)
             slave.delete_task(task)
 
-            res_body_ = {
+            res_body = {
                 'task_token': task_token,
                 'status': 'success'
             }
         except TaskValueError as e:
             # invalid message
             print('[!]', e)
-            res_body_ = {
+            res_body = {
                 'task_token': task_token,
                 'status': 'fail',
                 'error_code': 'invalid_token'
@@ -222,13 +220,13 @@ class SlaveMessageHandler(metaclass=SingletonMeta):
         except Exception as e:
             # invalid message
             print('[!]', e)
-            res_body_ = {
+            res_body = {
                 'task_token' : task_token,
                 'status' : 'fail',
                 'error_code' : 'unknown'
             }
 
-        SlaveMessageDispatcher().dispatch_msg(slave_identity, 'slave_finish_res', res_body_)
+        SlaveMessageDispatcher().dispatch_msg(slave_identity, 'slave_finish_res', res_body)
 
     __handler_dict = {
         "heart_beat_res": _h_heart_beat_res,

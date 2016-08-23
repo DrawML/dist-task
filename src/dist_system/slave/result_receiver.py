@@ -1,0 +1,5 @@
+from ..library import make_singleton_class_from
+from ..result_receiver import ResultReceiverCommunicator
+
+
+ResultReceiverCommunicatorWithSlave = make_singleton_class_from(ResultReceiverCommunicator)

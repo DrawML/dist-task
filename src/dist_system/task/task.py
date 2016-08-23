@@ -37,6 +37,11 @@ class TaskType(AutoIncrementEnum):
         else:
             return TaskTypeValueError(task_type_str + ' is invalid task type.')
 
+    def to_str(self):
+        if self == TaskType.TYPE_SLEEP_TASK:
+            return 'sleep_task'
+        else:
+            return TaskTypeValueError(self + ' is invalid task type.')
 
 class TaskJob(metaclass = ABCMeta):
     @abstractmethod
