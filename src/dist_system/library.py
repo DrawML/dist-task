@@ -1,4 +1,5 @@
 from enum import Enum
+import asyncio
 
 
 class AutoIncrementEnum(Enum):
@@ -23,3 +24,11 @@ def apply_metaclass_from_class(class_, metaclass_):
 
 def make_singleton_class_from(class_):
     return apply_metaclass_from_class(class_, SingletonMeta)
+
+
+async def coroutine_with_no_exception(coro, f_callback = None, *args, **kwargs):
+    try:
+        await coro
+    except BaseException as e:
+        if f_callback is not None :
+            f_callback(coro, e, *args, **kwargs)

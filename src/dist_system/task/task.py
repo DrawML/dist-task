@@ -5,7 +5,7 @@ import random
 import string
 from abc import *
 from ..library import AutoIncrementEnum
-from ..protocol import ResultReceiverAddress
+from ..result_receiver import ResultReceiverAddress
 from ..library import SingletonMeta
 
 
@@ -90,6 +90,10 @@ class TaskResult(metaclass = ABCMeta):
         except Exception as e:
             raise TaskValueError(str(e))
 
+    @abstractmethod
+    def __str__(self):
+        pass
+
 
 class TaskToken(object):
     def __init__(self, token : bytes):
@@ -148,7 +152,7 @@ class Task(metaclass = ABCMeta):
         self._result = result
 
 
-class CommonTaskManager(metaclass=SingletonMeta):
+class CommonTaskManager(object):
 
     """ Example of dic_status_queue
     dic_status_queue = {
@@ -166,6 +170,10 @@ class CommonTaskManager(metaclass=SingletonMeta):
         if not None in self._dic_status_queue:
             self._none_status_tasks = []
             self._dic_status_queue[None] = self._none_status_tasks
+
+    @property
+    def all_tasks(self):
+        return tuple(self._all_tasks)
 
     def add_task(self, task, status = None):
         if status is None: status = self._initial_status

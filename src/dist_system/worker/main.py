@@ -45,7 +45,7 @@ class SlaveConnection(object):
     def _resolve_msg(self, msg):
         return msg[0]
 
-    def dispatch_msg(self, data, async=True):
+    def dispatch_msg(self, data, async_=True):
 
         def _dispatch_msg_sync(msg):
             asyncio.wait([self._dealer.send_multipart(msg)])
@@ -54,7 +54,7 @@ class SlaveConnection(object):
             asyncio.ensure_future(self._dealer.send_multipart(msg))
 
         msg = [data]
-        if async:
+        if async_:
             _dispatch_msg_async(msg)
         else:
             _dispatch_msg_sync(msg)

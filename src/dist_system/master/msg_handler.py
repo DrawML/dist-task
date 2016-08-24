@@ -6,6 +6,7 @@ from .controller import *
 from ..result_receiver import ResultReceiverAddress
 from ..library import SingletonMeta
 from .msg_dispatcher import *
+from ..task.functions import *
 
 
 class ClientMessageHandler(metaclass=SingletonMeta):
@@ -22,11 +23,8 @@ class ClientMessageHandler(metaclass=SingletonMeta):
             result_receiver_address = ResultReceiverAddress.from_dict(body['result_receiver_address'])
             task_token = TaskToken.generate_random_token()
             task_type = TaskType.from_str(body['task_type'])
-
-            if task_type == TaskType.TYPE_SLEEP_TASK:
-                task = SleepTask(task_token, result_receiver_address, SleepTaskJob.from_dict(body['task']))
-            else:
-                raise NotImplementedError("Not implemented Task Type.")
+            task = make_task_with_task_type(task_type,
+                                            task_token, result_receiver_address, SleepTaskJob.from_dict(body['task']))
 
             try:
                 session = ClientSession.make_session_from_identity(session_identity, task)

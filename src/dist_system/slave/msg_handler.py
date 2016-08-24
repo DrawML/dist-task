@@ -6,6 +6,7 @@ from .worker import *
 from .task import *
 from .controller import *
 from .msg_dispatcher import *
+from ..task.functions import *
 
 
 class MasterMessageHandler(metaclass=SingletonMeta):
@@ -17,7 +18,7 @@ class MasterMessageHandler(metaclass=SingletonMeta):
         MasterMessageHandler.__handler_dict[msg_name](self, body)
 
     def _h_heart_beat_req(self, body):
-        MasterMessageDispatcher().dispatch_msg('heart_beat_res', '')
+        MasterMessageDispatcher().dispatch_msg('heart_beat_res', {})
 
     def _h_slave_register_res(self, body):
         import sys
@@ -44,11 +45,8 @@ class MasterMessageHandler(metaclass=SingletonMeta):
         try:
             result_receiver_address = ResultReceiverAddress.from_dict(body['result_receiver_address'])
             task_type = TaskType.from_str(body['task_type'])
-
-            if task_type == TaskType.TYPE_SLEEP_TASK:
-                task = SleepTask(task_token, result_receiver_address, SleepTaskJob.from_dict(body['task']))
-            else:
-                raise NotImplementedError("Not implemented Task Type.")
+            task = make_task_with_task_type(task_type,
+                                            task_token, result_receiver_address, SleepTaskJob.from_dict(body['task']))
 
             TaskManager().add_task(task)
             proc = WorkerCreator().create(result_receiver_address, task_token, task_type, task)
@@ -78,7 +76,7 @@ class MasterMessageHandler(metaclass=SingletonMeta):
                 worker = WorkerManager().find_worker_having_task(task)
                 WorkerManager().del_worker(worker)
 
-                WorkerMessageDispatcher().dispatch_msg(worker, 'task_cancel_req', '')
+                WorkerMessageDispatcher().dispatch_msg(worker, 'task_cancel_req', {})
                 # 여기서 worker를 지우므로 worker로 부터 Task Cancel Res는 받을 수 없다.
             except WorkerValueError as e:
                 pass

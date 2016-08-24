@@ -11,7 +11,7 @@ async def run_heartbeat():
 
     while True:
         for slave in SlaveManager().slaves:
-            SlaveMessageDispatcher().dispatch_msg(slave, 'heart_beat_req', '')
+            SlaveMessageDispatcher().dispatch_msg(slave, 'heart_beat_req', {})
 
         await asyncio.sleep(SlaveManager.HEARTBEAT_INTERVAL)
 

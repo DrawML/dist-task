@@ -47,7 +47,13 @@ class TaskInformation(object):
 
 
 async def _do_sleep_task(sleep_task : SleepTask):
+    global _sleep_task_cnt
+    if _sleep_task_cnt is None:
+        _sleep_task_cnt = 0
+    _sleep_task_cnt += 1
+
     await asyncio.sleep(sleep_task.job.seconds)
+    sleep_task.result = SleepTaskResult('{0}th sleep..'.format(_sleep_task_cnt))
 
 
 async def _report_task_result(context : Context, task_info : TaskInformation):
@@ -55,14 +61,15 @@ async def _report_task_result(context : Context, task_info : TaskInformation):
     sock = context.socket(zmq.DEALER)
     sock.connect(task_info.result_receiver_address.to_zeromq_addr())
 
-    header, body = ResultReceiverCommunicatorWithWorker().communicate(task_info.result_receiver_address, 'task_result_req', {
+    header, body = ResultReceiverCommunicatorWithWorker().communicate(
+        task_info.result_receiver_address, 'task_result_req', {
         'status' : 'complete',
         'task_token' : task_info.task_token.to_bytes(),
         'result' : task_info.task.result.to_dict()
     })
     # nothing to do using response message...
 
-    SlaveMessageDispatcher().dispatch_msg('task_finish_req', '')
+    SlaveMessageDispatcher().dispatch_msg('task_finish_req', {})
 
 
     # send task_result_req to result receiver. (wait)
@@ -75,7 +82,7 @@ async def do_task(context : Context, task_info : TaskInformation):
     if task_info.task_type == TaskType.TYPE_SLEEP_TASK:
         await _do_sleep_task(task_info.task)
     else:
-        raise ValueError("Invalid Task Type.")
+        raise TaskTypeValueError("Invalid Task Type.")
 
     await _report_task_result(context, task_info)
 

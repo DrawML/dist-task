@@ -44,7 +44,7 @@ class MasterConnection(metaclass=SingletonMeta):
     def _resolve_msg(self, msg):
         return msg[0]
 
-    def dispatch_msg(self, header, body, async=True):
+    def dispatch_msg(self, header, body, async_=True):
 
         def _dispatch_msg_sync(msg):
             asyncio.wait([self._dealer.send_multipart(msg)])
@@ -54,7 +54,7 @@ class MasterConnection(metaclass=SingletonMeta):
 
         data = master_slave.make_msg_data(header, body)
         msg = [data]
-        if async:
+        if async_:
             _dispatch_msg_async(msg)
         else:
             _dispatch_msg_sync(msg)
@@ -88,7 +88,7 @@ class WorkerRouter(metaclass=SingletonMeta):
 
         return addr, data
 
-    def dispatch_msg(self, worker_identity, header, body, async=True):
+    def dispatch_msg(self, worker_identity, header, body, async_=True):
 
         def _dispatch_msg_sync(msg):
             asyncio.wait([self._router.send_multipart(msg)])
@@ -99,7 +99,7 @@ class WorkerRouter(metaclass=SingletonMeta):
         addr = worker_identity.addr
         data = slave_worker.make_msg_data(header, body)
         msg = [addr, data]
-        if async:
+        if async_:
             _dispatch_msg_async(msg)
         else:
             _dispatch_msg_sync(msg)
@@ -133,6 +133,8 @@ class ResultReceiverCommunicationIO(metaclass=SingletonMeta):
 
 
 async def run_master(context : Context, master_addr, worker_router_addr, worker_file_name):
+
+    TaskManager()
 
     master_conn = MasterConnection(context, master_addr, MasterMessageHandler())
     worker_router = WorkerRouter(context, worker_router_addr, WorkerMessageHandler())
