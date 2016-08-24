@@ -16,19 +16,18 @@ class SlaveMessageHandler(metaclass=SingletonMeta):
         SlaveMessageHandler.__handler_dict[msg_name](self, body)
 
     def _h_worker_register_res(self, body):
+        status = body['status']
 
-        # if success
-        pass
-
-        # if fail
-        import sys
-        sys.exit(0)
+        if status == 'fail':
+            import sys
+            sys.exit(0)
 
     def _h_task_cancel_req(self, body):
         import sys
         sys.exit(0)
 
     def _h_task_finish_res(self, body):
+        # nothing to do using response message...
         import sys
         sys.exit(0)
 

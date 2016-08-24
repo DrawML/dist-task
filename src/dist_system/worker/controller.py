@@ -1,9 +1,11 @@
 import zmq
 from zmq.asyncio import Context
 import asyncio
-from ..protocol import ResultReceiverAddress
+from ..result_receiver import ResultReceiverAddress
+from .result_receiver import *
 from ..task.task import *
 from ..task.sleep_task import *
+from .msg_dispatcher import *
 
 
 class TaskInformation(object):
@@ -32,9 +34,16 @@ class TaskInformation(object):
         return self._task
 
     @staticmethod
-    def from_bytes(bytes_ : bytes) -> 'TaskInformation':
-        raise NotImplementedError("will be implemented.")
-        return TaskInformation("""will be filled...""")
+    def from_dict(dict_ : dict) -> 'TaskInformation':
+        result_receiver_address = ResultReceiverAddress.from_dict(dict_['result_receiver_address'])
+        task_token = TaskToken.from_bytes(dict_['task_token'])
+        task_type = TaskType.from_str(dict_['task_type'])
+        if task_type == TaskType.TYPE_SLEEP_TASK:
+            task = SleepTask(task_token, result_receiver_address, SleepTaskJob.from_dict(dict_['task']))
+        else:
+            raise NotImplementedError("Not implemented Task Type.")
+
+        return TaskInformation(result_receiver_address, task_token, task_type, task)
 
 
 async def _do_sleep_task(sleep_task : SleepTask):
@@ -45,6 +54,16 @@ async def _report_task_result(context : Context, task_info : TaskInformation):
 
     sock = context.socket(zmq.DEALER)
     sock.connect(task_info.result_receiver_address.to_zeromq_addr())
+
+    header, body = ResultReceiverCommunicatorWithWorker().communicate(task_info.result_receiver_address, 'task_result_req', {
+        'status' : 'complete',
+        'task_token' : task_info.task_token.to_bytes(),
+        'result' : task_info.task.result.to_dict()
+    })
+    # nothing to do using response message...
+
+    SlaveMessageDispatcher().dispatch_msg('task_finish_req', '')
+
 
     # send task_result_req to result receiver. (wait)
     # receive task_result_res (wait)
