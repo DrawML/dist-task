@@ -24,15 +24,14 @@ class MasterConnection(metaclass=SingletonMeta):
     async def run(self):
         self._dealer = self._context.socket(zmq.DEALER)
         self._dealer.connect(self._master_addr)
-        self._register()
+        await self._register()
 
         while True:
             msg = await self._dealer.recv_multipart()
             self._process(msg)
 
-    def _register(self):
-        # MasterMessageDispatcher().dispatch_msg('slave_register_req', '', async=False)
-        MasterMessageDispatcher().dispatch_msg('slave_register_req', '', async=True)
+    async def _register(self):
+        await self.dispatch_msg_coro('slave_register_req', '')
 
     def _process(self, msg):
         data = self._resolve_msg(msg)
@@ -44,20 +43,15 @@ class MasterConnection(metaclass=SingletonMeta):
     def _resolve_msg(self, msg):
         return msg[0]
 
-    def dispatch_msg(self, header, body, async_=True):
-
-        def _dispatch_msg_sync(msg):
-            asyncio.wait([self._dealer.send_multipart(msg)])
-
-        def _dispatch_msg_async(msg):
-            asyncio.ensure_future(self._dealer.send_multipart(msg))
-
+    async def dispatch_msg_coro(self, header, body):
         data = master_slave.make_msg_data(header, body)
         msg = [data]
-        if async_:
-            _dispatch_msg_async(msg)
-        else:
-            _dispatch_msg_sync(msg)
+        await self._dealer.send_multipart(msg)
+
+    def dispatch_msg(self, header, body, f_callback=None):
+        future = asyncio.ensure_future(self.dispatch_msg_coro(header, body))
+        if f_callback is not None:
+            future.add_done_callback(f_callback)
 
 
 class WorkerRouter(metaclass=SingletonMeta):
@@ -88,21 +82,16 @@ class WorkerRouter(metaclass=SingletonMeta):
 
         return addr, data
 
-    def dispatch_msg(self, worker_identity, header, body, async_=True):
-
-        def _dispatch_msg_sync(msg):
-            asyncio.wait([self._router.send_multipart(msg)])
-
-        def _dispatch_msg_async(msg):
-            asyncio.ensure_future(self._router.send_multipart(msg))
-
+    async def dispatch_msg_coro(self, worker_identity, header, body):
         addr = worker_identity.addr
         data = slave_worker.make_msg_data(header, body)
         msg = [addr, data]
-        if async_:
-            _dispatch_msg_async(msg)
-        else:
-            _dispatch_msg_sync(msg)
+        await self._router.send_multipart(msg)
+
+    def dispatch_msg(self, worker_identity, header, body, f_callback=None):
+        future = asyncio.ensure_future(self.dispatch_msg_coro(worker_identity, header, body))
+        if f_callback is not None:
+            future.add_done_callback(f_callback)
 
 
 class ResultReceiverCommunicationIO(metaclass=SingletonMeta):
@@ -158,14 +147,14 @@ async def run_master(context : Context, master_addr, worker_router_addr, worker_
     ])
 
 
-def main(master_addr, worker_router_addr):
+def main(master_addr, worker_router_addr, worker_file_name):
     try:
         loop = ZMQEventLoop()
         asyncio.set_event_loop(loop)
 
         context = Context()
 
-        loop.run_until_complete(run_master(context, master_addr, worker_router_addr))
+        loop.run_until_complete(run_master(context, master_addr, worker_router_addr, worker_file_name))
     except KeyboardInterrupt:
         print('\nFinished (interrupted)')
         sys.exit(0)

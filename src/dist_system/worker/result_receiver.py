@@ -1,5 +1,6 @@
-from ..library import make_singleton_class_from
 from ..result_receiver import ResultReceiverCommunicator
+from ..library import SingletonMeta
 
 
-ResultReceiverCommunicatorWithWorker = make_singleton_class_from(ResultReceiverCommunicator)
+class ResultReceiverCommunicatorWithWorker(ResultReceiverCommunicator, metaclass=SingletonMeta):
+    pass

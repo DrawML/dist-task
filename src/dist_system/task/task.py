@@ -103,7 +103,7 @@ class TaskToken(object):
         return self._token == other._token
 
     @staticmethod
-    def generate_random_token(bytes_size : int = 512/8) -> 'TaskToken':
+    def generate_random_token(bytes_size : int = 512//8) -> 'TaskToken':
         return TaskToken(bytes(random.getrandbits(8) for _ in range(bytes_size)))
 
     def to_bytes(self):

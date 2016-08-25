@@ -39,21 +39,16 @@ class ClientRouter(metaclass=SingletonMeta):
 
         return addr, data
 
-    def dispatch_msg(self, session_identity, header, body, async_=True):
-
-        def _dispatch_msg_sync(msg):
-            asyncio.wait([self._router.send_multipart(msg)])
-
-        def _dispatch_msg_async(msg):
-            asyncio.ensure_future(self._router.send_multipart(msg))
-
-        addr = session_identity.addr
+    async def dispatch_msg_coro(self, client_session_identity, header, body):
+        addr = client_session_identity.addr
         data = client_master.make_msg_data(header, body)
         msg = [addr, data]
-        if async_:
-            _dispatch_msg_async(msg)
-        else:
-            _dispatch_msg_sync(msg)
+        await self._router.send_multipart(msg)
+
+    def dispatch_msg(self, client_session_identity, header, body, f_callback=None):
+        future = asyncio.ensure_future(self.dispatch_msg_coro(client_session_identity, header, body))
+        if f_callback is not None:
+            future.add_done_callback(f_callback)
 
 
 class SlaveRouter(metaclass=SingletonMeta):
@@ -84,21 +79,16 @@ class SlaveRouter(metaclass=SingletonMeta):
 
         return addr, data
 
-    def dispatch_msg(self, slave_identity, header, body, async_=True):
-
-        def _dispatch_msg_sync(msg):
-            asyncio.wait([self._router.send_multipart(msg)])
-
-        def _dispatch_msg_async(msg):
-            asyncio.ensure_future(self._router.send_multipart(msg))
-
+    async def dispatch_msg_coro(self, slave_identity, header, body):
         addr = slave_identity.addr
-        data = master_slave.make_msg_data(header, body)
+        data = client_master.make_msg_data(header, body)
         msg = [addr, data]
-        if async_:
-            _dispatch_msg_async(msg)
-        else:
-            _dispatch_msg_sync(msg)
+        await self._router.send_multipart(msg)
+
+    def dispatch_msg(self, slave_identity, header, body, f_callback=None):
+        future = asyncio.ensure_future(self.dispatch_msg_coro(slave_identity, header, body))
+        if f_callback is not None:
+            future.add_done_callback(f_callback)
 
 
 async def run_master(context : Context, client_router_addr, slave_router_addr):

@@ -1,3 +1,4 @@
 from dist_system.master.main import main
 
-main('tcp://*:6000', 'tcp://*:7000')
+if __name__ == '__main__':
+    main('tcp://*:6000', 'tcp://*:7000')

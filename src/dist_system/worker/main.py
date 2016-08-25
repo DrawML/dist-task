@@ -9,7 +9,7 @@ import asyncio
 from .msg_handler import SlaveMessageHandler
 from .controller import (TaskInformation, do_task)
 from .msg_dispatcher import *
-from ..protocol import any_result_receiver
+from ..protocol import any_result_receiver, slave_worker
 from .result_receiver import *
 from functools import partial
 
@@ -24,20 +24,20 @@ class SlaveConnection(object):
     async def run(self, task_information : TaskInformation):
         self._dealer = self._context.socket(zmq.DEALER)
         self._dealer.connect(self._slave_addr)
-        self._register(task_information.task_token)
+        await self._register(task_information.task_token)
 
         while True:
             msg = await self._dealer.recv_multipart()
             self._process(msg)
 
-    def _register(self, task_token):
-        SlaveMessageDispatcher().dispatch_msg('worker_register_req', {
-            'task_token' : task_token.to_bytes()
-        }, async=True)
+    async def _register(self, task_token):
+        await self.dispatch_msg_coro('worker_register_req', {
+            'task_token': task_token.to_bytes()
+        })
 
     def _process(self, msg):
         data = self._resolve_msg(msg)
-        header, body = any_result_receiver.parse_msg_data(data)
+        header, body = slave_worker.parse_msg_data(data)
 
         # handle message
         self._msg_handler.handle_msg(header, body)
@@ -45,19 +45,15 @@ class SlaveConnection(object):
     def _resolve_msg(self, msg):
         return msg[0]
 
-    def dispatch_msg(self, data, async_=True):
-
-        def _dispatch_msg_sync(msg):
-            asyncio.wait([self._dealer.send_multipart(msg)])
-
-        def _dispatch_msg_async(msg):
-            asyncio.ensure_future(self._dealer.send_multipart(msg))
-
+    async def dispatch_msg_coro(self, header, body):
+        data = slave_worker.make_msg_data(header, body)
         msg = [data]
-        if async_:
-            _dispatch_msg_async(msg)
-        else:
-            _dispatch_msg_sync(msg)
+        await self._dealer.send_multipart(msg)
+
+    def dispatch_msg(self, addr, header, body, f_callback=None):
+        future = asyncio.ensure_future(self.dispatch_msg_coro(header, body))
+        if f_callback is not None:
+            future.add_done_callback(f_callback)
 
 
 class ResultReceiverCommunicationIO(metaclass=SingletonMeta):

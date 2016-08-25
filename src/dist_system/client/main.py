@@ -8,7 +8,7 @@ from zmq.asyncio import Context, ZMQEventLoop
 import asyncio
 from .msg_handler import ResultMessageHandler
 from .controller import *
-from ..protocol import master_slave, slave_worker, any_result_receiver
+from ..protocol import client_master, any_result_receiver
 from functools import partial
 from ..library import SingletonMeta
 from ..task.task import *
@@ -33,26 +33,21 @@ class MasterConnection(object):
     async def recv_msg(self):
         msg = await self._sock.recv_multipart()
         data = self._resolve_msg(msg)
-        header, body = master_slave.parse_msg_data(data)
+        header, body = client_master.parse_msg_data(data)
         return header, body
 
     def _resolve_msg(self, msg):
         return msg[0]
 
-    def dispatch_msg(self, header, body, async_=True):
-
-        def _dispatch_msg_sync(msg):
-            asyncio.wait([self._sock.send_multipart(msg)])
-
-        def _dispatch_msg_async(msg):
-            asyncio.ensure_future(self._sock.send_multipart(msg))
-
-        data = master_slave.make_msg_data(header, body)
+    async def dispatch_msg_coro(self, header, body):
+        data = client_master.make_msg_data(header, body)
         msg = [data]
-        if async_:
-            _dispatch_msg_async(msg)
-        else:
-            _dispatch_msg_sync(msg)
+        await self._sock.send_multipart(msg)
+
+    def dispatch_msg(self, header, body, f_callback=None):
+        future = asyncio.ensure_future(self.dispatch_msg_coro(header, body))
+        if f_callback is not None:
+            future.add_done_callback(f_callback)
 
 
 class ResultReceiverCommunicationRouter(metaclass=SingletonMeta):
@@ -72,7 +67,7 @@ class ResultReceiverCommunicationRouter(metaclass=SingletonMeta):
 
     def _process(self, msg):
         addr, data = self._resolve_msg(msg)
-        header, body = slave_worker.parse_msg_data(data)
+        header, body = any_result_receiver.parse_msg_data(data)
 
         # handle message
         self._msg_handler.handle_msg(addr, header, body)
@@ -83,40 +78,35 @@ class ResultReceiverCommunicationRouter(metaclass=SingletonMeta):
 
         return addr, data
 
-    def dispatch_msg(self, addr, header, body, async_=True):
-
-        def _dispatch_msg_sync(msg):
-            asyncio.wait([self._router.send_multipart(msg)])
-
-        def _dispatch_msg_async(msg):
-            asyncio.ensure_future(self._router.send_multipart(msg))
-
-        data = slave_worker.make_msg_data(header, body)
+    async def dispatch_msg_coro(self, addr, header, body):
+        data = any_result_receiver.make_msg_data(header, body)
         msg = [addr, data]
-        if async_:
-            _dispatch_msg_async(msg)
-        else:
-            _dispatch_msg_sync(msg)
+        await self._router.send_multipart(msg)
+
+    def dispatch_msg(self, addr, header, body, f_callback=None):
+        future = asyncio.ensure_future(self.dispatch_msg_coro(addr, header, body))
+        if f_callback is not None:
+            future.add_done_callback(f_callback)
 
 
-async def run_master(context : Context, master_addr, result_router_addr, result_receiver_address):
+async def run_client(context : Context, master_addr, result_router_addr, raw_result_receiver_address : str):
 
     result_router = ResultReceiverCommunicationRouter(context, result_router_addr, ResultMessageHandler())
 
     await asyncio.wait([
         asyncio.ensure_future(result_router.run()),
-        asyncio.ensure_future(simulate_task(context, master_addr, result_receiver_address))
+        asyncio.ensure_future(simulate_task(context, master_addr, raw_result_receiver_address))
     ])
 
 
-def main(master_addr, worker_router_addr):
+def main(master_addr, result_router_addr, raw_result_receiver_address : str):
     try:
         loop = ZMQEventLoop()
         asyncio.set_event_loop(loop)
 
         context = Context()
 
-        loop.run_until_complete(run_master(context, master_addr, worker_router_addr))
+        loop.run_until_complete(run_client(context, master_addr, result_router_addr, raw_result_receiver_address))
     except KeyboardInterrupt:
         print('\nFinished (interrupted)')
         sys.exit(0)

@@ -46,7 +46,7 @@ class WorkerIdentity(object):
 
 
 class Worker(WorkerIdentity):
-    def __init__(self, proc : subprocess.Pipen, task, addr = None):
+    def __init__(self, proc : subprocess.Popen, task, addr = None):
         super().__init__(addr)
         self._proc = proc
         self._task = task

@@ -18,14 +18,6 @@ class SingletonMeta(type):
         return cls.__instances[cls]
 
 
-def apply_metaclass_from_class(class_, metaclass_):
-    return metaclass_(class_.__name__, class_.__bases__, class_.__dict__)
-
-
-def make_singleton_class_from(class_):
-    return apply_metaclass_from_class(class_, SingletonMeta)
-
-
 async def coroutine_with_no_exception(coro, f_callback = None, *args, **kwargs):
     try:
         await coro

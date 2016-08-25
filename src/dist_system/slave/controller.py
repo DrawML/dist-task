@@ -7,6 +7,7 @@ from ..library import SingletonMeta
 from .worker import WorkerManager
 from .msg_dispatcher import *
 from ..protocol.slave_worker import *
+import binascii
 
 
 class WorkerCreator(metaclass=SingletonMeta):
@@ -20,13 +21,9 @@ class WorkerCreator(metaclass=SingletonMeta):
             'task_type' : task_type.to_str(),
             'task' : task.job.to_dict()
         })
-        str_data = serialized_data.decode(encoding='utf-8')
-        proc = subprocess.Popen([self._worker_file_name, str_data])
+        hex_data = serialized_data.hex()
+        proc = subprocess.Popen([self._worker_file_name, hex_data])
         return proc
-
-        #issue!!
-        #decode encoding type what?
-    ############################### SEE THIS!@@@
 
 
 async def run_polling_workers(result_re):

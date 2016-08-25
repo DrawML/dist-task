@@ -1,9 +1,9 @@
 
 from ..task.sleep_task import *
-from ..protocol import ResultReceiverAddress
+from ..result_receiver import ResultReceiverAddress
 from ..library import SingletonMeta
 from .main import *
-from .task import *
+from ..task.task import *
 from .controller import *
 
 
