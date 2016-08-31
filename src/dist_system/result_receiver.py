@@ -18,8 +18,8 @@ class ResultReceiverAddress(object):
         }
 
     @staticmethod
-    def from_dict(self, dict_ : dict):
-        ResultReceiverAddress(dict_['type'], dict_['ip'], dict_['port'])
+    def from_dict(dict_ : dict):
+        return ResultReceiverAddress(dict_['type'], dict_['ip'], dict_['port'])
 
     def to_zeromq_addr(self):
         # need to refine.
