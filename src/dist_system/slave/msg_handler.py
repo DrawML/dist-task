@@ -45,8 +45,8 @@ class MasterMessageHandler(metaclass=SingletonMeta):
         try:
             result_receiver_address = ResultReceiverAddress.from_dict(body['result_receiver_address'])
             task_type = TaskType.from_str(body['task_type'])
-            task = make_task_with_task_type(task_type,
-                                            task_token, result_receiver_address, SleepTaskJob.from_dict(body['task']))
+            task = make_task_with_task_type(task_type, body['task'],
+                                            task_token, result_receiver_address)
 
             TaskManager().add_task(task)
             proc = WorkerCreator().create(result_receiver_address, task_token, task_type, task)

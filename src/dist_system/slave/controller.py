@@ -8,6 +8,7 @@ from .worker import WorkerManager
 from .msg_dispatcher import *
 from ..protocol.slave_worker import *
 import binascii
+from .monitor.monitor import monitor
 
 
 class WorkerCreator(metaclass=SingletonMeta):
@@ -26,19 +27,29 @@ class WorkerCreator(metaclass=SingletonMeta):
         return proc
 
 
-async def run_polling_workers(result_re):
+async def run_polling_workers():
     POLLING_WORKERS_INTERVAL = 3
 
-    await asyncio.sleep(POLLING_WORKERS_INTERVAL)
-    expired_workers, leak_tasks = WorkerManager().purge()
-    for expired_worker in expired_workers:
-        WorkerManager().del_worker(expired_worker)
-    for leak_task in leak_tasks:
+    while True:
+        await asyncio.sleep(POLLING_WORKERS_INTERVAL)
+        expired_workers, leak_tasks = WorkerManager().purge()
+        for expired_worker in expired_workers:
+            WorkerManager().del_worker(expired_worker)
+        for leak_task in leak_tasks:
+            TaskManager().del_task(leak_task)
 
-        TaskManager().del_task(leak_task)
+            header, body = ResultReceiverCommunicatorWithSlave().communicate('task_finish_req', {
+                'status' : 'fail',
+                'task_token' : leak_task.task_token.to_bytes()
+            })
+            # nothing to do using response message...
 
-        header, body = ResultReceiverCommunicatorWithSlave().communicate('task_finish_req', {
-            'status' : 'fail',
-            'task_token' : leak_task.task_token.to_bytes()
-        })
-        # nothing to do using response message...
+
+async def monitor_information():
+    MONITORING_INTERVAL = 3
+
+    while True:
+        slave_information = await monitor()
+        await asyncio.sleep(MONITORING_INTERVAL)
+
+        MasterMessageDispatcher().dispatch_msg('slave_information', slave_information.to_dict())

@@ -27,21 +27,30 @@ class TaskValueError(ValueError):
 
 class TaskType(AutoIncrementEnum):
     TYPE_SLEEP_TASK = ()
-    #TYPE_TENSORFLOW_LEARNING = ()
-    #TYPE_TENSORFLOW_TEST = ()
+    TYPE_DATA_PROCESSING_TASK = ()
+    TYPE_TENSORFLOW_TASK = ()
 
     @staticmethod
     def from_str(task_type_str : str):
         if task_type_str == 'sleep_task':
             return TaskType.TYPE_SLEEP_TASK
+        elif task_type_str == 'data_processing_task':
+            return TaskType.TYPE_DATA_PROCESSING_TASK
+        elif task_type_str == 'tensorflow_task':
+            return TaskType.TYPE_TENSORFLOW_TASK
         else:
             return TaskTypeValueError(task_type_str + ' is invalid task type.')
 
     def to_str(self):
         if self == TaskType.TYPE_SLEEP_TASK:
             return 'sleep_task'
+        elif self == TaskType.TYPE_DATA_PROCESSING_TASK:
+            return 'data_processing_task'
+        elif self == TaskType.TYPE_TENSORFLOW_TASK:
+            return 'tensorflow_task'
         else:
             return TaskTypeValueError(self + ' is invalid task type.')
+
 
 class TaskJob(metaclass = ABCMeta):
     @abstractmethod
@@ -50,7 +59,7 @@ class TaskJob(metaclass = ABCMeta):
 
     @staticmethod
     @abstractmethod
-    def _from_dict(bytes_ : bytes):
+    def _from_dict(dict_ : dict):
         pass
 
     def to_dict(self):
@@ -60,9 +69,9 @@ class TaskJob(metaclass = ABCMeta):
             raise TaskValueError(str(e))
 
     @staticmethod
-    def from_dict(bytes_: bytes):
+    def from_dict(dict_: dict):
         try:
-            return TaskJob._from_dict(bytes_)
+            return TaskJob._from_dict(dict_)
         except Exception as e:
             raise TaskValueError(str(e))
 
@@ -74,7 +83,7 @@ class TaskResult(metaclass = ABCMeta):
 
     @staticmethod
     @abstractmethod
-    def _from_dict(bytes_ : bytes):
+    def _from_dict(dict_ : dict):
         pass
 
     def to_dict(self):
@@ -84,9 +93,9 @@ class TaskResult(metaclass = ABCMeta):
             raise TaskValueError(str(e))
 
     @staticmethod
-    def from_dict(bytes_: bytes):
+    def from_dict(dict_: dict):
         try:
-            return TaskResult._from_dict(bytes_)
+            return TaskResult._from_dict(dict_)
         except Exception as e:
             raise TaskValueError(str(e))
 

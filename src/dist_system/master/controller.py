@@ -2,8 +2,10 @@ import asyncio
 from .slave import *
 from .task import *
 from ..library import SingletonMeta
-from ..task.sleep_task import *
+from ..task.functions import get_task_type_of_task
 from .msg_dispatcher import *
+from typing import Iterable
+import random
 
 
 async def run_heartbeat():
@@ -33,7 +35,7 @@ class Scheduler(metaclass=SingletonMeta):
             client = task.client
 
             try:
-                slave = slave_manager.get_proper_slave(task)
+                slave = self._schedule(slave_manager.slaves, task)
             except NotAvailableSlaveError:
                 continue
 
@@ -45,3 +47,36 @@ class Scheduler(metaclass=SingletonMeta):
                 'task_token' : task.task_token.to_bytes(),
                 'task' : task.job.to_dict()
             })
+
+    def _schedule(self, slaves : Iterable, task) -> Slave:
+        __schedule_dict = {
+            TaskType.TYPE_SLEEP_TASK : self._schedule_sleep_task,
+            TaskType.TYPE_DATA_PROCESSING_TASK : self._schedule_data_processing_task,
+            TaskType.TYPE_TENSORFLOW_TASK : self._schedule_tensorflow_task
+        }
+        return __schedule_dict[get_task_type_of_task(task)](slaves, task)
+
+    def _schedule_sleep_task(self, slaves : Iterable, task) -> Slave:
+        return random.choice(slaves)
+
+    def _schedule_data_processing_task(self, slaves : Iterable, task) -> Slave:
+        best_slave = None
+        best_cpu_rest = None
+        for slave in slaves:
+            info = slave.slave_information
+            if info is None:
+                continue
+            cpu_rest = 0
+            for cpu_percent in info.cpu_info.cpu_percents:
+                cpu_rest += 100 - cpu_percent
+            if best_slave is None or best_cpu_rest < cpu_rest:
+                best_slave = slave
+                best_cpu_rest = cpu_rest
+
+        if best_slave is None:
+            raise NotAvailableSlaveError
+        return best_slave
+
+    def _schedule_tensorflow_task(self, slaves : Iterable, task) -> Slave:
+        # temporary... must be modified.
+        return random.choice(slaves)
