@@ -12,6 +12,7 @@ from ..protocol import master_slave, slave_worker, any_result_receiver
 from functools import partial
 from .msg_dispatcher import *
 from .result_receiver import *
+from .monitor.monitor import monitor
 
 
 class MasterConnection(metaclass=SingletonMeta):
@@ -143,7 +144,8 @@ async def run_master(context : Context, master_addr, worker_router_addr, worker_
     await asyncio.wait([
         asyncio.ensure_future(master_conn.run()),
         asyncio.ensure_future(worker_router.run()),
-        asyncio.ensure_future(run_polling_workers())
+        asyncio.ensure_future(run_polling_workers()),
+        asyncio.ensure_future(monitor_information())
     ])
 
 

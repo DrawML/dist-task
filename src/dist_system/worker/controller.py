@@ -6,6 +6,7 @@ from .result_receiver import *
 from ..task.task import *
 from ..task.sleep_task import *
 from .msg_dispatcher import *
+from ..task.functions import make_task_with_task_type
 
 
 class TaskInformation(object):
@@ -38,11 +39,7 @@ class TaskInformation(object):
         result_receiver_address = ResultReceiverAddress.from_dict(dict_['result_receiver_address'])
         task_token = TaskToken.from_bytes(dict_['task_token'])
         task_type = TaskType.from_str(dict_['task_type'])
-        if task_type == TaskType.TYPE_SLEEP_TASK:
-            task = SleepTask(task_token, result_receiver_address, SleepTaskJob.from_dict(dict_['task']))
-        else:
-            raise NotImplementedError("Not implemented Task Type.")
-
+        task = make_task_with_task_type(task_type, dict_['task'], 'worker', task_token, result_receiver_address)
         return TaskInformation(result_receiver_address, task_token, task_type, task)
 
 

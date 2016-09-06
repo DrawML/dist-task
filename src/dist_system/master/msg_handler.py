@@ -23,8 +23,8 @@ class ClientMessageHandler(metaclass=SingletonMeta):
             result_receiver_address = ResultReceiverAddress.from_dict(body['result_receiver_address'])
             task_token = TaskToken.generate_random_token()
             task_type = TaskType.from_str(body['task_type'])
-            task = make_task_with_task_type(task_type,
-                                            task_token, result_receiver_address, SleepTaskJob.from_dict(body['task']))
+            task = make_task_with_task_type(task_type, body['task'], 'master',
+                                            task_token, result_receiver_address)
 
             try:
                 session = ClientSession.make_session_from_identity(session_identity, task)
@@ -65,12 +65,11 @@ class ClientMessageHandler(metaclass=SingletonMeta):
 
         ClientMessageDispatcher().dispatch_msg(session_identity, 'task_register_res', res_body)
 
-
     def _h_task_register_ack(self, session_identity, body):
         try:
             session = ClientSessionManager().find_session(session_identity)
             task = session.task
-            TaskManager().change_task_status(task, TaskStatus.STATUS_WAITING)
+            TaskManager().change_task_status(task, TaskStatus.STATUS_PREPROCESSING_WAITING)
             ClientSessionManager().del_session(session)
         except ClientSessionValueError as e:
             # invalid message
@@ -226,10 +225,14 @@ class SlaveMessageHandler(metaclass=SingletonMeta):
 
         SlaveMessageDispatcher().dispatch_msg(slave_identity, 'slave_finish_res', res_body)
 
+    def _h_slave_information(self, slave_identity, body):
+        pass
+
     __handler_dict = {
         "heart_beat_res": _h_heart_beat_res,
         "slave_register_req": _h_slave_register_req,
         "task_register_res": _h_task_register_res,
         "task_cancel_res": _h_task_cancel_res,
-        "task_finish_req": _h_task_finish_req
+        "task_finish_req": _h_task_finish_req,
+        "slave_information": _h_slave_information
     }

@@ -9,9 +9,11 @@ class TaskStatusValueError(ValueError):
     def __str__(self):
         return "TaskStatusValueError : %s" % self._msg
 
+
 class TaskStatus(AutoIncrementEnum):
     STATUS_PENDING_ACK = ()
     STATUS_WAITING = ()
+    STATUS_PREPROCESSING = ()
     STATUS_PROCESSING = ()
     STATUS_COMPLETE = ()
 
@@ -21,11 +23,13 @@ class TaskManager(CommonTaskManager, metaclass=SingletonMeta):
     def __init__(self):
         self._pending_ack_tasks = []
         self._waiting_tasks = []
+        self._preprocessing_tasks = []
         self._processing_tasks = []
         self._complete_tasks = []
         self._dic_status_queue = {
             TaskStatus.STATUS_PENDING_ACK : self._pending_ack_tasks,
             TaskStatus.STATUS_WAITING : self._waiting_tasks,
+            TaskStatus.STATUS_PREPROCESSING : self._preprocessing_tasks,
             TaskStatus.STATUS_PROCESSING : self._processing_tasks,
             TaskStatus.STATUS_COMPLETE : self._complete_tasks
         }

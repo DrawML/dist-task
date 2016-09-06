@@ -12,6 +12,20 @@ class TensorflowGpuInformation(object):
             self.pci_bus_id, self.name, self.tf_device, self.mem_total, self.mem_free
         )
 
+    def to_dict(self):
+        return {
+            'pci_bus_id' : self.pci_bus_id,
+            'name' : self.name,
+            'tf_device' : self.tf_device,
+            'mem_total' : self.mem_total,
+            'mem_free' : self.mem_free
+        }
+
+    @staticmethod
+    def from_dict(dict_ : dict):
+        return TensorflowGpuInformation(dict_['pci_bus_id'], dict_['name'], dict_['tf_device'],
+                                        dict_['mem_total'], dict_['mem_free'])
+
 
 class CpuInformation(object):
 
@@ -23,6 +37,16 @@ class CpuInformation(object):
         return "CpuInformation(cpu_count={0}, cpu_percents={1})".format(
             self.cpu_count, self.cpu_percents
         )
+
+    def to_dict(self):
+        return {
+            'cpu_count': self.cpu_count,
+            'cpu_percents': self.cpu_percents,
+        }
+
+    @staticmethod
+    def from_dict(dict_: dict):
+        return CpuInformation(dict_['cpu_count'], dict_['cpu_percents'])
 
 
 class MemoryInformation(object):
@@ -36,6 +60,16 @@ class MemoryInformation(object):
             self.mem_total, self.mem_free
         )
 
+    def to_dict(self):
+        return {
+            'mem_total': self.mem_total,
+            'mem_free': self.mem_free,
+        }
+
+    @staticmethod
+    def from_dict(dict_: dict):
+        return MemoryInformation(dict_['mem_total'], dict_['mem_free'])
+
 
 class SlaveInformation(object):
 
@@ -48,3 +82,18 @@ class SlaveInformation(object):
         return "SlaveInformation(cpu_info=<{0}>, mem_info=<{1}>, tf_gpu_info_list=<{2}>)".format(
             self.cpu_info, self.mem_info, self.tf_gpu_info_list
         )
+
+    def to_dict(self):
+        d_tf_gpu_info_list = [x.to_dict() for x in self.tf_gpu_info_list]
+        return {
+            'cpu_info': self.cpu_info.to_dict(),
+            'mem_info': self.mem_info.to_dict(),
+            'tf_gpu_info_list': d_tf_gpu_info_list
+        }
+
+    @staticmethod
+    def from_dict(dict_: dict):
+        tf_gpu_info_list = [TensorflowGpuInformation.from_dict(x) for x in dict_['tf_gpu_info_list']]
+        return SlaveInformation(CpuInformation.from_dict(dict_['cpu_info']),
+                                MemoryInformation.from_dict(dict_['mem_info']),
+                                tf_gpu_info_list)

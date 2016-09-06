@@ -45,6 +45,6 @@ class SleepTask(Task):
         super().__init__(task_token, result_receiver_address, job)
 
     @Task.result.setter
-    def result(self, result: SleepTaskResult) -> SleepTaskResult:
+    def result(self, result: SleepTaskResult):
         assert isinstance(result, SleepTaskResult)
         self._result = result

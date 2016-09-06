@@ -36,6 +36,7 @@ class Slave(SlaveIdentity):
     def __init__(self, addr):
         super().__init__(addr)
         self._tasks = []
+        self._slave_information = None
         self.heartbeat()
 
     @property
@@ -66,6 +67,14 @@ class Slave(SlaveIdentity):
     def live(self):
         self._liveness -= 1
         return self._liveness > 0
+
+    @property
+    def slave_information(self):
+        return self._slave_information
+
+    @slave_information.setter
+    def slave_information(self, slave_information):
+        self._slave_information = slave_information
 
 
 class SlaveManager(metaclass=SingletonMeta):
@@ -122,7 +131,7 @@ class SlaveManager(metaclass=SingletonMeta):
             if task in slave.tasks:
                 return slave
         raise SlaveValueError("Non-existent Slave.")
-
+    """
     # Get proper slave for task.
     def get_proper_slave(self, task):
 
@@ -138,7 +147,7 @@ class SlaveManager(metaclass=SingletonMeta):
             raise NotAvailableSlaveError("Not available Slaves.")
         else:
             return proper_slave
-
+    """
     def purge(self):
         expired_slaves = []
         leak_tasks = []
