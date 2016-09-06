@@ -19,5 +19,5 @@ shopt -s nullglob
 for proto_file in *.proto 
 do
 	echo "Compile $proto_file..."
-	protoc --python_out=$output_path $proto_file
+	protoc --python_out="$output_path" "$proto_file"
 done

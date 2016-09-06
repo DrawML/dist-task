@@ -8,6 +8,12 @@
     gpu_memory_fraction=1
 """
 
+""" Run Config Argument.
+tf_device='/cpu:0' ('/gpu:0', ... can be placed in it)
+cpu_count=0 (means use of all cpu cores) (valid if tf_device='/cpu:0')
+gpu_memory_fraction = 1.0 (valid if tf_device='/gpu:*')
+and more if you think..(for logging..)
+"""
 
 class RunConfig:
     def __init__(self,
