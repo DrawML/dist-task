@@ -1,6 +1,5 @@
 """
     [config - default value]
-    device_count=1
     log_placement=False
     inter_threads_count=0
     intra_threads_count=0
@@ -17,63 +16,55 @@ and more if you think..(for logging..)
 
 class RunConfig:
     def __init__(self,
-                 device_count=1,
-                 log_placement=False,
-                 inter_threads_count=0,
-                 intra_threads_count=0,
-                 allow_soft_placement=False,
-                 gpu_memory_fraction=1):
-        self._device_count = device_count
-        self._log_placement = log_placement
-        self._inter_threads_count = inter_threads_count
-        self._intra_threads_count = intra_threads_count
-        self._allow_soft_placement = allow_soft_placement
+                 tf_device="/cpu:0",
+                 cpu_count=0,
+                 gpu_memory_fraction=1.0,
+                 log_placement=False):
+        self._tf_device = tf_device
+        self._cpu_count = cpu_count
         self._gpu_memory_fraction = gpu_memory_fraction
 
+        self._log_placement = log_placement
+        self._allow_soft_placement = False
+
     def __iter__(self):
-        for_iter = self.__dict__.items()
-        for key, value in for_iter:
+        for_iter = self.dictify()
+        for key, value in for_iter.items():
             yield (key, value)
 
-    @property
-    def device_count(self):
-        return self.device_count
+    def dictify(self):
+        config = dict()
+        config['device'] = self._tf_device
+        config['log_placement'] = self._log_placement
 
-    @device_count.setter
-    def device_count(self, val):
-        self.device_count = val
+        if "gpu" in self._tf_device:
+            config['allow_soft_placement'] = self._allow_soft_placement
+            config['gpu_memory_fraction'] = self._gpu_memory_fraction
+        else:
+            config['inter_threads_count'] = self._cpu_count
+            config['intra_threads_count'] = self._cpu_count
 
-    @property
-    def log_placement(self):
-        return self.log_placement
-
-    @log_placement.setter
-    def log_placement(self, val):
-        self._log_placement = val
+        return config
 
     @property
-    def inter_threads_count(self):
-        return self._inter_threads_count
+    def tf_device(self):
+        return self._tf_device
 
-    @inter_threads_count.setter
-    def inter_threads_count(self, val):
-        self._inter_threads_count = val
-
-    @property
-    def intra_threads_count(self):
-        return self._intra_threads_count
-
-    @intra_threads_count.setter
-    def intra_threads_count(self, val):
-        self._intra_threads_count = val
+    @tf_device.setter
+    def tf_device(self, val):
+        self._tf_device = val
+        if "gpu" in val:
+            self._allow_soft_placement = True
+        else:
+            self._allow_soft_placement = False
 
     @property
-    def allow_soft_placement(self):
-        return self._allow_soft_placement
+    def cpu_count(self):
+        return self._cpu_count
 
-    @allow_soft_placement.setter
-    def allow_soft_placement(self, val):
-        self._allow_soft_placement = val
+    @cpu_count.setter
+    def cpu_count(self, val):
+        self._cpu_count = val
 
     @property
     def gpu_memory_fraction(self):
@@ -82,3 +73,12 @@ class RunConfig:
     @gpu_memory_fraction.setter
     def gpu_memory_fraction(self, val):
         self._gpu_memory_fraction = val
+
+    @property
+    def log_placement(self):
+        return self._log_placement
+
+    @log_placement.setter
+    def log_placement(self, val):
+        self._log_placement = val
+
