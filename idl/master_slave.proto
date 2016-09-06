@@ -32,13 +32,17 @@ message TaskRegisterRequest
 	{
 		int32 seconds = 1;
 	}
-	
-	message TensorflowLearningTask
+
+	message DataProcessingTask
 	{
+		string data_file_token = 1;
+		string executable_code = 2;
 	}
 
-	message TensorflowTestTask 
+	message TensorflowTask
 	{
+		string data_file_token = 1;
+		string executable_code = 2;
 	}
 
 	ResultReceiverAddress result_receiver_address = 1;
@@ -46,8 +50,8 @@ message TaskRegisterRequest
 	oneof task
 	{
 		SleepTask sleep_task = 10;
-		TensorflowLearningTask tensorflow_learning_task = 11;
-		TensorflowTestTask tensorflow_test_task = 12;
+		DataProcessingTask data_processing_task = 11;
+		TensorflowTask tensorflow_task = 12;
 	}
 }
 
@@ -82,6 +86,34 @@ message TaskFinishResponse
 	bytes task_token = 3;
 }
 
+message SlaveInformationRequest
+{
+    message CpuInfo
+	{
+		int32 cpu_count = 1;
+		repeated float cpu_percents = 2;
+	}
+
+	message MemInfo
+	{
+		int64 mem_total = 1;
+		int64 mem_free = 2;
+	}
+
+	message TfGpuInfo
+	{
+		string pci_bus_id = 1;
+		string name = 2;
+		string tf_device = 3;
+		int64 mem_total = 4;
+		int64 mem_free = 5;
+	}
+
+    CpuInfo cpu_info = 1;
+	MemInfo mem_info = 2;
+	repeated TfGpuInfo tf_gpu_info_list = 3;
+}
+
 message Message 
 {
 	oneof body
@@ -96,6 +128,7 @@ message Message
 		TaskCancelResponse task_cancel_res = 8;
 		TaskFinishRequest task_finish_req = 9;
 		TaskFinishResponse task_finish_res = 10;
+		SlaveInformationRequest slave_information_req = 11;
 	}
 }
 

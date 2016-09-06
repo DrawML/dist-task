@@ -15,20 +15,24 @@ message TaskRegisterRequest
 		int32 seconds = 1;
 	}
 	
-	message TensorflowLearningTask
+	message DataProcessingTask
 	{
+        string data_file_token = 1;
+		string object_code = 2;
 	}
 
-	message TensorflowTestTask 
+	message TensorflowTask
 	{
+		string data_file_token = 1;
+		string object_code = 2;
 	}
 
 	ResultReceiverAddress result_receiver_address = 1;
 	oneof task
 	{
 		SleepTask sleep_task = 10;
-		TensorflowLearningTask tensorflow_learning_task = 11;
-		TensorflowTestTask tensorflow_test_task = 12;
+		DataProcessingTask data_processing_task = 11;
+		TensorflowTask tensorflow_task = 12;
 	}
 }
 
@@ -52,7 +56,6 @@ message TaskCancelResponse
 {
 	string status = 1;
 	string error_code = 2;
-	bytes task_token = 3;
 }
 
 message Message 
