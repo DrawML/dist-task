@@ -23,7 +23,7 @@ class ClientMessageHandler(metaclass=SingletonMeta):
             result_receiver_address = ResultReceiverAddress.from_dict(body['result_receiver_address'])
             task_token = TaskToken.generate_random_token()
             task_type = TaskType.from_str(body['task_type'])
-            task = make_task_with_task_type(task_type, body['task'],
+            task = make_task_with_task_type(task_type, body['task'], 'master',
                                             task_token, result_receiver_address)
 
             try:
@@ -65,12 +65,11 @@ class ClientMessageHandler(metaclass=SingletonMeta):
 
         ClientMessageDispatcher().dispatch_msg(session_identity, 'task_register_res', res_body)
 
-
     def _h_task_register_ack(self, session_identity, body):
         try:
             session = ClientSessionManager().find_session(session_identity)
             task = session.task
-            TaskManager().change_task_status(task, TaskStatus.STATUS_WAITING)
+            TaskManager().change_task_status(task, TaskStatus.STATUS_PREPROCESSING_WAITING)
             ClientSessionManager().del_session(session)
         except ClientSessionValueError as e:
             # invalid message

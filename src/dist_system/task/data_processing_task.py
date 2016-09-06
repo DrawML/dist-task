@@ -2,7 +2,17 @@ from .task import *
 
 
 class DataProcessingTaskJob(TaskJob):
-    pass
+
+    @staticmethod
+    def from_dict_with_whose_job(whose_job, dict_ : dict):
+        if whose_job == 'master':
+            return DataProcessingTaskMasterJob.from_dict(dict_)
+        elif whose_job == 'slave':
+            return DataProcessingTaskSlaveJob.from_dict(dict_)
+        elif whose_job == 'worker':
+            return DataProcessingTaskWorkerJob.from_dict(dict_)
+        else:
+            raise TaskValueError('Invalid whose_job.')
 
 
 class DataProcessingTaskMasterJob(TaskJob):

@@ -45,10 +45,13 @@ class MasterMessageHandler(metaclass=SingletonMeta):
         try:
             result_receiver_address = ResultReceiverAddress.from_dict(body['result_receiver_address'])
             task_type = TaskType.from_str(body['task_type'])
-            task = make_task_with_task_type(task_type, body['task'],
+            task = make_task_with_task_type(task_type, body['task'], 'slave',
                                             task_token, result_receiver_address)
 
             TaskManager().add_task(task)
+            TaskManager().change_task_status(task, TaskStatus.STATUS_PREPROCESSING)
+            preprocess_task(task)
+            TaskManager().change_task_status(task, TaskStatus.STATUS_PROCESSING)
             proc = WorkerCreator().create(result_receiver_address, task_token, task_type, task)
             WorkerManager().add_worker(Worker(proc, task))
 

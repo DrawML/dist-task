@@ -4,13 +4,13 @@ from .data_processing_task import *
 from .tensorflow_task import *
 
 
-def make_task_with_task_type(task_type: TaskType, job_dict: dict, *args, **kwargs):
+def make_task_with_task_type(task_type: TaskType, job_dict: dict, whose_job, *args, **kwargs):
     if task_type == TaskType.TYPE_SLEEP_TASK:
         return SleepTask(*args, **kwargs, job=SleepTaskJob.from_dict(job_dict))
     elif task_type == TaskType.TYPE_DATA_PROCESSING_TASK:
-        return DataProcessingTask(*args, **kwargs, job=DataProcessingTaskJob.from_dict(job_dict))
+        return DataProcessingTask(*args, **kwargs, job=DataProcessingTaskJob.from_dict_with_whose_job(whose_job, job_dict))
     elif task_type == TaskType.TYPE_TENSORFLOW_TASK:
-        return TensorflowTask(*args, **kwargs, job=TensorflowTaskJob.from_dict(job_dict))
+        return TensorflowTask(*args, **kwargs, job=TensorflowTaskJob.from_dict_with_whose_job(whose_job, job_dict))
     else:
         raise TaskTypeValueError("Invalid Task Type.")
 

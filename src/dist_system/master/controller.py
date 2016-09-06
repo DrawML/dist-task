@@ -3,6 +3,8 @@ from .slave import *
 from .task import *
 from ..library import SingletonMeta
 from ..task.functions import get_task_type_of_task
+from ..task.data_processing_task import *
+from ..task.tensorflow_task import *
 from .msg_dispatcher import *
 from typing import Iterable
 import random
@@ -21,6 +23,7 @@ async def run_heartbeat():
         TaskManager().redo_leak_task(leak_tasks)
 
 
+
 class Scheduler(metaclass=SingletonMeta):
 
     def invoke(self):
@@ -32,13 +35,13 @@ class Scheduler(metaclass=SingletonMeta):
         task_manager = TaskManager()
 
         for task in task_manager.waiting_tasks:
-            client = task.client
-
             try:
                 slave = self._schedule(slave_manager.slaves, task)
             except NotAvailableSlaveError:
                 continue
 
+            task_manager.change_task_status(task, TaskStatus.STATUS_PREPROCESSING)
+            self._preprocess_task(task)
             task_manager.change_task_status(task, TaskStatus.STATUS_PROCESSING)
             slave.assign_task(task)
 
@@ -47,6 +50,19 @@ class Scheduler(metaclass=SingletonMeta):
                 'task_token' : task.task_token.to_bytes(),
                 'task' : task.job.to_dict()
             })
+
+    def _preprocess_task(self, task):
+        task_type = get_task_type_of_task(task)
+        if task_type == TaskType.TYPE_SLEEP_TASK:
+            pass
+        elif task_type == TaskType.TYPE_DATA_PROCESSING_TASK:
+            executable_code = task.job.object_code
+            task.job = DataProcessingTaskSlaveJob(task.job.data_file_token, executable_code)
+        elif task_type == TaskType.TYPE_TENSORFLOW_TASK:
+            executable_code = task.job.object_code
+            task.job = TensorflowTaskSlaveJob(task.job.data_file_token, executable_code)
+        else:
+            raise NotImplementedError
 
     def _schedule(self, slaves : Iterable, task) -> Slave:
         __schedule_dict = {

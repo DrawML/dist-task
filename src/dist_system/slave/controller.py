@@ -4,6 +4,9 @@ from ..result_receiver import *
 from .result_receiver import *
 from .task import TaskManager
 from ..library import SingletonMeta
+from ..task.functions import get_task_type_of_task
+from ..task.tensorflow_task import *
+from ..task.data_processing_task import *
 from .worker import WorkerManager
 from .msg_dispatcher import *
 from ..protocol.slave_worker import *
@@ -25,6 +28,22 @@ class WorkerCreator(metaclass=SingletonMeta):
         hex_data = serialized_data.hex()
         proc = subprocess.Popen([self._worker_file_name, hex_data])
         return proc
+
+
+def preprocess_task(task):
+    task_type = get_task_type_of_task(task)
+    if task_type == TaskType.TYPE_SLEEP_TASK:
+        pass
+    elif task_type == TaskType.TYPE_DATA_PROCESSING_TASK:
+        data_filename = "data_filename"
+        executable_code_filename = "executable_code_filename"
+        task.job = DataProcessingTaskWorkerJob(data_filename, executable_code_filename)
+    elif task_type == TaskType.TYPE_TENSORFLOW_TASK:
+        data_filename = "data_filename"
+        executable_code_filename = "executable_code_filename"
+        task.job = TensorflowTaskWorkerJob(data_filename, executable_code_filename)
+    else:
+        raise NotImplementedError
 
 
 async def run_polling_workers():

@@ -152,6 +152,10 @@ class Task(metaclass = ABCMeta):
     def job(self) -> TaskJob:
         return self._job
 
+    @job.setter
+    def job(self, job):
+        self._job = job
+
     @property
     def result(self) -> TaskResult:
         return self._result
