@@ -23,7 +23,7 @@ class ResultReceiverAddress(object):
 
     def to_zeromq_addr(self):
         # need to refine.
-        return "{0}//{1}:{2}".format(self._type, self._ip, self._port)
+        return "{0}://{1}:{2}".format(self._type, self._ip, self._port)
 
 
 class ResultReceiverCommunicator(object):

@@ -5,6 +5,8 @@ from ..library import SingletonMeta
 from .main import *
 from ..task.task import *
 from .controller import *
+from ..logger import Logger
+import traceback
 
 
 class SlaveMessageHandler(metaclass=SingletonMeta):
@@ -13,7 +15,12 @@ class SlaveMessageHandler(metaclass=SingletonMeta):
 
     def handle_msg(self, header, body):
         msg_name = header
-        SlaveMessageHandler.__handler_dict[msg_name](self, body)
+        Logger().log("from slave, header={0}, body={1}".format(header, body))
+        try:
+            SlaveMessageHandler.__handler_dict[msg_name](self, body)
+        except Exception as e:
+            print(traceback.format_exc())
+        Logger().log("finish of handling slave message")
 
     def _h_worker_register_res(self, body):
         status = body['status']

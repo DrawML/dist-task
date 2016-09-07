@@ -10,7 +10,7 @@ from ..library import SingletonMeta
 
 
 class TaskTypeValueError(ValueError):
-    def __init__(self, msg):
+    def __init__(self, msg = ''):
         self._msg = msg
 
     def __str__(self):
@@ -18,7 +18,7 @@ class TaskTypeValueError(ValueError):
 
 
 class TaskValueError(ValueError):
-    def __init__(self, msg):
+    def __init__(self, msg = ''):
         self._msg = msg
 
     def __str__(self):
@@ -57,9 +57,9 @@ class TaskJob(metaclass = ABCMeta):
     def _to_dict(self):
         pass
 
-    @staticmethod
+    @classmethod
     @abstractmethod
-    def _from_dict(dict_ : dict):
+    def _from_dict(cls, dict_ : dict):
         pass
 
     def to_dict(self):
@@ -68,10 +68,10 @@ class TaskJob(metaclass = ABCMeta):
         except Exception as e:
             raise TaskValueError(str(e))
 
-    @staticmethod
-    def from_dict(dict_: dict):
+    @classmethod
+    def from_dict(cls, dict_: dict):
         try:
-            return TaskJob._from_dict(dict_)
+            return cls._from_dict(dict_)
         except Exception as e:
             raise TaskValueError(str(e))
 
@@ -81,9 +81,9 @@ class TaskResult(metaclass = ABCMeta):
     def _to_dict(self):
         pass
 
-    @staticmethod
+    @classmethod
     @abstractmethod
-    def _from_dict(dict_ : dict):
+    def _from_dict(cls, dict_ : dict):
         pass
 
     def to_dict(self):
@@ -92,10 +92,10 @@ class TaskResult(metaclass = ABCMeta):
         except Exception as e:
             raise TaskValueError(str(e))
 
-    @staticmethod
-    def from_dict(dict_: dict):
+    @classmethod
+    def from_dict(cls, dict_: dict):
         try:
-            return TaskResult._from_dict(dict_)
+            return cls._from_dict(dict_)
         except Exception as e:
             raise TaskValueError(str(e))
 
@@ -119,7 +119,7 @@ class TaskToken(object):
         return self._token
 
     @staticmethod
-    def from_bytes(self, bytes_ : bytes) -> 'TaskToken':
+    def from_bytes(bytes_ : bytes) -> 'TaskToken':
         return TaskToken(bytes_)
 
 

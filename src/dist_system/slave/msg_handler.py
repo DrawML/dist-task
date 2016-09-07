@@ -7,6 +7,8 @@ from .task import *
 from .controller import *
 from .msg_dispatcher import *
 from ..task.functions import *
+from ..logger import Logger
+import traceback
 
 
 class MasterMessageHandler(metaclass=SingletonMeta):
@@ -15,7 +17,12 @@ class MasterMessageHandler(metaclass=SingletonMeta):
 
     def handle_msg(self, header, body):
         msg_name = header
-        MasterMessageHandler.__handler_dict[msg_name](self, body)
+        Logger().log("from master, header={0}, body={1}".format(header, body))
+        try:
+            MasterMessageHandler.__handler_dict[msg_name](self, body)
+        except Exception as e:
+            print(traceback.format_exc())
+        Logger().log("finish of handling master message")
 
     def _h_heart_beat_req(self, body):
         MasterMessageDispatcher().dispatch_msg('heart_beat_res', {})
@@ -24,12 +31,12 @@ class MasterMessageHandler(metaclass=SingletonMeta):
         import sys
         try:
             status = body['status']
-            error_code = body['error_code']
 
             if status == 'success':
                 print('[*] Slave Register Success.')
             elif status == 'fail':
                 # cannot register itself to master.
+                error_code = body['error_code']
                 print("[!] Can't register itself to master. error_code =", error_code)
                 sys.exit(1)
             else:
@@ -56,14 +63,14 @@ class MasterMessageHandler(metaclass=SingletonMeta):
             WorkerManager().add_worker(Worker(proc, task))
 
             res_body = {
-                'task_token': task_token,
+                'task_token': task_token.to_bytes(),
                 'status': 'success'
             }
         except Exception as e:
             # invalid message
             print('[!]', e)
             res_body = {
-                'task_token': task_token,
+                'task_token': task_token.to_bytes(),
                 'status': 'fail',
                 'error_code': 'unknown'
             }
@@ -75,8 +82,9 @@ class MasterMessageHandler(metaclass=SingletonMeta):
         task_token = TaskToken.from_bytes(body['task_token'])
         try:
             task = TaskManager().find_task(task_token)
+            worker = WorkerManager().find_worker_having_task(task)
             try:
-                worker = WorkerManager().find_worker_having_task(task)
+                # why?? 나중에 보자!!!
                 WorkerManager().del_worker(worker)
 
                 WorkerMessageDispatcher().dispatch_msg(worker, 'task_cancel_req', {})
@@ -123,7 +131,12 @@ class WorkerMessageHandler(metaclass=SingletonMeta):
     def handle_msg(self, addr, header, body):
         worker_identity = WorkerIdentity(addr)
         msg_name = header
-        WorkerMessageHandler.__handler_dict[msg_name](self, worker_identity, body)
+        Logger().log("worker identity={0} header={1}, body={2}".format(worker_identity, header, body))
+        try:
+            WorkerMessageHandler.__handler_dict[msg_name](self, worker_identity, body)
+        except Exception as e:
+            print(traceback.format_exc())
+        Logger().log("finish of handling worker message")
 
     def _h_worker_register_req(self, worker_identity, body):
         task_token = TaskToken.from_bytes(body['task_token'])

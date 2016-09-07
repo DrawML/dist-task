@@ -12,6 +12,8 @@ from .msg_dispatcher import *
 from ..protocol import any_result_receiver, slave_worker
 from .result_receiver import *
 from functools import partial
+from ..logger import Logger
+import traceback
 
 
 class SlaveConnection(object):
@@ -24,6 +26,7 @@ class SlaveConnection(object):
     async def run(self, task_information : TaskInformation):
         self._dealer = self._context.socket(zmq.DEALER)
         self._dealer.connect(self._slave_addr)
+        Logger().log("slave connection to {0}".format(self._slave_addr))
         await self._register(task_information.task_token)
 
         while True:
@@ -46,11 +49,16 @@ class SlaveConnection(object):
         return msg[0]
 
     async def dispatch_msg_coro(self, header, body):
-        data = slave_worker.make_msg_data(header, body)
+        Logger().log("to slave, header={0}, body={1}".format(header, body))
+        try:
+            data = slave_worker.make_msg_data(header, body)
+        except Exception as e:
+            print(traceback.format_exc())
+            raise
         msg = [data]
         await self._dealer.send_multipart(msg)
 
-    def dispatch_msg(self, addr, header, body, f_callback=None):
+    def dispatch_msg(self, header, body, f_callback=None):
         future = asyncio.ensure_future(self.dispatch_msg_coro(header, body))
         if f_callback is not None:
             future.add_done_callback(f_callback)
@@ -66,6 +74,7 @@ class ResultReceiverCommunicationIO(metaclass=SingletonMeta):
         self._result_receiver_address = result_receiver_address
         self._sock = self._context.socket(zmq.REQ)
         self._sock.connect(result_receiver_address.to_zeromq_addr())
+        print("Connect to", result_receiver_address.to_zeromq_addr())
 
     def send_msg(self, msg_header, msg_body):
         assert self._sock is not None
@@ -85,18 +94,23 @@ class ResultReceiverCommunicationIO(metaclass=SingletonMeta):
 
 async def run_worker(context : Context, slave_addr, serialized_data : bytes):
 
-    header, body = any_result_receiver.parse_msg_data(serialized_data)
-    assert header == 'task_register'
+    import random
+    import time
+    Logger("Worker@" + str(time.time()) + "#" + str(random.randint(1, 10000000)))
+
+    header, body = slave_worker.parse_msg_data(serialized_data)
+    assert header == 'task_register_cmd'
     task_information = TaskInformation.from_dict(body)
 
     slave_conn = SlaveConnection(context, slave_addr, SlaveMessageHandler())
+    SlaveMessageDispatcher(slave_conn.dispatch_msg)
     result_receiver_communication_io = ResultReceiverCommunicationIO()
 
     ResultReceiverCommunicatorWithWorker(
-        partial(result_receiver_communication_io.connect, result_receiver_communication_io),
-        partial(result_receiver_communication_io.send_msg, result_receiver_communication_io),
-        partial(result_receiver_communication_io.recv_msg, result_receiver_communication_io),
-        partial(result_receiver_communication_io.close, result_receiver_communication_io)
+        result_receiver_communication_io.connect,
+        result_receiver_communication_io.send_msg,
+        result_receiver_communication_io.recv_msg,
+        result_receiver_communication_io.close,
     )
 
     await asyncio.wait([

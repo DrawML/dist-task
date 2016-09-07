@@ -24,8 +24,8 @@ class DataProcessingTaskMasterJob(TaskJob):
     def _to_dict(self) -> dict:
         return {'data_file_token': self._data_file_token, 'object_code': self._object_code }
 
-    @staticmethod
-    def _from_dict(dict_ : dict) -> 'DataProcessingTaskMasterJob':
+    @classmethod
+    def _from_dict(cls, dict_ : dict) -> 'DataProcessingTaskMasterJob':
         return DataProcessingTaskMasterJob(dict_['data_file_token'], dict_['object_code'])
 
     @property
@@ -46,8 +46,8 @@ class DataProcessingTaskSlaveJob(DataProcessingTaskJob):
     def _to_dict(self) -> dict:
         return {'data_file_token': self._data_file_token, 'executable_code': self._executable_code }
 
-    @staticmethod
-    def _from_dict(dict_ : dict) -> 'DataProcessingTaskSlaveJob':
+    @classmethod
+    def _from_dict(cls, dict_ : dict) -> 'DataProcessingTaskSlaveJob':
         return DataProcessingTaskSlaveJob(dict_['data_file_token'], dict_['executable_code'])
 
     @property
@@ -69,8 +69,8 @@ class DataProcessingTaskWorkerJob(DataProcessingTaskJob):
         return {'data_filename': self._data_filename,
                 'executable_code_filename': self._executable_code_filename }
 
-    @staticmethod
-    def _from_dict(dict_ : dict) -> 'DataProcessingTaskWorkerJob':
+    @classmethod
+    def _from_dict(cls, dict_ : dict) -> 'DataProcessingTaskWorkerJob':
         return DataProcessingTaskWorkerJob(dict_['data_filename'], dict_['executable_code_filename'])
 
     @property
@@ -93,8 +93,8 @@ class DataProcessingTaskResult(TaskResult):
         return {'stdout' : self._stdout, 'stderr' : self._stderr,
                 'result_file_token' : self._result_file_token }
 
-    @staticmethod
-    def _from_dict(dict_ : dict) -> 'DataProcessingTaskResult':
+    @classmethod
+    def _from_dict(cls, dict_ : dict) -> 'DataProcessingTaskResult':
         return DataProcessingTaskResult(dict_['stdout'], dict_['stderr'], dict_['result_file_token'])
 
     @property

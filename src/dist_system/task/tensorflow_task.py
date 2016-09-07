@@ -24,8 +24,8 @@ class TensorflowTaskMasterJob(TensorflowTaskJob):
     def _to_dict(self) -> dict:
         return {'data_file_token': self._data_file_token, 'object_code': self._object_code }
 
-    @staticmethod
-    def _from_dict(dict_ : dict) -> 'TensorflowTaskMasterJob':
+    @classmethod
+    def _from_dict(cls, dict_ : dict) -> 'TensorflowTaskMasterJob':
         return TensorflowTaskMasterJob(dict_['data_file_token'], dict_['object_code'])
 
     @property
@@ -46,8 +46,8 @@ class TensorflowTaskSlaveJob(TensorflowTaskJob):
     def _to_dict(self) -> dict:
         return {'data_file_token': self._data_file_token, 'executable_code': self._executable_code }
 
-    @staticmethod
-    def _from_dict(dict_ : dict) -> 'TensorflowTaskSlaveJob':
+    @classmethod
+    def _from_dict(cls, dict_ : dict) -> 'TensorflowTaskSlaveJob':
         return TensorflowTaskSlaveJob(dict_['data_file_token'], dict_['executable_code'])
 
     @property
@@ -69,8 +69,8 @@ class TensorflowTaskWorkerJob(TensorflowTaskJob):
         return {'data_filename': self._data_filename,
                 'executable_code_filename': self._executable_code_filename }
 
-    @staticmethod
-    def _from_dict(dict_ : dict) -> 'TensorflowTaskWorkerJob':
+    @classmethod
+    def _from_dict(cls, dict_ : dict) -> 'TensorflowTaskWorkerJob':
         return TensorflowTaskWorkerJob(dict_['data_filename'], dict_['executable_code_filename'])
 
     @property
@@ -93,8 +93,8 @@ class TensorflowTaskResult(TaskResult):
         return {'stdout' : self._stdout, 'stderr' : self._stderr,
                 'result_file_token' : self._result_file_token }
 
-    @staticmethod
-    def _from_dict(dict_ : dict) -> 'TensorflowTaskResult':
+    @classmethod
+    def _from_dict(cls, dict_ : dict) -> 'TensorflowTaskResult':
         return TensorflowTaskResult(dict_['stdout'], dict_['stderr'], dict_['result_file_token'])
 
     @property

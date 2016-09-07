@@ -17,13 +17,13 @@ message TaskRegisterCMD
 
 	message DataProcessingTask
 	{
-		string data_file_token = 1;
+		string data_filename = 1;
 		string executable_code_filename = 2;
 	}
 
 	message TensorflowTask
 	{
-		string data_file_token = 1;
+		string data_filename = 1;
 		string executable_code_filename = 2;
 	}
 

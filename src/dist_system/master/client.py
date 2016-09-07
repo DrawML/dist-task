@@ -2,7 +2,7 @@ from ..library import SingletonMeta
 
 
 class ClientSessionValueError(ValueError):
-    def __init__(self, msg):
+    def __init__(self, msg = ''):
         self._msg = msg
 
     def __str__(self):
@@ -20,6 +20,9 @@ class ClientSessionIdentity(object):
     @property
     def addr(self):
         return self._addr
+
+    def __repr__(self):
+        return str(self._addr)
 
 
 class ClientSession(ClientSessionIdentity):

@@ -7,6 +7,7 @@ from ..task.task import *
 from ..task.sleep_task import *
 from .msg_dispatcher import *
 from ..task.functions import make_task_with_task_type
+import traceback
 
 
 class TaskInformation(object):
@@ -44,23 +45,21 @@ class TaskInformation(object):
 
 
 async def _do_sleep_task(sleep_task : SleepTask):
-    global _sleep_task_cnt
-    if _sleep_task_cnt is None:
-        _sleep_task_cnt = 0
-    _sleep_task_cnt += 1
 
+    print("-------before sleep--------")
     await asyncio.sleep(sleep_task.job.seconds)
-    sleep_task.result = SleepTaskResult('{0}th sleep..'.format(_sleep_task_cnt))
+    print("+++++++after sleep++++++++")
+    sleep_task.result = SleepTaskResult('sleep{0}..'.format(random.randint(1,1000000)))
 
 
 async def _report_task_result(context : Context, task_info : TaskInformation):
 
     sock = context.socket(zmq.DEALER)
     sock.connect(task_info.result_receiver_address.to_zeromq_addr())
-
     header, body = ResultReceiverCommunicatorWithWorker().communicate(
         task_info.result_receiver_address, 'task_result_req', {
         'status' : 'complete',
+        'task_type' : task_info.task_type.to_str(),
         'task_token' : task_info.task_token.to_bytes(),
         'result' : task_info.task.result.to_dict()
     })
@@ -75,13 +74,16 @@ async def _report_task_result(context : Context, task_info : TaskInformation):
 
 
 async def do_task(context : Context, task_info : TaskInformation):
+    try:
+        if task_info.task_type == TaskType.TYPE_SLEEP_TASK:
+            await _do_sleep_task(task_info.task)
+        else:
+            raise TaskTypeValueError("Invalid Task Type.")
 
-    if task_info.task_type == TaskType.TYPE_SLEEP_TASK:
-        await _do_sleep_task(task_info.task)
-    else:
-        raise TaskTypeValueError("Invalid Task Type.")
-
-    await _report_task_result(context, task_info)
+        await _report_task_result(context, task_info)
+    except Exception as e:
+        print(traceback.format_exc())
+        raise
 
     """
     tensorflow 관련 task 실행시킬 땐,

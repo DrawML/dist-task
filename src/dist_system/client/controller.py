@@ -4,11 +4,11 @@ from ..task.task import *
 from .task import TaskManager
 
 
-async def register_task_to_master(context, master_addr, raw_result_receiver_address : str, task_type, job):
+async def register_task_to_master(context, master_addr, result_receiver_address, task_type, job):
     conn = main.MasterConnection(context, master_addr)
     conn.connect()
     await conn.dispatch_msg_coro('task_register_req', {
-        'result_receiver_address' : raw_result_receiver_address,
+        'result_receiver_address' : result_receiver_address.to_dict(),
         'task_type' : task_type.to_str(),
         'task' : job.to_dict()
     })
@@ -21,7 +21,7 @@ async def register_task_to_master(context, master_addr, raw_result_receiver_addr
 
     if status == 'success':
         await conn.dispatch_msg_coro('task_register_ack', {})
-        task = make_task_with_task_type(task_type, job.to_dict(), 'master', task_token, raw_result_receiver_address)
+        task = make_task_with_task_type(task_type, job.to_dict(), 'master', task_token, result_receiver_address)
         TaskManager().add_task(task)
     elif status == 'fail':
         error_code = body['error_code']

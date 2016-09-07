@@ -9,8 +9,8 @@ class SleepTaskJob(TaskJob):
     def _to_dict(self) -> dict:
         return {'seconds' : self._seconds }
 
-    @staticmethod
-    def _from_dict(dict_ : dict) -> 'SleepTaskJob':
+    @classmethod
+    def _from_dict(cls, dict_ : dict) -> 'SleepTaskJob':
         return SleepTaskJob(dict_['seconds'])
 
     @property
@@ -26,8 +26,8 @@ class SleepTaskResult(TaskResult):
     def _to_dict(self) -> dict:
         return {'comment' : self._comment }
 
-    @staticmethod
-    def _from_dict(dict_ : dict) -> 'SleepTaskResult':
+    @classmethod
+    def _from_dict(cls, dict_ : dict) -> 'SleepTaskResult':
         return SleepTaskResult(dict_['comment'])
 
     @property

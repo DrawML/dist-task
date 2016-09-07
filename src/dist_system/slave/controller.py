@@ -12,6 +12,7 @@ from .msg_dispatcher import *
 from ..protocol.slave_worker import *
 import binascii
 from .monitor.monitor import monitor
+from ..logger import Logger
 
 
 class WorkerCreator(metaclass=SingletonMeta):
@@ -19,7 +20,7 @@ class WorkerCreator(metaclass=SingletonMeta):
         self._worker_file_name = worker_file_name
 
     def create(self, result_receiver_address, task_token, task_type, task):
-        serialized_data = make_msg_data('task_register', {
+        serialized_data = make_msg_data('task_register_cmd', {
             'result_receiver_address' : result_receiver_address.to_dict(),
             'task_token' : task_token.to_bytes(),
             'task_type' : task_type.to_str(),
@@ -71,4 +72,4 @@ async def monitor_information():
         slave_information = await monitor()
         await asyncio.sleep(MONITORING_INTERVAL)
 
-        MasterMessageDispatcher().dispatch_msg('slave_information', slave_information.to_dict())
+        MasterMessageDispatcher().dispatch_msg('slave_information_req', slave_information.to_dict())

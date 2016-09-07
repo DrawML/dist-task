@@ -13,6 +13,8 @@ from functools import partial
 from .msg_dispatcher import *
 from .result_receiver import *
 from .monitor.monitor import monitor
+from ..logger import Logger
+import traceback
 
 
 class MasterConnection(metaclass=SingletonMeta):
@@ -25,6 +27,7 @@ class MasterConnection(metaclass=SingletonMeta):
     async def run(self):
         self._dealer = self._context.socket(zmq.DEALER)
         self._dealer.connect(self._master_addr)
+        Logger().log("master connection to {0}".format(self._master_addr))
         await self._register()
 
         while True:
@@ -32,7 +35,7 @@ class MasterConnection(metaclass=SingletonMeta):
             self._process(msg)
 
     async def _register(self):
-        await self.dispatch_msg_coro('slave_register_req', '')
+        await self.dispatch_msg_coro('slave_register_req', {})
 
     def _process(self, msg):
         data = self._resolve_msg(msg)
@@ -45,7 +48,12 @@ class MasterConnection(metaclass=SingletonMeta):
         return msg[0]
 
     async def dispatch_msg_coro(self, header, body):
-        data = master_slave.make_msg_data(header, body)
+        Logger().log("to master, header={0}, body={1}".format(header, body))
+        try:
+            data = master_slave.make_msg_data(header, body)
+        except Exception as e:
+            print(traceback.format_exc())
+            raise
         msg = [data]
         await self._dealer.send_multipart(msg)
 
@@ -65,6 +73,7 @@ class WorkerRouter(metaclass=SingletonMeta):
     async def run(self):
         self._router = self._context.socket(zmq.ROUTER)
         self._router.bind(self._addr)
+        Logger().log("worker router bind to {0}".format(self._addr))
 
         while True:
             msg = await self._router.recv_multipart()
@@ -84,8 +93,13 @@ class WorkerRouter(metaclass=SingletonMeta):
         return addr, data
 
     async def dispatch_msg_coro(self, worker_identity, header, body):
+        Logger().log("to worker({0}), header={1}, body={2}".format(worker_identity, header, body))
         addr = worker_identity.addr
-        data = slave_worker.make_msg_data(header, body)
+        try:
+            data = slave_worker.make_msg_data(header, body)
+        except Exception as e:
+            print(traceback.format_exc())
+            raise
         msg = [addr, data]
         await self._router.send_multipart(msg)
 
@@ -122,28 +136,30 @@ class ResultReceiverCommunicationIO(metaclass=SingletonMeta):
         self._sock = None
 
 
-async def run_master(context : Context, master_addr, worker_router_addr, worker_file_name):
+async def run_slave(context : Context, master_addr, worker_router_addr, worker_file_name):
 
+    Logger("Slave")
     TaskManager()
+    WorkerManager()
 
     master_conn = MasterConnection(context, master_addr, MasterMessageHandler())
     worker_router = WorkerRouter(context, worker_router_addr, WorkerMessageHandler())
     result_receiver_communication_io = ResultReceiverCommunicationIO()
 
-    MasterMessageDispatcher(partial(master_conn.dispatch_msg, master_conn))
-    WorkerMessageDispatcher(partial(worker_router.dispatch_msg, worker_router))
+    MasterMessageDispatcher(master_conn.dispatch_msg)
+    WorkerMessageDispatcher(worker_router.dispatch_msg)
     ResultReceiverCommunicatorWithSlave(
-        partial(result_receiver_communication_io.connect, result_receiver_communication_io),
-        partial(result_receiver_communication_io.send_msg, result_receiver_communication_io),
-        partial(result_receiver_communication_io.recv_msg, result_receiver_communication_io),
-        partial(result_receiver_communication_io.close, result_receiver_communication_io)
+        result_receiver_communication_io.connect,
+        result_receiver_communication_io.send_msg,
+        result_receiver_communication_io.recv_msg,
+        result_receiver_communication_io.close,
     )
 
     WorkerCreator(worker_file_name)
 
     await asyncio.wait([
+        asyncio.ensure_future(worker_router.run()),  # must be first.
         asyncio.ensure_future(master_conn.run()),
-        asyncio.ensure_future(worker_router.run()),
         asyncio.ensure_future(run_polling_workers()),
         asyncio.ensure_future(monitor_information())
     ])
@@ -156,7 +172,7 @@ def main(master_addr, worker_router_addr, worker_file_name):
 
         context = Context()
 
-        loop.run_until_complete(run_master(context, master_addr, worker_router_addr, worker_file_name))
+        loop.run_until_complete(run_slave(context, master_addr, worker_router_addr, worker_file_name))
     except KeyboardInterrupt:
         print('\nFinished (interrupted)')
         sys.exit(0)

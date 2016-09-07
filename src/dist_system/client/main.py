@@ -15,6 +15,8 @@ from ..task.task import *
 from ..task.functions import *
 from .task import TaskManager
 from .simulator import simulate_task
+from ..logger import Logger
+import traceback
 
 
 class MasterConnection(object):
@@ -26,20 +28,27 @@ class MasterConnection(object):
     def connect(self):
         self._sock = self._context.socket(zmq.REQ)
         self._sock.connect(self._master_addr)
+        Logger().log("master connection to {0}".format(self._master_addr))
 
     def close(self):
         self._sock.close()
 
     async def recv_msg(self):
         msg = await self._sock.recv_multipart()
+        Logger().log("master connection recv a message : {0}".format(msg))
         data = self._resolve_msg(msg)
-        header, body = client_master.parse_msg_data(data)
+        try:
+            header, body = client_master.parse_msg_data(data)
+        except BaseException as e:
+            print(e)
+            raise
         return header, body
 
     def _resolve_msg(self, msg):
         return msg[0]
 
     async def dispatch_msg_coro(self, header, body):
+        Logger().log("to master, header={0}, body={1}".format(header, body))
         data = client_master.make_msg_data(header, body)
         msg = [data]
         await self._sock.send_multipart(msg)
@@ -60,6 +69,7 @@ class ResultReceiverCommunicationRouter(metaclass=SingletonMeta):
     async def run(self):
         self._router = self._context.socket(zmq.ROUTER)
         self._router.bind(self._addr)
+        Logger().log("result router bind to {0}".format(self._addr))
 
         while True:
             msg = await self._router.recv_multipart()
@@ -67,20 +77,23 @@ class ResultReceiverCommunicationRouter(metaclass=SingletonMeta):
 
     def _process(self, msg):
         addr, data = self._resolve_msg(msg)
-        header, body = any_result_receiver.parse_msg_data(data)
+        try:
+            header, body = any_result_receiver.parse_msg_data(data)
+        except Exception as e:
+            print(traceback.format_exc())
 
         # handle message
         self._msg_handler.handle_msg(addr, header, body)
 
     def _resolve_msg(self, msg):
         addr = msg[0]
-        data = msg[1]
+        data = msg[2]
 
         return addr, data
 
     async def dispatch_msg_coro(self, addr, header, body):
         data = any_result_receiver.make_msg_data(header, body)
-        msg = [addr, data]
+        msg = [addr, b'', data]
         await self._router.send_multipart(msg)
 
     def dispatch_msg(self, addr, header, body, f_callback=None):
@@ -89,24 +102,25 @@ class ResultReceiverCommunicationRouter(metaclass=SingletonMeta):
             future.add_done_callback(f_callback)
 
 
-async def run_client(context : Context, master_addr, result_router_addr, raw_result_receiver_address : str):
+async def run_client(context : Context, master_addr, result_router_addr, result_receiver_address):
 
+    Logger('Client')
     result_router = ResultReceiverCommunicationRouter(context, result_router_addr, ResultMessageHandler())
 
     await asyncio.wait([
         asyncio.ensure_future(result_router.run()),
-        asyncio.ensure_future(simulate_task(context, master_addr, raw_result_receiver_address))
+        asyncio.ensure_future(simulate_task(context, master_addr, result_receiver_address))
     ])
 
 
-def main(master_addr, result_router_addr, raw_result_receiver_address : str):
+def main(master_addr, result_router_addr, result_receiver_address):
     try:
         loop = ZMQEventLoop()
         asyncio.set_event_loop(loop)
 
         context = Context()
 
-        loop.run_until_complete(run_client(context, master_addr, result_router_addr, raw_result_receiver_address))
+        loop.run_until_complete(run_client(context, master_addr, result_router_addr, result_receiver_address))
     except KeyboardInterrupt:
         print('\nFinished (interrupted)')
         sys.exit(0)

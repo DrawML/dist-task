@@ -6,7 +6,7 @@ import subprocess
 
 
 class WorkerValueError(ValueError):
-    def __init__(self, msg):
+    def __init__(self, msg = ''):
         self._msg = msg
 
     def __str__(self):
@@ -27,6 +27,9 @@ class WorkerIdentity(object):
             return self._addr == other._addr
         else:
             return False
+
+    def __repr__(self):
+        return "<{0}, {1}>".format(str(self._addr), str(self._valid))
 
     def get_lazy_identity(self, worker_identity):
         self._addr = worker_identity.addr
@@ -64,7 +67,6 @@ class WorkerManager(metaclass=SingletonMeta):
 
     def __init__(self):
         self._workers = []
-        self._dic_task_worker = {}
 
     @property
     def count(self):
@@ -79,7 +81,6 @@ class WorkerManager(metaclass=SingletonMeta):
     def del_worker(self, worker_identity):
         worker = self._from_generic_to_worker(worker_identity)
         self._workers.remove(worker)
-        del self._dic_task_worker[worker.task]
 
     def _from_generic_to_worker(self, identity_or_worker):
         if type(identity_or_worker) == WorkerIdentity:
@@ -106,10 +107,10 @@ class WorkerManager(metaclass=SingletonMeta):
             raise WorkerValueError("Non-existent Worker.")
 
     def find_worker_having_task(self, task):
-        try:
-            self._dic_task_worker[task]
-        except KeyError:
-            raise WorkerValueError("Non-existent Worker.")
+        targets = [w for w in self._workers if w.task == task]
+        if len(targets) == 0:
+            raise WorkerValueError("No worker that has a task.")
+        return targets[0]
 
     def purge(self):
         expired_workers = []

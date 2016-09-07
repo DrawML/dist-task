@@ -8,6 +8,7 @@ from ..task.tensorflow_task import *
 from .msg_dispatcher import *
 from typing import Iterable
 import random
+from ..logger import Logger
 
 
 async def run_heartbeat():
@@ -22,6 +23,8 @@ async def run_heartbeat():
         expired_slaves, leak_tasks = SlaveManager().purge()
         TaskManager().redo_leak_task(leak_tasks)
 
+        for slave in expired_slaves:
+            Logger().log("Expired Slave : {0}".format(str(slave)))
 
 
 class Scheduler(metaclass=SingletonMeta):
@@ -48,6 +51,7 @@ class Scheduler(metaclass=SingletonMeta):
             SlaveMessageDispatcher().dispatch_msg(slave, 'task_register_req', {
                 'result_receiver_address' : task.result_receiver_address.to_dict(),
                 'task_token' : task.task_token.to_bytes(),
+                'task_type' : get_task_type_of_task(task).to_str(),
                 'task' : task.job.to_dict()
             })
 
@@ -73,6 +77,8 @@ class Scheduler(metaclass=SingletonMeta):
         return __schedule_dict[get_task_type_of_task(task)](slaves, task)
 
     def _schedule_sleep_task(self, slaves : Iterable, task) -> Slave:
+        if not slaves:
+            raise NotAvailableSlaveError
         return random.choice(slaves)
 
     def _schedule_data_processing_task(self, slaves : Iterable, task) -> Slave:
@@ -95,4 +101,6 @@ class Scheduler(metaclass=SingletonMeta):
 
     def _schedule_tensorflow_task(self, slaves : Iterable, task) -> Slave:
         # temporary... must be modified.
+        if not slaves:
+            raise NotAvailableSlaveError
         return random.choice(slaves)

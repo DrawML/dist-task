@@ -5,6 +5,8 @@ from .task import *
 from .controller import *
 from ..task.functions import *
 from . import main
+from ..logger import Logger
+import traceback
 
 
 class ResultMessageHandler(metaclass=SingletonMeta):
@@ -13,7 +15,12 @@ class ResultMessageHandler(metaclass=SingletonMeta):
 
     def handle_msg(self, addr, header, body):
         msg_name = header
-        ResultMessageHandler.__handler_dict[msg_name](self, addr, body)
+        Logger().log("result addr={0} header={1}, body={2}".format(addr, header, body))
+        try:
+            ResultMessageHandler.__handler_dict[msg_name](self, addr, body)
+        except Exception as e:
+            print(traceback.format_exc())
+        Logger().log("finish of handling result message")
 
     def _h_task_result_req(self, addr, body):
         try:
