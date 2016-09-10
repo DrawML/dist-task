@@ -9,6 +9,8 @@ from .msg_dispatcher import *
 from typing import Iterable
 import random
 from ..logger import Logger
+from .virtualizer.linker import link
+from .virtualizer.config import RunConfig
 
 
 async def run_heartbeat():
@@ -39,12 +41,12 @@ class Scheduler(metaclass=SingletonMeta):
 
         for task in task_manager.waiting_tasks:
             try:
-                slave = self._schedule(slave_manager.slaves, task)
+                slave, run_config = self._schedule(slave_manager.slaves, task)
             except NotAvailableSlaveError:
                 continue
 
             task_manager.change_task_status(task, TaskStatus.STATUS_PREPROCESSING)
-            self._preprocess_task(task)
+            self._preprocess_task(task, run_config)
             task_manager.change_task_status(task, TaskStatus.STATUS_PROCESSING)
             slave.assign_task(task)
 
@@ -55,15 +57,15 @@ class Scheduler(metaclass=SingletonMeta):
                 'task' : task.job.to_dict()
             })
 
-    def _preprocess_task(self, task):
+    def _preprocess_task(self, task, run_config : RunConfig):
         task_type = get_task_type_of_task(task)
         if task_type == TaskType.TYPE_SLEEP_TASK:
             pass
         elif task_type == TaskType.TYPE_DATA_PROCESSING_TASK:
-            executable_code = task.job.object_code
+            executable_code = link(task.job.object_code, run_config)
             task.job = DataProcessingTaskSlaveJob(task.job.data_file_token, executable_code)
         elif task_type == TaskType.TYPE_TENSORFLOW_TASK:
-            executable_code = task.job.object_code
+            executable_code = link(task.job.object_code, run_config)
             task.job = TensorflowTaskSlaveJob(task.job.data_file_token, executable_code)
         else:
             raise NotImplementedError
@@ -79,7 +81,7 @@ class Scheduler(metaclass=SingletonMeta):
     def _schedule_sleep_task(self, slaves : Iterable, task) -> Slave:
         if not slaves:
             raise NotAvailableSlaveError
-        return random.choice(slaves)
+        return random.choice(slaves), None
 
     def _schedule_data_processing_task(self, slaves : Iterable, task) -> Slave:
         best_slave = None
@@ -97,10 +99,10 @@ class Scheduler(metaclass=SingletonMeta):
 
         if best_slave is None:
             raise NotAvailableSlaveError
-        return best_slave
+        return best_slave, RunConfig()
 
     def _schedule_tensorflow_task(self, slaves : Iterable, task) -> Slave:
         # temporary... must be modified.
         if not slaves:
             raise NotAvailableSlaveError
-        return random.choice(slaves)
+        return random.choice(slaves), RunConfig()

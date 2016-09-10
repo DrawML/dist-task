@@ -13,6 +13,7 @@ from ..protocol.slave_worker import *
 import binascii
 from .monitor.monitor import monitor
 from ..logger import Logger
+from .file import *
 
 
 class WorkerCreator(metaclass=SingletonMeta):
@@ -37,11 +38,11 @@ def preprocess_task(task):
         pass
     elif task_type == TaskType.TYPE_DATA_PROCESSING_TASK:
         data_filename = "data_filename"
-        executable_code_filename = "executable_code_filename"
+        executable_code_filename = FileManager().store(task, FileType.TYPE_EXECUTABLE_CODE_FILE, task.job.executable_code)
         task.job = DataProcessingTaskWorkerJob(data_filename, executable_code_filename)
     elif task_type == TaskType.TYPE_TENSORFLOW_TASK:
         data_filename = "data_filename"
-        executable_code_filename = "executable_code_filename"
+        executable_code_filename = FileManager().store(task, FileType.TYPE_EXECUTABLE_CODE_FILE, task.job.executable_code)
         task.job = TensorflowTaskWorkerJob(data_filename, executable_code_filename)
     else:
         raise NotImplementedError
@@ -57,6 +58,7 @@ async def run_polling_workers():
             WorkerManager().del_worker(expired_worker)
         for leak_task in leak_tasks:
             TaskManager().del_task(leak_task)
+            FileManager().remove_files_using_key(leak_task)
 
             header, body = ResultReceiverCommunicatorWithSlave().communicate('task_finish_req', {
                 'status' : 'fail',

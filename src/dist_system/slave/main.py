@@ -15,6 +15,8 @@ from .result_receiver import *
 from .monitor.monitor import monitor
 from ..logger import Logger
 import traceback
+from .file import FileManager
+import os
 
 
 class MasterConnection(metaclass=SingletonMeta):
@@ -141,6 +143,7 @@ async def run_slave(context : Context, master_addr, worker_router_addr, worker_f
     Logger("Slave")
     TaskManager()
     WorkerManager()
+    FileManager(os.path.dirname(os.sys.modules[__name__].__file__) + '/files')
 
     master_conn = MasterConnection(context, master_addr, MasterMessageHandler())
     worker_router = WorkerRouter(context, worker_router_addr, WorkerMessageHandler())

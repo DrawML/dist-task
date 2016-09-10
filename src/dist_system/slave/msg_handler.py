@@ -9,6 +9,7 @@ from .msg_dispatcher import *
 from ..task.functions import *
 from ..logger import Logger
 import traceback
+from .file import *
 
 
 class MasterMessageHandler(metaclass=SingletonMeta):
@@ -86,6 +87,7 @@ class MasterMessageHandler(metaclass=SingletonMeta):
             try:
                 # why?? 나중에 보자!!!
                 WorkerManager().del_worker(worker)
+                FileManager().remove_files_of_task(task)
 
                 WorkerMessageDispatcher().dispatch_msg(worker, 'task_cancel_req', {})
                 # 여기서 worker를 지우므로 worker로 부터 Task Cancel Res는 받을 수 없다.
@@ -178,6 +180,7 @@ class WorkerMessageHandler(metaclass=SingletonMeta):
             worker = WorkerManager().find_worker(worker_identity)
             WorkerManager().del_worker(worker)
             TaskManager().del_task(worker.task)
+            FileManager().remove_files_using_key(worker.task)
 
             res_body = {
                 'status': 'success',
