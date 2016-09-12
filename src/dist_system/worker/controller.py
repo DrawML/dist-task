@@ -8,6 +8,7 @@ from ..task.sleep_task import *
 from .msg_dispatcher import *
 from ..task.functions import make_task_with_task_type
 import traceback
+from ..logger import Logger
 
 
 class TaskInformation(object):
@@ -46,9 +47,9 @@ class TaskInformation(object):
 
 async def _do_sleep_task(sleep_task : SleepTask):
 
-    print("-------before sleep--------")
+    Logger().log("-------before sleep--------")
     await asyncio.sleep(sleep_task.job.seconds)
-    print("+++++++after sleep++++++++")
+    Logger().log("+++++++after sleep++++++++")
     sleep_task.result = SleepTaskResult('sleep{0}..'.format(random.randint(1,1000000)))
 
 
@@ -82,7 +83,7 @@ async def do_task(context : Context, task_info : TaskInformation):
 
         await _report_task_result(context, task_info)
     except Exception as e:
-        print(traceback.format_exc())
+        Logger().log("Unknown Exception occurs!\n" + traceback.format_exc())
         raise
 
     """

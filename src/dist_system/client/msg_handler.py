@@ -19,7 +19,7 @@ class ResultMessageHandler(metaclass=SingletonMeta):
         try:
             ResultMessageHandler.__handler_dict[msg_name](self, addr, body)
         except Exception as e:
-            print(traceback.format_exc())
+            Logger().log("Unknown Exception occurs! Pass it for continuous running.\n" + traceback.format_exc())
         Logger().log("finish of handling result message")
 
     def _h_task_result_req(self, addr, body):
@@ -30,7 +30,7 @@ class ResultMessageHandler(metaclass=SingletonMeta):
             if status == 'complete':
                 task = TaskManager().find_task(task_token)
                 set_result_dict_to_task(task, body['result'])
-                print("[*] Task Result : {0}".format(str(task.result)))
+                Logger().log("[*] Task Result : {0}".format(str(task.result)))
                 TaskManager().del_task(task)
                 res_body = {
                     'status': 'success'

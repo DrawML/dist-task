@@ -23,8 +23,8 @@ class ClientMessageHandler(metaclass=SingletonMeta):
         try:
             ClientMessageHandler.__handler_dict[msg_name](self, session_identity, body)
         except Exception as e:
-            print(traceback.format_exc())
-        Logger().log("finish of handling client message")
+            Logger().log("Unknown Exception occurs! Pass it for continuous running.\n" + traceback.format_exc())
+        Logger().log("finish of handling client message.")
 
     def _h_task_register_req(self, session_identity, body):
         try:
@@ -50,21 +50,21 @@ class ClientMessageHandler(metaclass=SingletonMeta):
             }
         except TaskTypeValueError as e:
             # invalid message
-            print('[!]', e)
+            Logger().log('[!]', e)
             res_body = {
                 'status': 'fail',
                 'error_code': 'invalid_task'
             }
         except TaskValueError as e:
             # invalid message
-            print('[!]', e)
+            Logger().log('[!]', e)
             res_body = {
                 'status': 'fail',
                 'error_code': 'invalid_task'
             }
         except Exception as e:
             # invalid message
-            print('[!]', e)
+            Logger().log('[!]', e)
             res_body = {
                 'status' : 'fail',
                 'error_code' : 'unknown'
@@ -80,9 +80,7 @@ class ClientMessageHandler(metaclass=SingletonMeta):
             ClientSessionManager().del_session(session)
         except ClientSessionValueError as e:
             # invalid message
-            print('[!]', e)
-        except BaseException as e:
-            print(e)
+            Logger().log('[!]', e)
 
         Scheduler().invoke()
 
@@ -107,14 +105,14 @@ class ClientMessageHandler(metaclass=SingletonMeta):
             }
         except TaskValueError as e:
             # invalid message
-            print('[!]', e)
+            Logger().log('[!]', e)
             res_body = {
                 'status': 'fail',
                 'error_code': 'invalid_token'
             }
         except Exception as e:
             # invalid message
-            print('[!]', e)
+            Logger().log('[!]', e)
             res_body = {
                 'status': 'fail',
                 'error_code': 'unknown'
@@ -140,7 +138,7 @@ class SlaveMessageHandler(metaclass=SingletonMeta):
         try:
             SlaveMessageHandler.__handler_dict[msg_name](self, slave_identity, body)
         except Exception as e:
-            print(traceback.format_exc())
+            Logger().log("Unknown Exception occurs! Pass it for continuous running.\n" + traceback.format_exc())
         Logger().log("finish of handling slave message")
 
     def _h_heart_beat_res(self, slave_identity, body):
@@ -148,7 +146,7 @@ class SlaveMessageHandler(metaclass=SingletonMeta):
             SlaveManager().find_slave(slave_identity).heartbeat()
         except SlaveValueError as e:
             # invalid message
-            print('[!]', e)
+            Logger().log('[!]', e)
 
     def _h_slave_register_req(self, slave_identity, body):
         try:
@@ -158,7 +156,7 @@ class SlaveMessageHandler(metaclass=SingletonMeta):
             }
         except Exception as e:
             # invalid message
-            print('[!]', e)
+            Logger().log('[!]', e)
             res_body = {
                 'status': 'fail',
                 'error_code' : 'unknown'
@@ -198,7 +196,7 @@ class SlaveMessageHandler(metaclass=SingletonMeta):
                 pass
         except Exception as e:
             # invalid message
-            print('[!]', e)
+            Logger().log('[!]', e)
 
 
     def _h_task_cancel_res(self, slave_identity, body):
@@ -222,7 +220,7 @@ class SlaveMessageHandler(metaclass=SingletonMeta):
             }
         except TaskValueError as e:
             # invalid message
-            print('[!]', e)
+            Logger().log('[!]', e)
             res_body = {
                 'task_token': task_token.to_bytes(),
                 'status': 'fail',
@@ -230,7 +228,7 @@ class SlaveMessageHandler(metaclass=SingletonMeta):
             }
         except Exception as e:
             # invalid message
-            print('[!]', e)
+            Logger().log('[!]', e)
             res_body = {
                 'task_token' : task_token.to_bytes(),
                 'status' : 'fail',

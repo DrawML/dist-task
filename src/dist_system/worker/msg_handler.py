@@ -19,7 +19,7 @@ class SlaveMessageHandler(metaclass=SingletonMeta):
         try:
             SlaveMessageHandler.__handler_dict[msg_name](self, body)
         except Exception as e:
-            print(traceback.format_exc())
+            Logger().log("Unknown Exception occurs! Pass it for continuous running.\n" + traceback.format_exc())
         Logger().log("finish of handling slave message")
 
     def _h_worker_register_res(self, body):

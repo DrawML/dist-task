@@ -22,7 +22,7 @@ class MasterMessageHandler(metaclass=SingletonMeta):
         try:
             MasterMessageHandler.__handler_dict[msg_name](self, body)
         except Exception as e:
-            print(traceback.format_exc())
+            Logger().log("Unknown Exception occurs! Pass it for continuous running.\n" + traceback.format_exc())
         Logger().log("finish of handling master message")
 
     def _h_heart_beat_req(self, body):
@@ -34,18 +34,18 @@ class MasterMessageHandler(metaclass=SingletonMeta):
             status = body['status']
 
             if status == 'success':
-                print('[*] Slave Register Success.')
+                Logger().log('[*] Slave Register Success.')
             elif status == 'fail':
                 # cannot register itself to master.
                 error_code = body['error_code']
-                print("[!] Can't register itself to master. error_code =", error_code)
+                Logger().log("[!] Can't register itself to master. error_code =", error_code)
                 sys.exit(1)
             else:
                 # invalid message.
                 sys.exit(1)
         except Exception as e:
             # invalid message
-            print('[!]', e)
+            Logger().log('[!]', e)
             sys.exit(1)
 
     def _h_task_register_req(self, body):
@@ -69,7 +69,7 @@ class MasterMessageHandler(metaclass=SingletonMeta):
             }
         except Exception as e:
             # invalid message
-            print('[!]', e)
+            Logger().log('[!]', e)
             res_body = {
                 'task_token': task_token.to_bytes(),
                 'status': 'fail',
@@ -97,7 +97,7 @@ class MasterMessageHandler(metaclass=SingletonMeta):
             TaskManager().del_task(task)
         except TaskValueError as e:
             # invalid message
-            print('[!]', e)
+            Logger().log('[!]', e)
             res_body = {
                 'task_token': task_token,
                 'status': 'fail',
@@ -105,7 +105,7 @@ class MasterMessageHandler(metaclass=SingletonMeta):
             }
         except Exception as e:
             # invalid message
-            print('[!]', e)
+            Logger().log('[!]', e)
             res_body = {
                 'task_token': task_token,
                 'status': 'fail',
@@ -137,7 +137,7 @@ class WorkerMessageHandler(metaclass=SingletonMeta):
         try:
             WorkerMessageHandler.__handler_dict[msg_name](self, worker_identity, body)
         except Exception as e:
-            print(traceback.format_exc())
+            Logger().log("Unknown Exception occurs! Pass it for continuous running.\n" + traceback.format_exc())
         Logger().log("finish of handling worker message")
 
     def _h_worker_register_req(self, worker_identity, body):
@@ -154,14 +154,14 @@ class WorkerMessageHandler(metaclass=SingletonMeta):
             }
         except TaskValueError as e:
             # invalid message
-            print('[!]', e)
+            Logger().log('[!]', e)
             res_body = {
                 'status': 'fail',
                 'error_code': 'invalid_token'
             }
         except Exception as e:
             # invalid message
-            print('[!]', e)
+            Logger().log('[!]', e)
             res_body = {
                 'status': 'fail',
                 'error_code': 'unknown'
@@ -191,7 +191,7 @@ class WorkerMessageHandler(metaclass=SingletonMeta):
                                                    })
         except Exception as e:
             # invalid message
-            print('[!]', e)
+            Logger().log('[!]', e)
             res_body = {
                 'status': 'fail',
                 'error_code': 'unknown'

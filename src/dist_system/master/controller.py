@@ -43,6 +43,7 @@ class Scheduler(metaclass=SingletonMeta):
             try:
                 slave, run_config = self._schedule(slave_manager.slaves, task)
             except NotAvailableSlaveError:
+                Logger().log('Not Available Slave Error!')
                 continue
 
             task_manager.change_task_status(task, TaskStatus.STATUS_PREPROCESSING)
