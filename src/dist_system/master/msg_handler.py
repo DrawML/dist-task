@@ -9,6 +9,7 @@ from .msg_dispatcher import *
 from ..task.functions import *
 from ..logger import Logger
 import traceback
+from ..information.information import *
 
 
 class ClientMessageHandler(metaclass=SingletonMeta):
@@ -238,8 +239,28 @@ class SlaveMessageHandler(metaclass=SingletonMeta):
 
         SlaveMessageDispatcher().dispatch_msg(slave_identity, 'task_finish_res', res_body)
 
+    # not considered about exception guarantee
     def _h_slave_information_req(self, slave_identity, body):
-        pass
+        try:
+            slave = SlaveManager().find_slave(slave_identity)
+            slave_info = SlaveInformation.from_dict(body)
+            slave.slave_info = slave_info
+            if slave.alloc_info is None:
+                slave.alloc_info = AllocationInformation(
+                    slave_info.cpu_info.cpu_count,
+                    slave_info.cpu_info.cpu_count,
+                    [AllocationTensorflowGpuInformation(True, tf_gpu_info)
+                     for tf_gpu_info in slave_info.tf_gpu_info_list]
+                )
+            else:
+                assert slave_info.cpu_info.cpu_count == slave.alloc_info.all_cpu_count
+                for alloc_tf_gpu_info in slave.alloc_info.alloc_tf_gpu_info_list:
+                    targets = [x for x in slave_info.tf_gpu_info_list if alloc_tf_gpu_info.tf_device == x.tf_device]
+                    assert len(targets) == 1
+                    alloc_tf_gpu_info.tf_gpu_info = targets[0]
+
+        except Exception as e:
+            pass
 
     __handler_dict = {
         "heart_beat_res": _h_heart_beat_res,

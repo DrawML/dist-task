@@ -97,3 +97,37 @@ class SlaveInformation(object):
         return SlaveInformation(CpuInformation.from_dict(dict_['cpu_info']),
                                 MemoryInformation.from_dict(dict_['mem_info']),
                                 tf_gpu_info_list)
+
+
+class AllocationTensorflowGpuInformation(object):
+    def __init__(self, available, tf_gpu_info):
+        self.available = available
+        self.tf_gpu_info = tf_gpu_info
+
+    def __getattr__(self, item):
+        return self.tf_gpu_info.__getattr__(item)
+
+    def __setattr__(self, key, value):
+        if hasattr(self, key):
+            super(AllocationTensorflowGpuInformation, self).__setattr__(key, value)
+        else:
+            self.tf_gpu_info.__setattr__(key, value)
+
+
+class AllocationInformation(object):
+    def __init__(self, alloc_cpu_count, all_cpu_count, alloc_tf_gpu_info_list):
+        self.alloc_cpu_count = alloc_cpu_count
+        self.all_cpu_count = all_cpu_count
+        self._alloc_tf_gpu_info_list = alloc_tf_gpu_info_list
+
+    @property
+    def alloc_tf_gpu_info_list(self):
+        return tuple(self._alloc_tf_gpu_info_list)
+
+    @property
+    def avail_cpu_count(self):
+        return self.all_cpu_count - self.alloc_cpu_count
+
+    @property
+    def cpu_available(self):
+        return self.avail_cpu_count > 0

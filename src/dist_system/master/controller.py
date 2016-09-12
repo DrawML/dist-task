@@ -86,23 +86,31 @@ class Scheduler(metaclass=SingletonMeta):
     def _schedule_data_processing_task(self, slaves : Iterable, task) -> Slave:
         best_slave = None
         best_cpu_rest = None
+        best_avail_cpu_count = None
         for slave in slaves:
-            info = slave.slave_information
-            if info is None:
+            slave_info = slave.slave_info
+            alloc_info = slave.alloc_info
+            if alloc_info is None or not alloc_info.cpu_available:
                 continue
+
             cpu_rest = 0
-            for cpu_percent in info.cpu_info.cpu_percents:
+            for cpu_percent in slave_info.cpu_info.cpu_percents:
                 cpu_rest += 100 - cpu_percent
-            if best_slave is None or best_cpu_rest < cpu_rest:
+
+            if best_slave is None or best_avail_cpu_count < alloc_info.avail_cpu_count:
+                best_slave = slave
+                best_cpu_rest = cpu_rest
+                best_avail_cpu_count = best_avail_cpu_count
+            elif best_avail_cpu_count == alloc_info.avail_cpu_count and best_cpu_rest < cpu_rest:
                 best_slave = slave
                 best_cpu_rest = cpu_rest
 
         if best_slave is None:
             raise NotAvailableSlaveError
+
+        best_slave.alloc_info.alloc_cpu_count = best_slave.alloc_info.all_cpu_count
         return best_slave, RunConfig()
 
     def _schedule_tensorflow_task(self, slaves : Iterable, task) -> Slave:
         # temporary... must be modified.
-        if not slaves:
-            raise NotAvailableSlaveError
-        return random.choice(slaves), RunConfig()
+        return self._schedule_data_processing_task(slaves, task)

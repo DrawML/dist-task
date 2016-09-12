@@ -39,12 +39,9 @@ class Slave(SlaveIdentity):
     def __init__(self, addr):
         super().__init__(addr)
         self._tasks = []
-        self._slave_information = None
+        self._slave_info = None
+        self._alloc_info = None
         self.heartbeat()
-
-    @property
-    def tag(self):
-        return self._tag
 
     @property
     def tasks_count(self):
@@ -72,12 +69,20 @@ class Slave(SlaveIdentity):
         return self._liveness > 0
 
     @property
-    def slave_information(self):
-        return self._slave_information
+    def slave_info(self):
+        return self._slave_info
 
-    @slave_information.setter
-    def slave_information(self, slave_information):
-        self._slave_information = slave_information
+    @slave_info.setter
+    def slave_info(self, slave_info):
+        self._slave_info = slave_info
+
+    @property
+    def alloc_info(self):
+        return self._alloc_info
+
+    @alloc_info.setter
+    def alloc_info(self, alloc_info):
+        self._alloc_info = alloc_info
 
 
 class SlaveManager(metaclass=SingletonMeta):
