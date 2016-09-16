@@ -40,40 +40,35 @@ def _get_tf_gpu_list():
     return tf_gpu_list
 
 
-def _exec_nvidia_smi():
-    proc = subprocess.Popen([PYTHON2, SRC_DIR + '/nvidia_smi.py'],
-                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    out, err = proc.communicate()
-    return out.decode(), err.decode()
+def _get_cuda_device_info_list():
+    import pycuda.autoinit
+    import pycuda.driver as cuda
+
+    device_info_list = []
+
+    for device_num in range(cuda.Device.count()):
+        device = cuda.Device(device_num)
+        device.make_context()
+
+        device_info = {}
+        device_info['name'] = device.name()
+        device_info['pci_bus_id'] = device.pci_bus_id()
+        device_info['compute_capability_major'] = device.compute_capability()[0]
+        device_info['compute_capability_minor'] = device.compute_capability()[1]
+        device_info['memory_total'] = cuda.mem_get_info()[1]
+        device_info['memory_free'] = cuda.mem_get_info()[0]
+
+        device_info_list.append(device_info)
+        cuda.Context.pop()
+
+    return device_info_list
 
 
-def _parse_nvidia_smi_result(result : str):
-    try:
-        root = ET.fromstring(result)
-        gpu_tags = root.findall('gpu')
-    except:
-        return []
-
-    gpu_info_list = []
-    for gpu_tag in gpu_tags:
-        try:
-            r = {}
-            r['name'] = gpu_tag.find('product_name').text
-            r['pci_bus_id'] = gpu_tag.find('pci').find('pci_bus_id').text
-            r['memory_total'] = gpu_tag.find('memory_usage').find('total').text[:-2]
-            r['memory_free'] = gpu_tag.find('memory_usage').find('free').text[:-2]
-            gpu_info_list.append(r)
-        except:
-            pass
-
-    return gpu_info_list
-
-
-def _get_tf_gpu_info_list(gpu_info_list, tf_gpu_list):
+def _get_tf_gpu_info_list(cuda_device_info_list, tf_gpu_list):
     tf_gpu_info_list = []
-    for gpu_info in gpu_info_list:
+    for cuda_device_info in cuda_device_info_list:
         try:
-            pci_bus_id = gpu_info['pci_bus_id']
+            pci_bus_id = cuda_device_info['pci_bus_id']
             tf_device = None
 
             for tf_gpu in tf_gpu_list:
@@ -83,9 +78,11 @@ def _get_tf_gpu_info_list(gpu_info_list, tf_gpu_list):
 
             if tf_device is not None:
                 tf_gpu_info_list.append(
-                    TensorflowGpuInformation(pci_bus_id, gpu_info['name'], tf_device,
-                                             int(gpu_info['memory_total']),
-                                             int(gpu_info['memory_free']))
+                    TensorflowGpuInformation(pci_bus_id, cuda_device_info['name'], tf_device,
+                                             int(cuda_device_info['compute_capability_major']),
+                                             int(cuda_device_info['compute_capability_minor']),
+                                             int(cuda_device_info['memory_total']),
+                                             int(cuda_device_info['memory_free']))
                 )
         except:
             pass
@@ -96,12 +93,8 @@ def _get_tf_gpu_info_list(gpu_info_list, tf_gpu_list):
 def monitor_tf_gpu():
     tf_gpu_list = _get_tf_gpu_list()
 
-    out, err = _exec_nvidia_smi()
-    if err:
-        return []
-
-    gpu_info_list = _parse_nvidia_smi_result(out)
-    tf_gpu_info_list = _get_tf_gpu_info_list(gpu_info_list, tf_gpu_list)
+    cuda_device_info_list = _get_cuda_device_info_list()
+    tf_gpu_info_list = _get_tf_gpu_info_list(cuda_device_info_list, tf_gpu_list)
 
     return tf_gpu_info_list
 

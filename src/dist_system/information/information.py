@@ -1,15 +1,19 @@
 class TensorflowGpuInformation(object):
 
-    def __init__(self, pci_bus_id, name, tf_device, mem_total, mem_free):
+    def __init__(self, pci_bus_id, name, tf_device, compute_capability_major, compute_capability_minor, mem_total, mem_free):
         self.pci_bus_id = pci_bus_id
         self.name = name
         self.tf_device = tf_device
+        self.compute_capability_major = compute_capability_major
+        self.compute_capability_minor = compute_capability_minor
         self.mem_total = mem_total
         self.mem_free = mem_free
 
     def __repr__(self):
-        return "TensorflowGpuInformation(pci_bus_id={0}, name={1}, tf_device={2}, mem_total={3}, mem_free={4})".format(
-            self.pci_bus_id, self.name, self.tf_device, self.mem_total, self.mem_free
+        return "TensorflowGpuInformation(pci_bus_id={0}, name={1}, tf_device={2}, " \
+               "compute_capability={3}, mem_total={4}, mem_free={5})".format(
+            self.pci_bus_id, self.name, self.tf_device,
+            (self.compute_capability_major, self.compute_capability_minor), self.mem_total, self.mem_free
         )
 
     def to_dict(self):
@@ -17,6 +21,8 @@ class TensorflowGpuInformation(object):
             'pci_bus_id' : self.pci_bus_id,
             'name' : self.name,
             'tf_device' : self.tf_device,
+            'compute_capability_major' : self.compute_capability_major,
+            'compute_capability_minor' : self.compute_capability_minor,
             'mem_total' : self.mem_total,
             'mem_free' : self.mem_free
         }
@@ -24,6 +30,7 @@ class TensorflowGpuInformation(object):
     @staticmethod
     def from_dict(dict_ : dict):
         return TensorflowGpuInformation(dict_['pci_bus_id'], dict_['name'], dict_['tf_device'],
+                                        dict_['compute_capability_major'], dict_['compute_capability_minor'],
                                         dict_['mem_total'], dict_['mem_free'])
 
 
