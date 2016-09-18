@@ -11,6 +11,7 @@ import random
 from ..logger import Logger
 from .virtualizer.linker import link
 from .virtualizer.config import RunConfig
+import heapq
 
 
 async def run_heartbeat():
@@ -113,5 +114,30 @@ class Scheduler(metaclass=SingletonMeta):
         return best_slave, RunConfig()
 
     def _schedule_tensorflow_task(self, slaves : Iterable, task) -> Slave:
-        # temporary... must be modified.
-        return self._schedule_data_processing_task(slaves, task)
+        best_slave = None
+        best_alloc_tf_gpu_info = None
+        best_cc_major = None
+        best_cc_minor = None
+        for slave in slaves:
+            slave_info = slave.slave_info
+            alloc_info = slave.alloc_info
+            if alloc_info is None:
+                continue
+
+            for alloc_tf_gpu_info in alloc_info.alloc_tf_gpu_info_list:
+                if not alloc_tf_gpu_info.available:
+                    continue
+                if best_slave is None or alloc_tf_gpu_info.compute_capability_major > best_cc_major or \
+                    (alloc_tf_gpu_info.compute_capability_major == best_cc_major and
+                     alloc_tf_gpu_info.compute_capability_minor > best_cc_minor):
+                    best_slave = slave
+                    best_alloc_tf_gpu_info = alloc_tf_gpu_info
+                    best_cc_major = alloc_tf_gpu_info.compute_capability_major
+                    best_cc_minor = alloc_tf_gpu_info.compute_capability_minor
+
+        if best_slave is None:
+            # will be refactored..
+            return self._schedule_data_processing_task(slaves, task)
+        else:
+            best_alloc_tf_gpu_info.available = False
+            return best_slave, RunConfig(tf_device=best_alloc_tf_gpu_info.tf_device)
