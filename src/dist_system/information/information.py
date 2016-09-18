@@ -108,11 +108,11 @@ class SlaveInformation(object):
 
 class AllocationTensorflowGpuInformation(object):
     def __init__(self, available, tf_gpu_info):
-        self.available = available
-        self.tf_gpu_info = tf_gpu_info
+        super(AllocationTensorflowGpuInformation, self).__setattr__('available', available)
+        super(AllocationTensorflowGpuInformation, self).__setattr__('tf_gpu_info', tf_gpu_info)
 
     def __getattr__(self, item):
-        return self.tf_gpu_info.__getattr__(item)
+        return self.tf_gpu_info.__getattribute__(item)
 
     def __setattr__(self, key, value):
         if hasattr(self, key):
