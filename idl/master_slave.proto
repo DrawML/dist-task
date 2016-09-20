@@ -105,8 +105,10 @@ message SlaveInformationRequest
 		string pci_bus_id = 1;
 		string name = 2;
 		string tf_device = 3;
-		int64 mem_total = 4;
-		int64 mem_free = 5;
+		int64 compute_capability_major = 4;
+		int64 compute_capability_minor = 5;
+		int64 mem_total = 6;
+		int64 mem_free = 7;
 	}
 
     CpuInfo cpu_info = 1;
