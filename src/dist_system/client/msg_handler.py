@@ -27,30 +27,41 @@ class ResultMessageHandler(metaclass=SingletonMeta):
             status = body['status']
             task_token = TaskToken.from_bytes(body['task_token'])
 
+            callback_args = dict()
+            callback_args['result'] = status
+
             if status == 'complete':
                 task = TaskManager().find_task(task_token)
+
+                callback = task.callback
+
                 set_result_dict_to_task(task, body['result'])
                 Logger().log("[*] Task Result : {0}".format(str(task.result)))
                 TaskManager().del_task(task)
+
                 res_body = {
                     'status': 'success'
                 }
             elif status == 'cancel':
                 # nothing to do use request.
                 res_body = {
-                    'status' : 'success'
+                    'status': 'success'
                 }
             elif status == 'fail':
                 error_code = body['error_code']
                 task = TaskManager().del_task(task_token)
+
+                callback = task.callback
+                callback_args['error_code'] = error_code
+
                 res_body = {
                     'status': 'success'
                 }
             else:
                 # invalid message
                 res_body = {
-                    'status' : 'fail',
-                    'error_code' : 'unknown'
+                    'status': 'fail',
+                    'error_code': 'unknown'
                 }
         except TaskValueError:
             res_body = {
@@ -58,8 +69,9 @@ class ResultMessageHandler(metaclass=SingletonMeta):
                 'error_code': 'unknown'
             }
 
-        main.ResultReceiverCommunicationRouter().dispatch_msg(addr, 'task_result_res', res_body)
+        main.ResultReceiverCommunicationRouter().dispatch_msg(addr, 'task_result_res', res_body,
+                                                              callback, callback_args)
 
     __handler_dict = {
-        'task_result_req' : _h_task_result_req
+        'task_result_req': _h_task_result_req
     }

@@ -1,6 +1,6 @@
 #!/usr/bin/python3
-#-*- coding: utf-8 -*-
-#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# !/usr/bin/env python
 
 import sys
 import zmq
@@ -10,18 +10,19 @@ from .msg_handler import ResultMessageHandler
 from .controller import *
 from ..protocol import client_master, any_result_receiver
 from functools import partial
-from ..library import SingletonMeta
+from ..library import SingletonMeta, coroutine_with_no_exception
 from ..task.task import *
 from ..task.functions import *
 from .task import TaskManager
-from .simulator import simulate_task
+from .simulator import simulate_task, _coroutine_exception_callback
 from ..logger import Logger
+from queue import Queue
+
 import traceback
 
 
 class MasterConnection(object):
-
-    def __init__(self, context : zmq.asyncio.Context, master_addr):
+    def __init__(self, context: zmq.asyncio.Context, master_addr):
         self._context = context
         self._master_addr = master_addr
 
@@ -60,7 +61,6 @@ class MasterConnection(object):
 
 
 class ResultReceiverCommunicationRouter(metaclass=SingletonMeta):
-
     def __init__(self, context, addr, msg_handler):
         self._context = context
         self._addr = addr
@@ -96,31 +96,64 @@ class ResultReceiverCommunicationRouter(metaclass=SingletonMeta):
         msg = [addr, b'', data]
         await self._router.send_multipart(msg)
 
-    def dispatch_msg(self, addr, header, body, f_callback=None):
+    def dispatch_msg(self, addr, header, body, f_callback=None, f_args=None):
         future = asyncio.ensure_future(self.dispatch_msg_coro(addr, header, body))
         if f_callback is not None:
-            future.add_done_callback(f_callback)
+            import functools
+            future.add_done_callback(functools.partial(f_callback, **f_args))
 
 
-async def run_client(context : Context, master_addr, result_router_addr, result_receiver_address):
+class TaskDeliverer(metaclass=SingletonMeta):
+    def __init__(self, context: Context, master_addr, result_receiver_address, msg_queue: Queue):
+        self._context = context
+        self._master_addr = master_addr
+        self._result_receiver_address = result_receiver_address
 
+        self._msg_queue = msg_queue
+
+    async def run(self):
+        while True:
+            task_type, task_job_dict, callback = await self._msg_queue.get()
+            await self._process(task_type, task_job_dict, callback)
+
+    async def _process(self, task_type: TaskType, task_job_dict: dict, callback):
+        if task_type == TaskType.TYPE_TENSORFLOW_TASK:
+            await tensorflow_task(self._context, self._master_addr, self._result_receiver_address,
+                                  task_job_dict, callback)
+        else:
+            pass
+
+
+async def tensorflow_task(context: Context, master_addr, result_receiver_address, task_job_dict: dict, callback):
+    asyncio.ensure_future(coroutine_with_no_exception(
+        register_task_to_master(context, master_addr, result_receiver_address, TaskType.TYPE_TENSORFLOW_TASK,
+                                TensorflowTaskJob.from_dict_with_whose_job('master', task_job_dict), callback),
+        _coroutine_exception_callback)
+    )
+
+
+async def run_client(context: Context, master_addr, result_router_addr, result_receiver_address, msg_queue):
     Logger('Client')
     result_router = ResultReceiverCommunicationRouter(context, result_router_addr, ResultMessageHandler())
+    deliverer = TaskDeliverer(context, master_addr, result_receiver_address, msg_queue)
+
+    _ = asyncio.ensure_future(simulate_task(context, master_addr, result_receiver_address))
 
     await asyncio.wait([
         asyncio.ensure_future(result_router.run()),
-        asyncio.ensure_future(simulate_task(context, master_addr, result_receiver_address))
+        asyncio.ensure_future(deliverer.run())
     ])
 
 
-def main(master_addr, result_router_addr, result_receiver_address):
+def main(master_addr, result_router_addr, result_receiver_address, msg_queue):
     try:
         loop = ZMQEventLoop()
         asyncio.set_event_loop(loop)
 
         context = Context()
 
-        loop.run_until_complete(run_client(context, master_addr, result_router_addr, result_receiver_address))
+        loop.run_until_complete(
+            run_client(context, master_addr, result_router_addr, result_receiver_address, msg_queue))
     except KeyboardInterrupt:
         print('\nFinished (interrupted)')
         sys.exit(0)
