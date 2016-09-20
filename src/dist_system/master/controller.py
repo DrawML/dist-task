@@ -12,6 +12,7 @@ from ..logger import Logger
 from .virtualizer.linker import link
 from .virtualizer.config import RunConfig
 import heapq
+from ..logger import Logger
 
 
 async def run_heartbeat():
@@ -34,6 +35,7 @@ class Scheduler(metaclass=SingletonMeta):
 
     def invoke(self):
         # 현재 waiting하고 있는 task가 있는 지 보고 available한 slave 있는지 판단하여 task를 slave에 배치한다.
+        Logger().log('**** Scheduler is invoked.')
         self._assign_waiting_task_to_slave()
 
     def _assign_waiting_task_to_slave(self):
@@ -46,6 +48,8 @@ class Scheduler(metaclass=SingletonMeta):
             except NotAvailableSlaveError:
                 Logger().log('Not Available Slave Error!')
                 continue
+
+            Logger().log('**** GO Schedule!')
 
             task_manager.change_task_status(task, TaskStatus.STATUS_PREPROCESSING)
             self._preprocess_task(task, run_config)
@@ -64,10 +68,16 @@ class Scheduler(metaclass=SingletonMeta):
         if task_type == TaskType.TYPE_SLEEP_TASK:
             pass
         elif task_type == TaskType.TYPE_DATA_PROCESSING_TASK:
+            if not isinstance(task.job, DataProcessingTaskMasterJob):
+                task.job = task.prev_job
             executable_code = link(task.job.object_code, run_config)
+            task.prev_job = task.job
             task.job = DataProcessingTaskSlaveJob(task.job.data_file_token, executable_code)
         elif task_type == TaskType.TYPE_TENSORFLOW_TASK:
+            if not isinstance(task.job, TensorflowTaskMasterJob):
+                task.job = task.prev_job
             executable_code = link(task.job.object_code, run_config)
+            task.prev_job = task.job
             task.job = TensorflowTaskSlaveJob(task.job.data_file_token, executable_code)
         else:
             raise NotImplementedError
@@ -81,19 +91,24 @@ class Scheduler(metaclass=SingletonMeta):
         return __schedule_dict[get_task_type_of_task(task)](slaves, task)
 
     def _schedule_sleep_task(self, slaves : Iterable, task) -> Slave:
+        Logger().log('**** Schedule of sleep task')
         if not slaves:
             raise NotAvailableSlaveError
         return random.choice(slaves), None
 
     def _schedule_data_processing_task(self, slaves : Iterable, task) -> Slave:
+        Logger().log('**** Schedule of data processing task. slaves = {0}'.format(slaves))
         best_slave = None
         best_cpu_rest = None
         best_avail_cpu_count = None
         for slave in slaves:
+            Logger().log('---------------------')
             slave_info = slave.slave_info
             alloc_info = slave.alloc_info
             if alloc_info is None or not alloc_info.cpu_available:
                 continue
+
+            Logger().log('***************')
 
             cpu_rest = 0
             for cpu_percent in slave_info.cpu_info.cpu_percents:
@@ -114,6 +129,7 @@ class Scheduler(metaclass=SingletonMeta):
         return best_slave, RunConfig()
 
     def _schedule_tensorflow_task(self, slaves : Iterable, task) -> Slave:
+        Logger().log('**** Schedule of tensorflow task')
         best_slave = None
         best_alloc_tf_gpu_info = None
         best_cc_major = None
