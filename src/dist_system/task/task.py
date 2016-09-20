@@ -99,10 +99,6 @@ class TaskResult(metaclass = ABCMeta):
         except Exception as e:
             raise TaskValueError(str(e))
 
-    @abstractmethod
-    def __str__(self):
-        pass
-
 
 class TaskToken(object):
     def __init__(self, token : bytes):
@@ -131,6 +127,9 @@ class Task(metaclass = ABCMeta):
 
     def __eq__(self, other : 'Task'):
         return self._task_token == other._task_token
+
+    def __hash__(self):
+        return id(self)
 
     @property
     def result_receiver_address(self):

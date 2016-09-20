@@ -62,7 +62,7 @@ class FileManager(metaclass=SingletonMeta):
 
     def _get_avail_filename(self, file_type : FileType):
         return FileManager.__FILENAME_PREFIX[file_type] + \
-            self._get_avail_file_no(file_type) + \
+            str(self._get_avail_file_no(file_type)) + \
             FileManager.__FILENAME_POSTFIX[file_type]
 
     # exception handling will be added.
@@ -72,7 +72,7 @@ class FileManager(metaclass=SingletonMeta):
             f.write(file_data)
         if not key in self._dic_key_files:
             self._dic_key_files[key] = []
-        self._dic_key_files[key].append(file_type, file_path)
+        self._dic_key_files[key].append((file_type, file_path))
         return file_path
 
     def remove_files_using_key(self, key):
