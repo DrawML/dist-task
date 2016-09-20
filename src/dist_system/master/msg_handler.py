@@ -257,7 +257,10 @@ class SlaveMessageHandler(metaclass=SingletonMeta):
                     assert len(targets) == 1
                     alloc_tf_gpu_info.tf_gpu_info = targets[0]
 
+            Scheduler().invoke()
+
         except Exception as e:
+            Logger().log('!!!!!!!!!!!!!!' + traceback.format_exc())
             pass
 
     __handler_dict = {
