@@ -9,6 +9,7 @@ from .msg_dispatcher import *
 from ..task.functions import make_task_with_task_type
 import traceback
 from ..logger import Logger
+from ..task.tensorflow_task import *
 
 
 class TaskInformation(object):
@@ -53,6 +54,25 @@ async def _do_sleep_task(sleep_task : SleepTask):
     sleep_task.result = SleepTaskResult('sleep{0}..'.format(random.randint(1,1000000)))
 
 
+# temporary variable for test. It will be deleted.
+tensorflow_task_no = 0
+
+
+async def _do_tensorflow_task(tensorflow_task : TensorflowTask):
+
+    job = tensorflow_task.job
+
+    Logger().log("-------before tensorflow--------")
+    proc = await asyncio.create_subprocess_exec(job.executable_code_filename, job.data_filename,
+                                   stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+    stdout, stderr = await proc.communicate()
+    Logger().log("-------after tensorflow--------")
+
+    global tensorflow_task_no
+    tensorflow_task_no += 1
+    tensorflow_task.result = TensorflowTaskResult(stdout, stderr, str(tensorflow_task_no))  # will be modified.
+
+
 async def _report_task_result(context : Context, task_info : TaskInformation):
 
     sock = context.socket(zmq.DEALER)
@@ -78,6 +98,8 @@ async def do_task(context : Context, task_info : TaskInformation):
     try:
         if task_info.task_type == TaskType.TYPE_SLEEP_TASK:
             await _do_sleep_task(task_info.task)
+        elif task_info.task_type == TaskType.TYPE_TENSORFLOW_TASK:
+            await _do_tensorflow_task(task_info.task)
         else:
             raise TaskTypeValueError("Invalid Task Type.")
 
@@ -85,10 +107,3 @@ async def do_task(context : Context, task_info : TaskInformation):
     except Exception as e:
         Logger().log("Unknown Exception occurs!\n" + traceback.format_exc())
         raise
-
-    """
-    tensorflow 관련 task 실행시킬 땐,
-    asyncio.create_subprocess_exec()
-    subprocess.wait()
-    활용하자.
-    """
