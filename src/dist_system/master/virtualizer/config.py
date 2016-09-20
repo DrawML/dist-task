@@ -18,7 +18,7 @@ class RunConfig:
     def __init__(self,
                  tf_device="/cpu:0",
                  cpu_count=0,
-                 gpu_memory_fraction=1.0,
+                 gpu_memory_fraction=None,
                  log_placement=False):
         self._tf_device = tf_device
         self._cpu_count = cpu_count
