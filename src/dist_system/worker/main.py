@@ -74,22 +74,25 @@ class ResultReceiverCommunicationIO(metaclass=SingletonMeta):
         self._result_receiver_address = result_receiver_address
         self._sock = self._context.socket(zmq.REQ)
         self._sock.connect(result_receiver_address.to_zeromq_addr())
-        print("Connect to", result_receiver_address.to_zeromq_addr())
+        Logger().log("Connect to", result_receiver_address.to_zeromq_addr())
 
     def send_msg(self, msg_header, msg_body):
         assert self._sock is not None
         data = any_result_receiver.make_msg_data(msg_header, msg_body)
+        Logger().log("To result receiver, header={0}, body={1}".format(msg_header, msg_body))
         self._sock.send(data)
 
     def recv_msg(self):
         assert self._sock is not None
         header, body = any_result_receiver.parse_msg_data(self._sock.recv())
+        Logger().log("From result receiver, header={0}, body={1}".format(header, body))
         return header, body
 
     def close(self):
         assert self._sock is not None
         self._sock.close()
         self._sock = None
+        Logger().log('Close a connection to result receiver')
 
 
 async def run_worker(context : Context, slave_addr, serialized_data : bytes):
