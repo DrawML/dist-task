@@ -2,10 +2,13 @@ from . import main
 from ..task.functions import make_task_with_task_type
 from ..task.task import *
 from .task import TaskManager
+from ..logger import Logger
 
 
 async def register_task_to_master(context, master_addr, result_receiver_address, task_type, job, callback):
+    Logger().log("* register_task_to_master")
     conn = main.MasterConnection(context, master_addr)
+
     conn.connect()
     await conn.dispatch_msg_coro('task_register_req', {
         'result_receiver_address': result_receiver_address.to_dict(),

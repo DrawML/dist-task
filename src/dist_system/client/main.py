@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 # !/usr/bin/env python
-
+import queue
 import sys
 import zmq
 from zmq.asyncio import Context, ZMQEventLoop
@@ -25,8 +25,10 @@ class MasterConnection(object):
     def __init__(self, context: zmq.asyncio.Context, master_addr):
         self._context = context
         self._master_addr = master_addr
+        Logger().log("master inits to connect to {0}".format(self._master_addr))
 
     def connect(self):
+        Logger().log("master try to connect to {0}".format(self._master_addr))
         self._sock = self._context.socket(zmq.REQ)
         self._sock.connect(self._master_addr)
         Logger().log("master connection to {0}".format(self._master_addr))
@@ -35,6 +37,7 @@ class MasterConnection(object):
         self._sock.close()
 
     async def recv_msg(self):
+        Logger().log("master try to recv to {0}".format(self._master_addr))
         msg = await self._sock.recv_multipart()
         Logger().log("master connection recv a message : {0}".format(msg))
         data = self._resolve_msg(msg)
@@ -105,6 +108,7 @@ class ResultReceiverCommunicationRouter(metaclass=SingletonMeta):
 
 class TaskDeliverer(metaclass=SingletonMeta):
     def __init__(self, context: Context, master_addr, result_receiver_address, msg_queue: Queue):
+        print('[TaskDeliverer] ', 'init! ')
         self._context = context
         self._master_addr = master_addr
         self._result_receiver_address = result_receiver_address
@@ -112,19 +116,31 @@ class TaskDeliverer(metaclass=SingletonMeta):
         self._msg_queue = msg_queue
 
     async def run(self):
+
+        async def get_msg(sleep_sec=1):
+            while True:
+                print('[TaskDeliverer] ', 'get_msg loop ')
+                try:
+                    return self._msg_queue.get_nowait()
+                except queue.Empty as e:
+                    await asyncio.sleep(sleep_sec)
+
         while True:
-            task_type, task_job_dict, callback = await self._msg_queue.get()
+            print('[TaskDeliverer] ', 'run! ')
+            task_type, task_job_dict, callback = await get_msg(sleep_sec=1)
+            print('[TaskDeliverer] ', 'get msg! ', task_job_dict)
             await self._process(task_type, task_job_dict, callback)
 
     async def _process(self, task_type: TaskType, task_job_dict: dict, callback):
+        print('[TaskDeliverer] ', 'start to request! in process')
         if task_type == TaskType.TYPE_TENSORFLOW_TASK:
-            await tensorflow_task(self._context, self._master_addr, self._result_receiver_address,
-                                  task_job_dict, callback)
+            print('[TaskDeliverer] ', 'request! in process')
+            await register_tensorflow_task(self._context, self._master_addr, self._result_receiver_address,
+                                           task_job_dict, callback)
         else:
             pass
 
-
-async def tensorflow_task(context: Context, master_addr, result_receiver_address, task_job_dict: dict, callback):
+async def register_tensorflow_task(context: Context, master_addr, result_receiver_address, task_job_dict: dict, callback):
     asyncio.ensure_future(coroutine_with_no_exception(
         register_task_to_master(context, master_addr, result_receiver_address, TaskType.TYPE_TENSORFLOW_TASK,
                                 TensorflowTaskJob.from_dict_with_whose_job('master', task_job_dict), callback),
@@ -134,10 +150,11 @@ async def tensorflow_task(context: Context, master_addr, result_receiver_address
 
 async def run_client(context: Context, master_addr, result_router_addr, result_receiver_address, msg_queue):
     Logger('Client')
+    print('[ClientRunClient] ', 'in run!')
     result_router = ResultReceiverCommunicationRouter(context, result_router_addr, ResultMessageHandler())
     deliverer = TaskDeliverer(context, master_addr, result_receiver_address, msg_queue)
 
-    _ = asyncio.ensure_future(simulate_task(context, master_addr, result_receiver_address))
+    # _ = asyncio.ensure_future(simulate_task(context, master_addr, result_receiver_address))
 
     await asyncio.wait([
         asyncio.ensure_future(result_router.run()),
@@ -147,6 +164,8 @@ async def run_client(context: Context, master_addr, result_router_addr, result_r
 
 def main(master_addr, result_router_addr, result_receiver_address, msg_queue):
     try:
+        print('[ClientMain] ', 'start!')
+
         loop = ZMQEventLoop()
         asyncio.set_event_loop(loop)
 
