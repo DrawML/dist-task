@@ -138,3 +138,14 @@ class AllocationInformation(object):
     @property
     def cpu_available(self):
         return self.avail_cpu_count > 0
+
+
+class AllocatedResource(object):
+    def __init__(self, alloc_cpu_count = 0, alloc_tf_gpu_info = None):
+        self.alloc_cpu_count = alloc_cpu_count
+        self.alloc_tf_gpu_info = alloc_tf_gpu_info
+
+    def __repr__(self):
+        return "AllocatedResource(alloc_cpu_count = {0}, alloc_tf_gpu_info = {1})".format(
+            self.alloc_cpu_count, self.alloc_tf_gpu_info
+        )

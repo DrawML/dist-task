@@ -37,11 +37,13 @@ def preprocess_task(task):
     if task_type == TaskType.TYPE_SLEEP_TASK:
         pass
     elif task_type == TaskType.TYPE_DATA_PROCESSING_TASK:
-        data_filename = "data_filename"
+        # temporary usage of protocol for test
+        data_filename = FileManager().store(task, FileType.TYPE_DATA_FILE, task.job.data_file_token)
         executable_code_filename = FileManager().store(task, FileType.TYPE_EXECUTABLE_CODE_FILE, task.job.executable_code)
         task.job = DataProcessingTaskWorkerJob(data_filename, executable_code_filename)
     elif task_type == TaskType.TYPE_TENSORFLOW_TASK:
-        data_filename = "data_filename"
+        # temporary usage of protocol for test
+        data_filename = FileManager().store(task, FileType.TYPE_DATA_FILE, task.job.data_file_token)
         executable_code_filename = FileManager().store(task, FileType.TYPE_EXECUTABLE_CODE_FILE, task.job.executable_code)
         task.job = TensorflowTaskWorkerJob(data_filename, executable_code_filename)
     else:

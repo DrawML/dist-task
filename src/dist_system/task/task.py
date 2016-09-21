@@ -7,6 +7,7 @@ from abc import *
 from ..library import AutoIncrementEnum
 from ..result_receiver import ResultReceiverAddress
 from ..library import SingletonMeta
+from ..information.information import AllocatedResource
 
 
 class TaskTypeValueError(ValueError):
@@ -99,10 +100,6 @@ class TaskResult(metaclass = ABCMeta):
         except Exception as e:
             raise TaskValueError(str(e))
 
-    @abstractmethod
-    def __str__(self):
-        pass
-
 
 class TaskToken(object):
     def __init__(self, token : bytes):
@@ -132,6 +129,10 @@ class Task(metaclass = ABCMeta):
     def __eq__(self, other : 'Task'):
         return self._task_token == other._task_token
 
+    # default __hash__ doesn't exist if __eq__ is overrided.
+    def __hash__(self):
+        return id(self)
+
     @property
     def result_receiver_address(self):
         return self._result_receiver_address
@@ -149,6 +150,14 @@ class Task(metaclass = ABCMeta):
         self._status = status
 
     @property
+    def prev_job(self):
+        return self._prev_job
+
+    @prev_job.setter
+    def prev_job(self, prev_job):
+        self._prev_job = prev_job
+
+    @property
     def job(self) -> TaskJob:
         return self._job
 
@@ -163,6 +172,14 @@ class Task(metaclass = ABCMeta):
     @result.setter
     def result(self, result : TaskResult):
         self._result = result
+
+    @property
+    def allocated_resource(self) -> AllocatedResource:
+        return self._allocated_resource
+
+    @allocated_resource.setter
+    def allocated_resource(self, allocated_resource: AllocatedResource):
+        self._allocated_resource = allocated_resource
 
 
 class CommonTaskManager(object):

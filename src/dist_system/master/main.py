@@ -33,7 +33,7 @@ class ClientRouter(metaclass=SingletonMeta):
             await self._process(msg)
 
     async def _process(self, msg):
-        Logger().log("client router recv a message : {0}".format(msg))
+        #Logger().log("client router recv a message : {0}".format(msg))
         addr, data = self._resolve_msg(msg)
         try:
             header, body = client_master.parse_msg_data(data)
@@ -83,7 +83,7 @@ class SlaveRouter(metaclass=SingletonMeta):
             await self._process(msg)
 
     async def _process(self, msg):
-        Logger().log("slave router recv a message : {0}".format(msg))
+        #Logger().log("slave router recv a message : {0}".format(msg))
         addr, data = self._resolve_msg(msg)
         header, body = master_slave.parse_msg_data(data)
 

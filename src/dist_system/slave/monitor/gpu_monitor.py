@@ -6,13 +6,6 @@ import xml.etree.ElementTree as ET
 import copy
 from ...information.information import *
 
-# its win32, maybe there is win64 too?
-is_windows = sys.platform.startswith('win')
-
-if is_windows:
-    PYTHON2 = 'C:/Python27/python.exe'
-else:
-    PYTHON2 = 'python2'
 
 SRC_DIR = os.path.dirname(os.sys.modules[__name__].__file__)
 
@@ -97,5 +90,3 @@ def monitor_tf_gpu():
     tf_gpu_info_list = _get_tf_gpu_info_list(cuda_device_info_list, tf_gpu_list)
 
     return tf_gpu_info_list
-
-

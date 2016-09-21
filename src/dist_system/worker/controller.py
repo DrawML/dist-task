@@ -63,14 +63,14 @@ async def _do_tensorflow_task(tensorflow_task : TensorflowTask):
     job = tensorflow_task.job
 
     Logger().log("-------before tensorflow--------")
-    proc = await asyncio.create_subprocess_exec(job.executable_code_filename, job.data_filename,
+    proc = await asyncio.create_subprocess_exec('python3', job.executable_code_filename, job.data_filename,
                                    stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
     stdout, stderr = await proc.communicate()
     Logger().log("-------after tensorflow--------")
 
     global tensorflow_task_no
     tensorflow_task_no += 1
-    tensorflow_task.result = TensorflowTaskResult(stdout, stderr, str(tensorflow_task_no))  # will be modified.
+    tensorflow_task.result = TensorflowTaskResult(stdout.decode(), stderr.decode(), str(tensorflow_task_no))  # will be modified.
 
 
 async def _report_task_result(context : Context, task_info : TaskInformation):
