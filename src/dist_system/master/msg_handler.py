@@ -205,6 +205,17 @@ class SlaveMessageHandler(metaclass=SingletonMeta):
 
     def _h_task_finish_req(self, slave_identity, body):
 
+        def free_resource(alloc_info : AllocationInformation, allocated_resource : AllocatedResource):
+
+            Logger().log("Free Resource :", allocated_resource)
+
+            if alloc_info.alloc_cpu_count < allocated_resource.alloc_cpu_count:
+                raise ValueError('Invalid allocated resource. (alloc_cpu_count)')
+
+            alloc_info.alloc_cpu_count -= allocated_resource.alloc_cpu_count
+            if allocated_resource.alloc_tf_gpu_info is not None:
+                allocated_resource.alloc_tf_gpu_info.available = True
+
         task_token = TaskToken.from_bytes(body['task_token'])
         try:
             slave = SlaveManager().find_slave(slave_identity)
@@ -213,6 +224,7 @@ class SlaveMessageHandler(metaclass=SingletonMeta):
             TaskManager().change_task_status(task, TaskStatus.STATUS_COMPLETE)  # yes, there is no need of this code.
             TaskManager().del_task(task)
             slave.delete_task(task)
+            free_resource(slave.alloc_info, task.allocated_resource)
 
             res_body = {
                 'task_token': task_token.to_bytes(),

@@ -13,6 +13,7 @@ from .virtualizer.linker import link
 from .virtualizer.config import RunConfig
 import heapq
 from ..logger import Logger
+from ..information.information import AllocatedResource
 
 
 async def run_heartbeat():
@@ -44,7 +45,7 @@ class Scheduler(metaclass=SingletonMeta):
 
         for task in task_manager.waiting_tasks:
             try:
-                slave, run_config = self._schedule(slave_manager.slaves, task)
+                slave, run_config, allocated_resource = self._schedule(slave_manager.slaves, task)
             except NotAvailableSlaveError:
                 Logger().log('Not Available Slave Error!')
                 continue
@@ -55,6 +56,8 @@ class Scheduler(metaclass=SingletonMeta):
             self._preprocess_task(task, run_config)
             task_manager.change_task_status(task, TaskStatus.STATUS_PROCESSING)
             slave.assign_task(task)
+
+            task.allocated_resource = allocated_resource
 
             SlaveMessageDispatcher().dispatch_msg(slave, 'task_register_req', {
                 'result_receiver_address' : task.result_receiver_address.to_dict(),
@@ -94,7 +97,7 @@ class Scheduler(metaclass=SingletonMeta):
         Logger().log('**** Schedule of sleep task')
         if not slaves:
             raise NotAvailableSlaveError
-        return random.choice(slaves), None
+        return random.choice(slaves), None, AllocatedResource()
 
     def _schedule_data_processing_task(self, slaves : Iterable, task) -> Slave:
         Logger().log('**** Schedule of data processing task. slaves = {0}'.format(slaves))
@@ -126,7 +129,7 @@ class Scheduler(metaclass=SingletonMeta):
             raise NotAvailableSlaveError
 
         best_slave.alloc_info.alloc_cpu_count = best_slave.alloc_info.all_cpu_count
-        return best_slave, RunConfig()
+        return best_slave, RunConfig(), AllocatedResource(alloc_cpu_count=best_slave.alloc_info.all_cpu_count)
 
     def _schedule_tensorflow_task(self, slaves : Iterable, task) -> Slave:
         Logger().log('**** Schedule of tensorflow task')
@@ -156,4 +159,5 @@ class Scheduler(metaclass=SingletonMeta):
             return self._schedule_data_processing_task(slaves, task)
         else:
             best_alloc_tf_gpu_info.available = False
-            return best_slave, RunConfig(tf_device=best_alloc_tf_gpu_info.tf_device)
+            return best_slave, RunConfig(tf_device=best_alloc_tf_gpu_info.tf_device), \
+                   AllocatedResource(alloc_tf_gpu_info=best_alloc_tf_gpu_info)
