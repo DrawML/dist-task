@@ -17,6 +17,7 @@ from ..logger import Logger
 import traceback
 from .file import FileManager
 import os
+from ..library import coroutine_with_no_exception
 
 
 class MasterConnection(metaclass=SingletonMeta):
@@ -50,7 +51,7 @@ class MasterConnection(metaclass=SingletonMeta):
         return msg[0]
 
     async def dispatch_msg_coro(self, header, body):
-        Logger().log("to master, header={0}, body={1}".format(header, body))
+        Logger().log("to master, header={0}, body={1}".format(header, body), level=2)
         try:
             data = master_slave.make_msg_data(header, body)
         except Exception as e:
@@ -95,7 +96,7 @@ class WorkerRouter(metaclass=SingletonMeta):
         return addr, data
 
     async def dispatch_msg_coro(self, worker_identity, header, body):
-        Logger().log("to worker({0}), header={1}, body={2}".format(worker_identity, header, body))
+        Logger().log("to worker({0}), header={1}, body={2}".format(worker_identity, header, body), level=2)
         addr = worker_identity.addr
         try:
             data = slave_worker.make_msg_data(header, body)
@@ -140,7 +141,10 @@ class ResultReceiverCommunicationIO(metaclass=SingletonMeta):
 
 async def run_slave(context : Context, master_addr, worker_router_addr, worker_file_name):
 
-    Logger("Slave")
+    def _coroutine_exception_callback(_, e):
+        Logger().log('[!] exception occurs in coroutine :', e)
+
+    Logger("Slave", level=3)
     TaskManager()
     WorkerManager()
     FileManager(os.path.dirname(os.sys.modules[__name__].__file__) + '/files')
@@ -164,7 +168,7 @@ async def run_slave(context : Context, master_addr, worker_router_addr, worker_f
         asyncio.ensure_future(worker_router.run()),  # must be first.
         asyncio.ensure_future(master_conn.run()),
         asyncio.ensure_future(run_polling_workers()),
-        asyncio.ensure_future(monitor_information())
+        asyncio.ensure_future(coroutine_with_no_exception(monitor_information(), _coroutine_exception_callback))
     ])
 
 
