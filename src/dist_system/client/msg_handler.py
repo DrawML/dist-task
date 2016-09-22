@@ -15,7 +15,7 @@ class ResultMessageHandler(metaclass=SingletonMeta):
 
     def handle_msg(self, addr, header, body):
         msg_name = header
-        Logger().log("result addr={0} header={1}, body={2}".format(addr, header, body))
+        # Logger().log("result addr={0} header={1}, body={2}".format(addr, header, body))
         try:
             ResultMessageHandler.__handler_dict[msg_name](self, addr, body)
         except Exception as e:
@@ -24,20 +24,24 @@ class ResultMessageHandler(metaclass=SingletonMeta):
 
     def _h_task_result_req(self, addr, body):
         try:
+            Logger().log("[*] Task Result in _h_task_result_req")
+
             status = body['status']
             task_token = TaskToken.from_bytes(body['task_token'])
 
+            callback = None
             callback_args = dict()
-            callback_args['result'] = status
 
             if status == 'complete':
                 task = TaskManager().find_task(task_token)
 
-                callback = task.callback
-
                 set_result_dict_to_task(task, body['result'])
                 Logger().log("[*] Task Result : {0}".format(str(task.result)))
                 TaskManager().del_task(task)
+
+                callback = task.callback
+                callback_args['status'] = 'success'
+                callback_args['body'] = task.result.to_dict()
 
                 res_body = {
                     'status': 'success'
@@ -52,7 +56,8 @@ class ResultMessageHandler(metaclass=SingletonMeta):
                 task = TaskManager().del_task(task_token)
 
                 callback = task.callback
-                callback_args['error_code'] = error_code
+                callback_args['status'] = 'error'
+                callback_args['body'] = error_code
 
                 res_body = {
                     'status': 'success'
@@ -63,7 +68,8 @@ class ResultMessageHandler(metaclass=SingletonMeta):
                     'status': 'fail',
                     'error_code': 'unknown'
                 }
-        except TaskValueError:
+        except TaskValueError as e:
+            print(e, traceback.format_exc())
             res_body = {
                 'status': 'fail',
                 'error_code': 'unknown'

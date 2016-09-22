@@ -95,7 +95,7 @@ class TensorflowTaskResult(TaskResult):
 
     @classmethod
     def _from_dict(cls, dict_ : dict) -> 'TensorflowTaskResult':
-        return TensorflowTaskResult(dict_['stdout'], dict_['stderr'], dict_['result_file_token'])
+        return TensorflowTaskResult(dict_.get('stdout', ''), dict_.get('stderr', ''), dict_.get('result_file_token', ''))
 
     @property
     def stdout(self):

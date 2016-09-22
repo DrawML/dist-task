@@ -103,7 +103,12 @@ class ResultReceiverCommunicationRouter(metaclass=SingletonMeta):
         future = asyncio.ensure_future(self.dispatch_msg_coro(addr, header, body))
         if f_callback is not None:
             import functools
-            future.add_done_callback(functools.partial(f_callback, **f_args))
+            callback = functools.partial(f_callback, **f_args)
+            # this is not thread-safe (internally, call <abstract_loop.call_soon()>)
+            # - future.add_done_callback(callback)
+            #
+            # you need to make adding callback thread-safe way
+            asyncio.get_event_loop().call_soon_threadsafe(callback)
 
 
 class TaskDeliverer(metaclass=SingletonMeta):
@@ -119,7 +124,6 @@ class TaskDeliverer(metaclass=SingletonMeta):
 
         async def get_msg(sleep_sec=1):
             while True:
-                print('[TaskDeliverer] ', 'get_msg loop ')
                 try:
                     return self._msg_queue.get_nowait()
                 except queue.Empty as e:
