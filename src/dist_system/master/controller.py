@@ -120,7 +120,7 @@ class Scheduler(metaclass=SingletonMeta):
             if best_slave is None or best_avail_cpu_count < alloc_info.avail_cpu_count:
                 best_slave = slave
                 best_cpu_rest = cpu_rest
-                best_avail_cpu_count = best_avail_cpu_count
+                best_avail_cpu_count = alloc_info.avail_cpu_count
             elif best_avail_cpu_count == alloc_info.avail_cpu_count and best_cpu_rest < cpu_rest:
                 best_slave = slave
                 best_cpu_rest = cpu_rest

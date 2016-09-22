@@ -19,12 +19,12 @@ class ClientMessageHandler(metaclass=SingletonMeta):
     def handle_msg(self, addr, header, body):
         session_identity = ClientSessionIdentity(addr)
         msg_name = header
-        Logger().log("client identity={0}, header={1}, body={2}".format(session_identity, header, body))
+        Logger().log("client identity={0}, header={1}, body={2}".format(session_identity, header, body), level=2)
         try:
             ClientMessageHandler.__handler_dict[msg_name](self, session_identity, body)
         except Exception as e:
             Logger().log("Unknown Exception occurs! Pass it for continuous running.\n" + traceback.format_exc())
-        Logger().log("finish of handling client message.")
+        Logger().log("finish of handling client message.", level=2)
 
     def _h_task_register_req(self, session_identity, body):
         try:
@@ -134,12 +134,12 @@ class SlaveMessageHandler(metaclass=SingletonMeta):
     def handle_msg(self, addr, header, body):
         slave_identity = SlaveIdentity(addr)
         msg_name = header
-        Logger().log("slave identity={0}, header={1}, body={2}".format(slave_identity, header, body))
+        Logger().log("slave identity={0}, header={1}, body={2}".format(slave_identity, header, body), level=2)
         try:
             SlaveMessageHandler.__handler_dict[msg_name](self, slave_identity, body)
         except Exception as e:
             Logger().log("Unknown Exception occurs! Pass it for continuous running.\n" + traceback.format_exc())
-        Logger().log("finish of handling slave message")
+        Logger().log("finish of handling slave message", level=2)
 
     def _h_heart_beat_res(self, slave_identity, body):
         try:
@@ -205,6 +205,8 @@ class SlaveMessageHandler(metaclass=SingletonMeta):
 
     def _h_task_finish_req(self, slave_identity, body):
 
+        Logger().log('task finish.')
+
         def free_resource(alloc_info : AllocationInformation, allocated_resource : AllocatedResource):
 
             Logger().log("Free Resource :", allocated_resource)
@@ -257,7 +259,7 @@ class SlaveMessageHandler(metaclass=SingletonMeta):
             slave.slave_info = slave_info
             if slave.alloc_info is None:
                 slave.alloc_info = AllocationInformation(
-                    slave_info.cpu_info.cpu_count,
+                    0,
                     slave_info.cpu_info.cpu_count,
                     [AllocationTensorflowGpuInformation(True, tf_gpu_info)
                      for tf_gpu_info in slave_info.tf_gpu_info_list]
