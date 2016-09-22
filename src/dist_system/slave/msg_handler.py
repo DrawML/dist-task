@@ -18,12 +18,12 @@ class MasterMessageHandler(metaclass=SingletonMeta):
 
     def handle_msg(self, header, body):
         msg_name = header
-        Logger().log("from master, header={0}, body={1}".format(header, body))
+        Logger().log("from master, header={0}, body={1}".format(header, body), level=2)
         try:
             MasterMessageHandler.__handler_dict[msg_name](self, body)
         except Exception as e:
             Logger().log("Unknown Exception occurs! Pass it for continuous running.\n" + traceback.format_exc())
-        Logger().log("finish of handling master message")
+        Logger().log("finish of handling master message", level=2)
 
     def _h_heart_beat_req(self, body):
         MasterMessageDispatcher().dispatch_msg('heart_beat_res', {})
@@ -133,12 +133,12 @@ class WorkerMessageHandler(metaclass=SingletonMeta):
     def handle_msg(self, addr, header, body):
         worker_identity = WorkerIdentity(addr)
         msg_name = header
-        Logger().log("worker identity={0} header={1}, body={2}".format(worker_identity, header, body))
+        Logger().log("worker identity={0} header={1}, body={2}".format(worker_identity, header, body), level=2)
         try:
             WorkerMessageHandler.__handler_dict[msg_name](self, worker_identity, body)
         except Exception as e:
             Logger().log("Unknown Exception occurs! Pass it for continuous running.\n" + traceback.format_exc())
-        Logger().log("finish of handling worker message")
+        Logger().log("finish of handling worker message", level=2)
 
     def _h_worker_register_req(self, worker_identity, body):
         task_token = TaskToken.from_bytes(body['task_token'])
@@ -176,6 +176,7 @@ class WorkerMessageHandler(metaclass=SingletonMeta):
         pass
 
     def _h_task_finish_req(self, worker_identity, body):
+        Logger().log('task finish.')
         try:
             worker = WorkerManager().find_worker(worker_identity)
             WorkerManager().del_worker(worker)

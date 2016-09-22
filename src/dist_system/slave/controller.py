@@ -28,7 +28,7 @@ class WorkerCreator(metaclass=SingletonMeta):
             'task' : task.job.to_dict()
         })
         hex_data = serialized_data.hex()
-        proc = subprocess.Popen([self._worker_file_name, hex_data])
+        proc = subprocess.Popen(['python3', self._worker_file_name, hex_data])
         return proc
 
 

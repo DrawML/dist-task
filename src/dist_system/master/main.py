@@ -50,7 +50,7 @@ class ClientRouter(metaclass=SingletonMeta):
         return addr, data
 
     async def dispatch_msg_coro(self, client_session_identity, header, body):
-        Logger().log("to client({0}), header={1}, body={2}".format(client_session_identity, header, body))
+        Logger().log("to client({0}), header={1}, body={2}".format(client_session_identity, header, body), level=2)
         addr = client_session_identity.addr
         try:
             data = client_master.make_msg_data(header, body)
@@ -97,7 +97,7 @@ class SlaveRouter(metaclass=SingletonMeta):
         return addr, data
 
     async def dispatch_msg_coro(self, slave_identity, header, body):
-        Logger().log("to slave({0}), header={1}, body={2}".format(slave_identity, header, body))
+        Logger().log("to slave({0}), header={1}, body={2}".format(slave_identity, header, body), level=2)
         addr = slave_identity.addr
         try:
             data = master_slave.make_msg_data(header, body)
@@ -115,7 +115,7 @@ class SlaveRouter(metaclass=SingletonMeta):
 
 async def run_master(context : Context, client_router_addr, slave_router_addr):
 
-    Logger("Master")
+    Logger("Master", level=3)
     TaskManager()
     SlaveManager()
     ClientSessionManager()

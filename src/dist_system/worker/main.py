@@ -49,7 +49,7 @@ class SlaveConnection(object):
         return msg[0]
 
     async def dispatch_msg_coro(self, header, body):
-        Logger().log("to slave, header={0}, body={1}".format(header, body))
+        Logger().log("to slave, header={0}, body={1}".format(header, body), level=2)
         try:
             data = slave_worker.make_msg_data(header, body)
         except Exception as e:
@@ -99,7 +99,7 @@ async def run_worker(context : Context, slave_addr, serialized_data : bytes):
 
     import random
     import time
-    Logger("Worker@" + str(time.time()) + "#" + str(random.randint(1, 10000000)))
+    Logger("Worker@" + str(time.time()) + "#" + str(random.randint(1, 10000000)), level=2)
 
     header, body = slave_worker.parse_msg_data(serialized_data)
     assert header == 'task_register_cmd'
