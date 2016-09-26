@@ -12,7 +12,7 @@ class FileValueError(ValueError):
         self._msg = msg
 
     def __str__(self):
-        return "TaskValueError : %s" % self._msg
+        return "FileValueError : %s" % self._msg
 
 
 class FileManager(metaclass=SingletonMeta):
