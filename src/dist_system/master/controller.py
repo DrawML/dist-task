@@ -75,7 +75,7 @@ class Scheduler(metaclass=SingletonMeta):
                 task.job = task.prev_job
             executable_code = link(task.job.object_code, run_config)
             task.prev_job = task.job
-            task.job = DataProcessingTaskSlaveJob(task.job.data_file_token, executable_code)
+            task.job = DataProcessingTaskSlaveJob.from_master_job(task.prev_job, executable_code)
         elif task_type == TaskType.TYPE_TENSORFLOW_TASK:
             if not isinstance(task.job, TensorflowTaskMasterJob):
                 task.job = task.prev_job

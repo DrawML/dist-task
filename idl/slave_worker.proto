@@ -17,8 +17,9 @@ message TaskRegisterCMD
 
 	message DataProcessingTask
 	{
-		string data_filename = 1;
-		string executable_code_filename = 2;
+		int32 data_file_num = 1;
+        repeated string data_filename_list = 2;
+		string executable_code_filename = 3;
 	}
 
 	message TensorflowTask

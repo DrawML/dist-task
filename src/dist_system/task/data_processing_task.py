@@ -16,21 +16,30 @@ class DataProcessingTaskJob(TaskJob):
 
 
 class DataProcessingTaskMasterJob(TaskJob):
-    def __init__(self, data_file_token : str, object_code : str):
+    def __init__(self, data_file_num : int, data_file_token_list : list, object_code : str):
         super().__init__()
-        self._data_file_token = data_file_token
+        self._data_file_num = data_file_num
+        self._data_file_token_list = data_file_token_list
         self._object_code = object_code
 
     def _to_dict(self) -> dict:
-        return {'data_file_token': self._data_file_token, 'object_code': self._object_code }
+        return {'data_file_num': self._data_file_num,
+                'data_file_token_list': self._data_file_token_list,
+                'object_code': self._object_code }
 
     @classmethod
     def _from_dict(cls, dict_ : dict) -> 'DataProcessingTaskMasterJob':
-        return DataProcessingTaskMasterJob(dict_['data_file_token'], dict_['object_code'])
+        return DataProcessingTaskMasterJob(dict_['data_file_num'],
+                                           dict_['data_file_token_list'],
+                                           dict_['object_code'])
 
     @property
-    def data_file_token(self):
-        return self._data_file_token
+    def data_file_num(self):
+        return self._data_file_num
+
+    @property
+    def data_file_tokens(self):
+        return tuple(self._data_file_token_list)
 
     @property
     def object_code(self):
@@ -38,21 +47,34 @@ class DataProcessingTaskMasterJob(TaskJob):
 
 
 class DataProcessingTaskSlaveJob(DataProcessingTaskJob):
-    def __init__(self, data_file_token : str, executable_code : str):
+    def __init__(self, data_file_num : int, data_file_token_list : list, executable_code : str):
         super().__init__()
-        self._data_file_token = data_file_token
+        self._data_file_num = data_file_num
+        self._data_file_token_list = data_file_token_list
         self._executable_code = executable_code
 
     def _to_dict(self) -> dict:
-        return {'data_file_token': self._data_file_token, 'executable_code': self._executable_code }
+        return {'data_file_num': self._data_file_num,
+                'data_file_token_list': self._data_file_token_list,
+                'executable_code': self._executable_code }
 
     @classmethod
     def _from_dict(cls, dict_ : dict) -> 'DataProcessingTaskSlaveJob':
-        return DataProcessingTaskSlaveJob(dict_['data_file_token'], dict_['executable_code'])
+        return DataProcessingTaskSlaveJob(dict_['data_file_num'],
+                                          dict_['data_file_token_list'],
+                                          dict_['executable_code'])
+
+    @classmethod
+    def from_master_job(cls, job : DataProcessingTaskMasterJob, executable_code):
+        return DataProcessingTaskSlaveJob(job.data_file_num, list(job.data_file_tokens), executable_code)
 
     @property
-    def data_file_token(self):
-        return self._data_file_token
+    def data_file_num(self):
+        return self._data_file_num
+
+    @property
+    def data_file_tokens(self):
+        return tuple(self._data_file_token_list)
 
     @property
     def executable_code(self):
@@ -60,22 +82,30 @@ class DataProcessingTaskSlaveJob(DataProcessingTaskJob):
 
 
 class DataProcessingTaskWorkerJob(DataProcessingTaskJob):
-    def __init__(self, data_filename : str, executable_code_filename : str):
+    def __init__(self, data_file_num : int, data_filename_list : list, executable_code_filename : str):
         super().__init__()
-        self._data_filename = data_filename
+        self._data_file_num = data_file_num
+        self._data_filename_list = data_filename_list
         self._executable_code_filename = executable_code_filename
 
     def _to_dict(self) -> dict:
-        return {'data_filename': self._data_filename,
+        return {'data_file_num': self._data_file_num,
+                'data_filename_list': self._data_filename_list,
                 'executable_code_filename': self._executable_code_filename }
 
     @classmethod
     def _from_dict(cls, dict_ : dict) -> 'DataProcessingTaskWorkerJob':
-        return DataProcessingTaskWorkerJob(dict_['data_filename'], dict_['executable_code_filename'])
+        return DataProcessingTaskWorkerJob(dict_['data_file_num'],
+                                           dict_['data_filename_list'],
+                                           dict_['executable_code_filename'])
 
     @property
-    def data_filename(self):
-        return self._data_filename
+    def data_file_num(self):
+        return self._data_file_num
+
+    @property
+    def data_filenames(self):
+        return tuple(self._data_filename_list)
 
     @property
     def executable_code_filename(self):

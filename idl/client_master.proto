@@ -17,8 +17,9 @@ message TaskRegisterRequest
 	
 	message DataProcessingTask
 	{
-        string data_file_token = 1;
-		string object_code = 2;
+		int32 data_file_num = 1;
+        repeated string data_file_token_list = 2;
+		string object_code = 3;
 	}
 
 	message TensorflowTask
