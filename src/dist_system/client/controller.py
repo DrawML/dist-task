@@ -1,3 +1,6 @@
+import asyncio
+
+import functools
 from . import main
 from ..task.functions import make_task_with_task_type
 from ..task.task import *
@@ -18,7 +21,13 @@ async def register_task_to_master(context, master_addr, result_receiver_address,
 
     header, body = await conn.recv_msg()
     if header != 'task_register_res':
+        callback_args = dict()
+        callback_args['status'] = 'error'
+        callback_args['body'] = 'dist-task Internal Error'
+
+        asyncio.get_event_loop().call_soon_threadsafe(functools.partial(callback, **callback_args))
         raise Exception('Task Register Fail')
+
     status = body['status']
     task_token = TaskToken.from_bytes(body['task_token'])
 
@@ -29,9 +38,21 @@ async def register_task_to_master(context, master_addr, result_receiver_address,
         TaskManager().add_task(task)
     elif status == 'fail':
         error_code = body['error_code']
+
+        callback_args = dict()
+        callback_args['status'] = 'error'
+        callback_args['body'] = error_code
+
+        asyncio.get_event_loop().call_soon_threadsafe(functools.partial(callback, **callback_args))
+
         raise Exception('Task Register Fail')
     else:
         # invalid message
+        callback_args = dict()
+        callback_args['status'] = 'error'
+        callback_args['body'] = 'dist-task Internal Error'
+
+        asyncio.get_event_loop().call_soon_threadsafe(functools.partial(callback, **callback_args))
         raise Exception('Task Register Fail')
 
     conn.close()
@@ -43,7 +64,16 @@ async def cancel_task_to_master(context, master_addr, task):
     await conn.dispatch_msg_coro('task_cancel_req', {
         'task_token': task.task_token.to_bytes()
     })
+
+    callback_args = dict()
+    callback = task.callback
+
+    # TODO: [SB] Why is task deleted here?
     TaskManager().del_task(task)
     header, body = await conn.recv_msg()
     # nothing to do using response message.
     conn.close()
+
+    callback_args['status'] = 'cancel'
+    callback_args['body'] = None
+    asyncio.get_event_loop().call_soon_threadsafe(functools.partial(callback, **callback_args))
