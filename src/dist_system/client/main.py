@@ -6,6 +6,8 @@ import sys
 import zmq
 from zmq.asyncio import Context, ZMQEventLoop
 import asyncio
+
+from . import RequestMessage, CancelMessage
 from .msg_handler import ResultMessageHandler
 from .controller import *
 from ..protocol import client_master, any_result_receiver
@@ -161,25 +163,59 @@ class TaskDeliverer(metaclass=SingletonMeta):
 
         while True:
             print('[TaskDeliverer] ', 'run! ')
-            task_type, task_job_dict, callback = await get_msg(sleep_sec=1)
-            print('[TaskDeliverer] ', 'get msg! ', task_job_dict)
-            await self._process(task_type, task_job_dict, callback)
+            message = await get_msg(sleep_sec=1)
+            print('[TaskDeliverer] ', 'get msg! ', message)
+            await self._process(message)
 
-    async def _process(self, task_type: TaskType, task_job_dict: dict, callback):
+    async def _process(self, msg):
         print('[TaskDeliverer] ', 'start to request! in process')
-        if task_type == TaskType.TYPE_TENSORFLOW_TASK:
-            print('[TaskDeliverer] ', 'request! in process')
-            await register_tensorflow_task(self._context, self._master_addr, self._result_receiver_address,
-                                           task_job_dict, callback)
-        else:
-            pass
 
-async def register_tensorflow_task(context: Context, master_addr, result_receiver_address, task_job_dict: dict, callback):
+        if isinstance(msg, RequestMessage):
+            if msg.task_type == TaskType.TYPE_TENSORFLOW_TASK:
+                print('[TaskDeliverer] ', 'TENSORFLOW_TASK request! in process')
+                await register_tensorflow_task(self._context, self._master_addr, self._result_receiver_address, msg)
+            elif msg.task_type == TaskType.TYPE_DATA_PROCESSING_TASK:
+                print('[TaskDeliverer] ', 'DATA_PROCESSING_TASK request! in process')
+                await register_data_proc_task(self._context, self._master_addr, self._result_receiver_address, msg)
+            else:
+                pass
+        elif isinstance(msg, CancelMessage):
+            register_task_cancel(self._context, self._master_addr, msg)
+
+
+async def register_tensorflow_task(context: Context, master_addr, result_receiver_address, msg: RequestMessage):
+    TaskSyncManager().pend_experiment(msg.experiment_id)
+
     asyncio.ensure_future(coroutine_with_no_exception(
         register_task_to_master(context, master_addr, result_receiver_address, TaskType.TYPE_TENSORFLOW_TASK,
-                                TensorflowTaskJob.from_dict_with_whose_job('master', task_job_dict), callback),
+                                TensorflowTaskJob.from_dict_with_whose_job('master', msg.task_job_dict), msg.callback,
+                                msg.experiment_id),
         _coroutine_exception_callback)
     )
+
+
+async def register_data_proc_task(context: Context, master_addr, result_receiver_address, msg: RequestMessage):
+    TaskSyncManager().pend_experiment(msg.experiment_id)
+
+    asyncio.ensure_future(coroutine_with_no_exception(
+        register_task_to_master(context, master_addr, result_receiver_address, TaskType.TYPE_DATA_PROCESSING_TASK,
+                                DataProcessingTaskJob.from_dict_with_whose_job('master', msg.task_job_dict), msg.callback,
+                                msg.experiment_id),
+        _coroutine_exception_callback)
+    )
+
+
+async def register_task_cancel(context: Context, master_addr, msg: CancelMessage):
+    if TaskManager().check_task_existence_by_exp_id(msg.experiment_id):
+        task = TaskManager().find_task_by_exp_id(msg.experiment_id)
+        asyncio.ensure_future(coroutine_with_no_exception(
+            cancel_task_to_master(context, master_addr, task),
+            _coroutine_exception_callback)
+        )
+    elif TaskSyncManager().check_pending_exp_id(msg.experiment_id):
+        TaskSyncManager().reserve_cancel(msg.experiment_id)
+    else:
+        raise Exception('Task Cancel Fail')
 
 
 async def run_client(context: Context, master_addr, result_router_addr, result_receiver_address, msg_queue):

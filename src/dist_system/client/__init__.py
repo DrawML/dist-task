@@ -4,6 +4,41 @@ from threading import Thread
 from queue import Queue
 
 
+class RequestMessage():
+
+    def __init__(self, experiment_id, task_type, task_job_dict, callback):
+        self._experiment_id = experiment_id
+        self._task_type = task_type
+        self._task_job_dict = task_job_dict
+        self._callback = callback
+
+    @property
+    def experiment_id(self):
+        return self._experiment_id
+
+    @property
+    def task_type(self):
+        return self._task_type
+
+    @property
+    def task_job_dict(self):
+        return self._task_job_dict
+
+    @property
+    def callback(self):
+        return self._callback
+
+
+class CancelMessage():
+
+    def __init__(self, experiment_id):
+        self._experiment_id = experiment_id
+
+    @property
+    def experiment_id(self):
+        return self._experiment_id
+
+
 class Client(metaclass=SingletonMeta):
     TaskType = TaskType
 
@@ -41,14 +76,26 @@ class Client(metaclass=SingletonMeta):
             print('[Client] ', 'already stopped ')
             pass
 
-    def request(self, task_type: TaskType, task_job_dict: dict, callback=None):
+    def request_task(self, experiment_id, task_type: TaskType, task_job_dict: dict, callback=None):
         if self._is_running:
             print('[Client] ', 'request message before')
 
-            msg = (task_type, task_job_dict, callback)
+            msg = RequestMessage(experiment_id, task_type, task_job_dict, callback)
             self._msg_queue.put(msg)
 
             print('[Client] ', 'request message after')
+        else:
+            print('[Client] ', 'is not running')
+            pass
+
+    def request_cancel(self, experiment_id):
+        if self._is_running:
+            print('[Client] ', 'request cancel message before')
+
+            msg = CancelMessage(experiment_id)
+            self._msg_queue.put(msg)
+
+            print('[Client] ', 'request cancel message after')
         else:
             print('[Client] ', 'is not running')
             pass
