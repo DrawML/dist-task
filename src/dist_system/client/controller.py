@@ -1,6 +1,8 @@
 import asyncio
 
 import functools
+
+from .main import TaskSyncManager
 from . import main
 from ..task.functions import make_task_with_task_type
 from ..task.task import *
@@ -8,7 +10,7 @@ from .task import TaskManager
 from ..logger import Logger
 
 
-async def register_task_to_master(context, master_addr, result_receiver_address, task_type, job, callback):
+async def register_task_to_master(context, master_addr, result_receiver_address, task_type, job, callback, exp_id):
     Logger().log("* register_task_to_master")
     conn = main.MasterConnection(context, master_addr)
 
@@ -20,6 +22,8 @@ async def register_task_to_master(context, master_addr, result_receiver_address,
     })
 
     header, body = await conn.recv_msg()
+    TaskSyncManager().unpend_experiment(exp_id)
+
     if header != 'task_register_res':
         callback_args = dict()
         callback_args['status'] = 'error'
@@ -35,7 +39,13 @@ async def register_task_to_master(context, master_addr, result_receiver_address,
         await conn.dispatch_msg_coro('task_register_ack', {})
         task = make_task_with_task_type(task_type, job.to_dict(), 'master', task_token, result_receiver_address)
         task.callback = callback
+        task.exp_id = exp_id
+
         TaskManager().add_task(task)
+
+        if TaskSyncManager().check_cancel_exp(exp_id):
+            TaskSyncManager().remove_from_cancel_queue(exp_id)
+            cancel_task_to_master(context, master_addr, task)
     elif status == 'fail':
         error_code = body['error_code']
 

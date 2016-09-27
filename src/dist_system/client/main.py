@@ -111,6 +111,36 @@ class ResultReceiverCommunicationRouter(metaclass=SingletonMeta):
             asyncio.get_event_loop().call_soon_threadsafe(callback)
 
 
+class TaskSyncManager(metaclass=SingletonMeta):
+    def __index__(self):
+        self._pending_queue = list()
+        self._cancel_queue = list()
+
+    def pend_experiment(self, exp_id):
+        self._pending_queue.append(exp_id)
+
+    def unpend_experiment(self, exp_id):
+        if exp_id in self._pending_queue:
+            self._pending_queue.remove(exp_id)
+        else:
+            Logger().log(" * TaskSyncManager::Unpending error - There is no experiment_id")
+
+    def reserve_cancel(self, exp_id):
+        self._cancel_queue.append(exp_id)
+
+    def remove_from_cancel_queue(self, exp_id):
+        if exp_id in self._cancel_queue:
+            self._cancel_queue.remove(exp_id)
+        else:
+            Logger().log(" * TaskSyncManager::Canceling error - There is no experiment_id")
+
+    def check_cancel_exp(self, exp_id):
+        return exp_id in self._cancel_queue
+
+    def check_pending_exp_id(self, exp_id):
+        return exp_id in self._pending_queue
+
+
 class TaskDeliverer(metaclass=SingletonMeta):
     def __init__(self, context: Context, master_addr, result_receiver_address, msg_queue: Queue):
         print('[TaskDeliverer] ', 'init! ')
@@ -155,6 +185,7 @@ async def register_tensorflow_task(context: Context, master_addr, result_receive
 async def run_client(context: Context, master_addr, result_router_addr, result_receiver_address, msg_queue):
     Logger('Client')
     print('[ClientRunClient] ', 'in run!')
+    TaskSyncManager()
     result_router = ResultReceiverCommunicationRouter(context, result_router_addr, ResultMessageHandler())
     deliverer = TaskDeliverer(context, master_addr, result_receiver_address, msg_queue)
 
