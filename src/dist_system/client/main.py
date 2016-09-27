@@ -15,7 +15,7 @@ from functools import partial
 from ..library import SingletonMeta, coroutine_with_no_exception
 from ..task.task import *
 from ..task.functions import *
-from .task import TaskManager
+from .task import TaskManager, TaskSyncManager
 from .simulator import simulate_task, _coroutine_exception_callback
 from ..logger import Logger
 from queue import Queue
@@ -111,36 +111,6 @@ class ResultReceiverCommunicationRouter(metaclass=SingletonMeta):
             #
             # you need to make adding callback thread-safe way
             asyncio.get_event_loop().call_soon_threadsafe(callback)
-
-
-class TaskSyncManager(metaclass=SingletonMeta):
-    def __index__(self):
-        self._pending_queue = list()
-        self._cancel_queue = list()
-
-    def pend_experiment(self, exp_id):
-        self._pending_queue.append(exp_id)
-
-    def unpend_experiment(self, exp_id):
-        if exp_id in self._pending_queue:
-            self._pending_queue.remove(exp_id)
-        else:
-            Logger().log(" * TaskSyncManager::Unpending error - There is no experiment_id")
-
-    def reserve_cancel(self, exp_id):
-        self._cancel_queue.append(exp_id)
-
-    def remove_from_cancel_queue(self, exp_id):
-        if exp_id in self._cancel_queue:
-            self._cancel_queue.remove(exp_id)
-        else:
-            Logger().log(" * TaskSyncManager::Canceling error - There is no experiment_id")
-
-    def check_cancel_exp(self, exp_id):
-        return exp_id in self._cancel_queue
-
-    def check_pending_exp_id(self, exp_id):
-        return exp_id in self._pending_queue
 
 
 class TaskDeliverer(metaclass=SingletonMeta):

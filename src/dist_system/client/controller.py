@@ -2,11 +2,11 @@ import asyncio
 
 import functools
 
-from .main import TaskSyncManager
+
 from . import main
 from ..task.functions import make_task_with_task_type
 from ..task.task import *
-from .task import TaskManager
+from .task import TaskManager, TaskSyncManager
 from ..logger import Logger
 
 
