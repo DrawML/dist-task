@@ -1,5 +1,5 @@
 # Custom ignore files
-idl/output
+idl/output/*
 src/dist_system/protocol/pb/*_pb2.py
 
 
