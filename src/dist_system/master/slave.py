@@ -1,4 +1,4 @@
-from ..library import SingletonMeta
+from dist_system.library import SingletonMeta
 
 
 class SlaveValueError(ValueError):

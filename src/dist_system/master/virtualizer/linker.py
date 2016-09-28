@@ -1,5 +1,5 @@
 from jinja2 import Template
-from .config import RunConfig
+from dist_system.master.virtualizer.config import RunConfig
 
 
 """

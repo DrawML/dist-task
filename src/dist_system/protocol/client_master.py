@@ -1,5 +1,5 @@
-from .base_protocol import BaseProtocol
-from .pb import client_master_pb2 as cm_proto
+from dist_system.protocol.base_protocol import BaseProtocol
+from dist_system.protocol.pb import client_master_pb2 as cm_proto
 
 
 message_table = {

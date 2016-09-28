@@ -1,19 +1,19 @@
 import asyncio
-from .slave import *
-from .task import *
-from ..library import SingletonMeta
-from ..task.functions import get_task_type_of_task
-from ..task.data_processing_task import *
-from ..task.tensorflow_task import *
-from .msg_dispatcher import *
+from dist_system.master.slave import *
+from dist_system.master.task import *
+from dist_system.library import SingletonMeta
+from dist_system.task.functions import get_task_type_of_task
+from dist_system.task.data_processing_task import *
+from dist_system.task.tensorflow_task import *
+from dist_system.master.msg_dispatcher import *
 from typing import Iterable
 import random
-from ..logger import Logger
-from .virtualizer.linker import link
-from .virtualizer.config import RunConfig
+from dist_system.logger import Logger
+from dist_system.master.virtualizer.linker import link
+from dist_system.master.virtualizer.config import RunConfig
 import heapq
-from ..logger import Logger
-from ..information.information import AllocatedResource
+from dist_system.logger import Logger
+from dist_system.information.information import AllocatedResource
 
 
 async def run_heartbeat():

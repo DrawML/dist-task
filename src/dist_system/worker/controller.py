@@ -1,15 +1,15 @@
 import zmq
 from zmq.asyncio import Context
 import asyncio
-from ..result_receiver import ResultReceiverAddress
-from .result_receiver import *
-from ..task.task import *
-from ..task.sleep_task import *
-from .msg_dispatcher import *
-from ..task.functions import make_task_with_task_type
+from dist_system.result_receiver import ResultReceiverAddress
+from dist_system.worker.result_receiver import *
+from dist_system.task.task import *
+from dist_system.task.sleep_task import *
+from dist_system.worker.msg_dispatcher import *
+from dist_system.task.functions import make_task_with_task_type
 import traceback
-from ..logger import Logger
-from ..task.tensorflow_task import *
+from dist_system.logger import Logger
+from dist_system.task.tensorflow_task import *
 
 
 class TaskInformation(object):

@@ -1,15 +1,15 @@
-from .client import *
-from .slave import *
-from .task import *
-from ..task.sleep_task import *
-from .controller import *
-from ..result_receiver import ResultReceiverAddress
-from ..library import SingletonMeta
-from .msg_dispatcher import *
-from ..task.functions import *
-from ..logger import Logger
+from dist_system.master.client import *
+from dist_system.master.slave import *
+from dist_system.master.task import *
+from dist_system.task.sleep_task import *
+from dist_system.master.controller import *
+from dist_system.result_receiver import ResultReceiverAddress
+from dist_system.library import SingletonMeta
+from dist_system.master.msg_dispatcher import *
+from dist_system.task.functions import *
+from dist_system.logger import Logger
 import traceback
-from ..information.information import *
+from dist_system.information.information import *
 
 
 class ClientMessageHandler(metaclass=SingletonMeta):

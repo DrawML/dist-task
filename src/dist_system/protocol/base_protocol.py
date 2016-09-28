@@ -1,4 +1,4 @@
-from .exceptions import *
+from dist_system.protocol.exceptions import *
 
 
 class BaseProtocol:

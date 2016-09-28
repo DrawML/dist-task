@@ -1,11 +1,11 @@
-from ..task.sleep_task import *
-from ..result_receiver import ResultReceiverAddress
-from ..library import SingletonMeta
-from .task import *
-from .controller import *
-from ..task.functions import *
-from . import main
-from ..logger import Logger
+from dist_system.task.sleep_task import *
+from dist_system.result_receiver import ResultReceiverAddress
+from dist_system.library import SingletonMeta
+from dist_system.client.task import *
+from dist_system.client.controller import *
+from dist_system.task.functions import *
+from dist_system.client import main
+from dist_system.logger import Logger
 import traceback
 
 

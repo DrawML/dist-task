@@ -1,8 +1,8 @@
-from .controller import *
+from dist_system.client.controller import *
 import asyncio
-from ..task.sleep_task import *
-from .task import TaskManager
-from ..library import coroutine_with_no_exception
+from dist_system.task.sleep_task import *
+from dist_system.client.task import TaskManager
+from dist_system.library import coroutine_with_no_exception
 
 
 def _coroutine_exception_callback(_, e):

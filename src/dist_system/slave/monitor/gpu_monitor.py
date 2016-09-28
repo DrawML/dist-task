@@ -4,7 +4,7 @@ import os
 import sys
 import xml.etree.ElementTree as ET
 import copy
-from ...information.information import *
+from dist_system.information.information import *
 
 
 SRC_DIR = os.path.dirname(os.sys.modules[__name__].__file__)

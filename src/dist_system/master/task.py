@@ -1,5 +1,5 @@
-from ..library import (AutoIncrementEnum, SingletonMeta)
-from ..task.task import *
+from dist_system.library import (AutoIncrementEnum, SingletonMeta)
+from dist_system.task.task import *
 
 
 class TaskStatusValueError(ValueError):

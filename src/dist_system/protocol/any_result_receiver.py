@@ -1,5 +1,5 @@
-from .base_protocol import BaseProtocol
-from .pb import any_result_receiver_pb2 as arr_proto
+from dist_system.protocol.base_protocol import BaseProtocol
+from dist_system.protocol.pb import any_result_receiver_pb2 as arr_proto
 
 
 message_table = {

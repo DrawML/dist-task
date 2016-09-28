@@ -6,18 +6,18 @@ import sys
 import zmq
 from zmq.asyncio import Context, ZMQEventLoop
 import asyncio
-from .msg_handler import (MasterMessageHandler, WorkerMessageHandler)
-from .controller import *
-from ..protocol import master_slave, slave_worker, any_result_receiver
+from dist_system.slave.msg_handler import (MasterMessageHandler, WorkerMessageHandler)
+from dist_system.slave.controller import *
+from dist_system.protocol import master_slave, slave_worker, any_result_receiver
 from functools import partial
-from .msg_dispatcher import *
-from .result_receiver import *
-from .monitor.monitor import monitor
-from ..logger import Logger
+from dist_system.slave.msg_dispatcher import *
+from dist_system.slave.result_receiver import *
+from dist_system.slave.monitor.monitor import monitor
+from dist_system.logger import Logger
 import traceback
-from .file import FileManager
+from dist_system.slave.file import FileManager
 import os
-from ..library import coroutine_with_no_exception
+from dist_system.library import coroutine_with_no_exception
 
 
 class MasterConnection(metaclass=SingletonMeta):

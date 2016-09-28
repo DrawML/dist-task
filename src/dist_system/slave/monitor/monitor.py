@@ -1,6 +1,6 @@
 import psutil
-from ...information.information import *
-from .gpu_monitor import monitor_tf_gpu
+from dist_system.information.information import *
+from dist_system.slave.monitor.gpu_monitor import monitor_tf_gpu
 import asyncio
 
 

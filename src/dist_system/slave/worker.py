@@ -1,7 +1,7 @@
 import asyncio
 import string
 import random
-from ..library import SingletonMeta
+from dist_system.library import SingletonMeta
 import subprocess
 
 

@@ -1,5 +1,5 @@
 import unittest
-from src.dist_system.information.information import *
+from dist_system.information.information import *
 
 
 class MyTestCase(unittest.TestCase):

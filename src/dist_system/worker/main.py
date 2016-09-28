@@ -6,13 +6,13 @@ import sys
 import zmq
 from zmq.asyncio import Context, ZMQEventLoop
 import asyncio
-from .msg_handler import SlaveMessageHandler
-from .controller import (TaskInformation, do_task)
-from .msg_dispatcher import *
-from ..protocol import any_result_receiver, slave_worker
-from .result_receiver import *
+from dist_system.worker.msg_handler import SlaveMessageHandler
+from dist_system.worker.controller import (TaskInformation, do_task)
+from dist_system.worker.msg_dispatcher import *
+from dist_system.protocol import any_result_receiver, slave_worker
+from dist_system.worker.result_receiver import *
 from functools import partial
-from ..logger import Logger
+from dist_system.logger import Logger
 import traceback
 
 

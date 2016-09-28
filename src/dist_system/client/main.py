@@ -6,16 +6,16 @@ import sys
 import zmq
 from zmq.asyncio import Context, ZMQEventLoop
 import asyncio
-from .msg_handler import ResultMessageHandler
-from .controller import *
-from ..protocol import client_master, any_result_receiver
+from dist_system.client.msg_handler import ResultMessageHandler
+from dist_system.client.controller import *
+from dist_system.protocol import client_master, any_result_receiver
 from functools import partial
-from ..library import SingletonMeta, coroutine_with_no_exception
-from ..task.task import *
-from ..task.functions import *
-from .task import TaskManager
-from .simulator import simulate_task, _coroutine_exception_callback
-from ..logger import Logger
+from dist_system.library import SingletonMeta, coroutine_with_no_exception
+from dist_system.task.task import *
+from dist_system.task.functions import *
+from dist_system.client.task import TaskManager
+from dist_system.client.simulator import simulate_task, _coroutine_exception_callback
+from dist_system.logger import Logger
 from queue import Queue
 
 import traceback

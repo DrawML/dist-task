@@ -1,5 +1,5 @@
-from .base_protocol import BaseProtocol
-from .pb import slave_worker_pb2 as sw_proto
+from dist_system.protocol.base_protocol import BaseProtocol
+from dist_system.protocol.pb import slave_worker_pb2 as sw_proto
 
 message_table = {
     'task_register_cmd': {

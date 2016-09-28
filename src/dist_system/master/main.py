@@ -2,17 +2,17 @@ import sys
 import zmq
 from zmq.asyncio import Context, ZMQEventLoop
 import asyncio
-from .msg_handler import (ClientMessageHandler, SlaveMessageHandler)
-from .msg_dispatcher import *
-from .controller import run_heartbeat
-from ..protocol import master_slave, client_master
-from ..library import SingletonMeta
+from dist_system.master.msg_handler import (ClientMessageHandler, SlaveMessageHandler)
+from dist_system.master.msg_dispatcher import *
+from dist_system.master.controller import run_heartbeat
+from dist_system.protocol import master_slave, client_master
+from dist_system.library import SingletonMeta
 from functools import partial
-from .task import TaskManager
-from ..logger import Logger
-from .client import *
-from .slave import *
-from .controller import Scheduler
+from dist_system.master.task import TaskManager
+from dist_system.logger import Logger
+from dist_system.master.client import *
+from dist_system.master.slave import *
+from dist_system.master.controller import Scheduler
 import traceback
 
 

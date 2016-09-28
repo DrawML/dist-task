@@ -4,10 +4,10 @@
 import random
 import string
 from abc import *
-from ..library import AutoIncrementEnum
-from ..result_receiver import ResultReceiverAddress
-from ..library import SingletonMeta
-from ..information.information import AllocatedResource
+from dist_system.library import AutoIncrementEnum
+from dist_system.result_receiver import ResultReceiverAddress
+from dist_system.library import SingletonMeta
+from dist_system.information.information import AllocatedResource
 
 
 class TaskTypeValueError(ValueError):
