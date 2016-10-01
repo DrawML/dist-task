@@ -1,11 +1,11 @@
-from dist_system.task import TaskType
-from dist_system.library import SingletonMeta
-from threading import Thread
 from queue import Queue
+from threading import Thread
+
+from dist_system.library import SingletonMeta
+from dist_system.task import TaskType
 
 
 class RequestMessage():
-
     def __init__(self, experiment_id, task_type, task_job_dict, callback):
         self._experiment_id = experiment_id
         self._task_type = task_type
@@ -30,7 +30,6 @@ class RequestMessage():
 
 
 class CancelMessage():
-
     def __init__(self, experiment_id):
         self._experiment_id = experiment_id
 
@@ -103,4 +102,3 @@ class Client(metaclass=SingletonMeta):
     @property
     def is_running(self):
         return self._is_running
-

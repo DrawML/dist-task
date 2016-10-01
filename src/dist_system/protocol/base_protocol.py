@@ -18,7 +18,7 @@ class BaseProtocol:
                 if desc.containing_oneof:
                     name = desc.containing_oneof.name
                     field_dict[name + '_type'] = desc.name
-            elif hasattr(val, 'sort') and hasattr(val[0], 'ListFields'):    # when list
+            elif hasattr(val, 'sort') and hasattr(val[0], 'ListFields'):  # when list
                 value = list(map(lambda x: self.dictify_from_body(x), val))
 
             field_dict[name] = value

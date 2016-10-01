@@ -1,23 +1,23 @@
+import asyncio
 import sys
+import traceback
+
 import zmq
 from zmq.asyncio import Context, ZMQEventLoop
-import asyncio
 
-from dist_system.master.client import ClientSessionManager
-from dist_system.master.msg_handler import (ClientMessageHandler, SlaveMessageHandler)
-from dist_system.master.msg_dispatcher import SlaveMessageDispatcher, ClientMessageDispatcher
-from dist_system.master.controller import run_heartbeat
-from dist_system.master.slave import SlaveManager
-from dist_system.protocol import master_slave, client_master
 from dist_system.library import SingletonMeta
-from dist_system.master.task import TaskManager
 from dist_system.logger import Logger
+from dist_system.master.client import ClientSessionManager
 from dist_system.master.controller import Scheduler
-import traceback
+from dist_system.master.controller import run_heartbeat
+from dist_system.master.msg_dispatcher import SlaveMessageDispatcher, ClientMessageDispatcher
+from dist_system.master.msg_handler import (ClientMessageHandler, SlaveMessageHandler)
+from dist_system.master.slave import SlaveManager
+from dist_system.master.task import TaskManager
+from dist_system.protocol import master_slave, client_master
 
 
 class ClientRouter(metaclass=SingletonMeta):
-
     def __init__(self, context, addr, msg_handler):
         self._context = context
         self._addr = addr
@@ -33,7 +33,7 @@ class ClientRouter(metaclass=SingletonMeta):
             await self._process(msg)
 
     async def _process(self, msg):
-        #Logger().log("client router recv a message : {0}".format(msg))
+        # Logger().log("client router recv a message : {0}".format(msg))
         addr, data = self._resolve_msg(msg)
         try:
             header, body = client_master.parse_msg_data(data)
@@ -67,7 +67,6 @@ class ClientRouter(metaclass=SingletonMeta):
 
 
 class SlaveRouter(metaclass=SingletonMeta):
-
     def __init__(self, context, addr, msg_handler):
         self._context = context
         self._addr = addr
@@ -83,7 +82,7 @@ class SlaveRouter(metaclass=SingletonMeta):
             await self._process(msg)
 
     async def _process(self, msg):
-        #Logger().log("slave router recv a message : {0}".format(msg))
+        # Logger().log("slave router recv a message : {0}".format(msg))
         addr, data = self._resolve_msg(msg)
         header, body = master_slave.parse_msg_data(data)
 
@@ -113,8 +112,7 @@ class SlaveRouter(metaclass=SingletonMeta):
             future.add_done_callback(f_callback)
 
 
-async def run_master(context : Context, client_router_addr, slave_router_addr):
-
+async def run_master(context: Context, client_router_addr, slave_router_addr):
     Logger("Master", level=3)
     TaskManager()
     SlaveManager()

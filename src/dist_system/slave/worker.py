@@ -1,9 +1,10 @@
-from dist_system.library import SingletonMeta
 import subprocess
+
+from dist_system.library import SingletonMeta
 
 
 class WorkerValueError(ValueError):
-    def __init__(self, msg = ''):
+    def __init__(self, msg=''):
         self._msg = msg
 
     def __str__(self):
@@ -11,7 +12,7 @@ class WorkerValueError(ValueError):
 
 
 class WorkerIdentity(object):
-    def __init__(self, addr = None):
+    def __init__(self, addr=None):
         self._addr = addr
         if addr is None:
             self._valid = False
@@ -46,7 +47,7 @@ class WorkerIdentity(object):
 
 
 class Worker(WorkerIdentity):
-    def __init__(self, proc : subprocess.Popen, task, addr = None):
+    def __init__(self, proc: subprocess.Popen, task, addr=None):
         super().__init__(addr)
         self._proc = proc
         self._task = task
@@ -61,7 +62,6 @@ class Worker(WorkerIdentity):
 
 
 class WorkerManager(metaclass=SingletonMeta):
-
     def __init__(self):
         self._workers = []
 
@@ -86,7 +86,7 @@ class WorkerManager(metaclass=SingletonMeta):
             worker = identity_or_worker
         return worker
 
-    def check_worker_existence(self, worker_identity, find_flag = False):
+    def check_worker_existence(self, worker_identity, find_flag=False):
         targets = [worker for worker in self._workers if worker == worker_identity]
         ret = len(targets) > 0
         if find_flag:

@@ -1,6 +1,7 @@
-import unittest
-import dist_system.slave.monitor as monitor
 import asyncio
+import unittest
+
+import dist_system.slave.monitor as monitor
 
 
 class MyTestCase(unittest.TestCase):

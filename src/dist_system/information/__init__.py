@@ -1,6 +1,6 @@
 class TensorflowGpuInformation(object):
-
-    def __init__(self, pci_bus_id, name, tf_device, compute_capability_major, compute_capability_minor, mem_total, mem_free):
+    def __init__(self, pci_bus_id, name, tf_device, compute_capability_major, compute_capability_minor, mem_total,
+                 mem_free):
         self.pci_bus_id = pci_bus_id
         self.name = name
         self.tf_device = tf_device
@@ -18,25 +18,24 @@ class TensorflowGpuInformation(object):
 
     def to_dict(self):
         return {
-            'pci_bus_id' : self.pci_bus_id,
-            'name' : self.name,
-            'tf_device' : self.tf_device,
-            'compute_capability_major' : self.compute_capability_major,
-            'compute_capability_minor' : self.compute_capability_minor,
-            'mem_total' : self.mem_total,
-            'mem_free' : self.mem_free
+            'pci_bus_id': self.pci_bus_id,
+            'name': self.name,
+            'tf_device': self.tf_device,
+            'compute_capability_major': self.compute_capability_major,
+            'compute_capability_minor': self.compute_capability_minor,
+            'mem_total': self.mem_total,
+            'mem_free': self.mem_free
         }
 
     @staticmethod
-    def from_dict(dict_ : dict):
+    def from_dict(dict_: dict):
         return TensorflowGpuInformation(dict_['pci_bus_id'], dict_['name'], dict_['tf_device'],
                                         dict_['compute_capability_major'], dict_['compute_capability_minor'],
                                         dict_['mem_total'], dict_['mem_free'])
 
 
 class CpuInformation(object):
-
-    def __init__(self, cpu_count : int, cpu_percents : list):
+    def __init__(self, cpu_count: int, cpu_percents: list):
         self.cpu_count = cpu_count
         self.cpu_percents = cpu_percents
 
@@ -57,7 +56,6 @@ class CpuInformation(object):
 
 
 class MemoryInformation(object):
-
     def __init__(self, mem_total, mem_free):
         self.mem_total = mem_total
         self.mem_free = mem_free
@@ -79,7 +77,6 @@ class MemoryInformation(object):
 
 
 class SlaveInformation(object):
-
     def __init__(self, cpu_info, mem_info, tf_gpu_info_list):
         self.cpu_info = cpu_info
         self.mem_info = mem_info
@@ -141,7 +138,7 @@ class AllocationInformation(object):
 
 
 class AllocatedResource(object):
-    def __init__(self, alloc_cpu_count = 0, alloc_tf_gpu_info = None):
+    def __init__(self, alloc_cpu_count=0, alloc_tf_gpu_info=None):
         self.alloc_cpu_count = alloc_cpu_count
         self.alloc_tf_gpu_info = alloc_tf_gpu_info
 

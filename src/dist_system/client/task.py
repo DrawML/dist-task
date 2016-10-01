@@ -1,5 +1,5 @@
+from dist_system.library import (SingletonMeta)
 from dist_system.logger import Logger
-from dist_system.library import (AutoIncrementEnum, SingletonMeta)
 from dist_system.task import CommonTaskManager, TaskValueError
 
 
@@ -34,7 +34,6 @@ class TaskSyncManager(metaclass=SingletonMeta):
 
 
 class TaskManager(CommonTaskManager, metaclass=SingletonMeta):
-
     def __init__(self):
         super().__init__()
 
@@ -57,4 +56,3 @@ class TaskManager(CommonTaskManager, metaclass=SingletonMeta):
                 raise TaskValueError("Exist, but not found.")
         else:
             raise TaskValueError("Non-existent Task.")
-

@@ -1,73 +1,61 @@
 syntax = "proto3";
 
 
-message TaskRegisterRequest
-{
-	message ResultReceiverAddress
-	{
-		string type = 1;
-		string ip = 2;
-		int32 port = 3;
-	}
+message TaskRegisterRequest {
+    message ResultReceiverAddress {
+        string type = 1;
+        string ip = 2;
+        int32 port = 3;
+    }
 
-	message SleepTask
-	{
-		int32 seconds = 1;
-	}
-	
-	message DataProcessingTask
-	{
-		int32 data_file_num = 1;
+    message SleepTask {
+        int32 seconds = 1;
+    }
+
+    message DataProcessingTask {
+        int32 data_file_num = 1;
         repeated string data_file_token_list = 2;
-		string object_code = 3;
-	}
+        string object_code = 3;
+    }
 
-	message TensorflowTask
-	{
-		string data_file_token = 1;
-		string object_code = 2;
-	}
+    message TensorflowTask {
+        string data_file_token = 1;
+        string object_code = 2;
+    }
 
-	ResultReceiverAddress result_receiver_address = 1;
-	oneof task
-	{
-		SleepTask sleep_task = 10;
-		DataProcessingTask data_processing_task = 11;
-		TensorflowTask tensorflow_task = 12;
-	}
+    ResultReceiverAddress result_receiver_address = 1;
+    oneof task {
+        SleepTask sleep_task = 10;
+        DataProcessingTask data_processing_task = 11;
+        TensorflowTask tensorflow_task = 12;
+    }
 }
 
-message TaskRegisterResponse
-{
-	string status = 1;
-	string error_code = 2;
-	bytes task_token = 3;
+message TaskRegisterResponse {
+    string status = 1;
+    string error_code = 2;
+    bytes task_token = 3;
 }
 
-message TaskRegisterACK
-{
+message TaskRegisterACK {
 }
 
-message TaskCancelRequest
-{
-	bytes task_token = 1;
+message TaskCancelRequest {
+    bytes task_token = 1;
 }
 
-message TaskCancelResponse
-{
-	string status = 1;
-	string error_code = 2;
+message TaskCancelResponse {
+    string status = 1;
+    string error_code = 2;
 }
 
-message Message 
-{
-	oneof body
-	{
-		TaskRegisterRequest task_register_req = 1;
-		TaskRegisterResponse task_register_res = 2;
-		TaskRegisterACK task_register_ack = 3;
-		TaskCancelRequest task_cancel_req = 4;
-		TaskCancelResponse task_cancel_res = 5;
-	}
+message Message {
+    oneof body {
+        TaskRegisterRequest task_register_req = 1;
+        TaskRegisterResponse task_register_res = 2;
+        TaskRegisterACK task_register_ack = 3;
+        TaskCancelRequest task_cancel_req = 4;
+        TaskCancelResponse task_cancel_res = 5;
+    }
 }
 

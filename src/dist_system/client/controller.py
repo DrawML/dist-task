@@ -1,13 +1,11 @@
 import asyncio
-
 import functools
 
-
 from dist_system.client import main
-from dist_system.task.functions import make_task_with_task_type
-from dist_system.task import TaskToken
 from dist_system.client.task import TaskManager, TaskSyncManager
 from dist_system.logger import Logger
+from dist_system.task import TaskToken
+from dist_system.task.functions import make_task_with_task_type
 
 
 async def register_task_to_master(context, master_addr, result_receiver_address, task_type, job, callback, exp_id):

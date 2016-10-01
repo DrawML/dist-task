@@ -1,6 +1,7 @@
+from queue import Queue
+
 from dist_system.client.main import main
 from dist_system.result_receiver import ResultReceiverAddress
-from queue import Queue
 
 if __name__ == '__main__':
     msg_queue = Queue()

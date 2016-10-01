@@ -1,89 +1,75 @@
 syntax = "proto3";
 
 
-message TaskRegisterCMD
-{
-	message ResultReceiverAddress
-	{
-		string type = 1;
-		string ip = 2;
-		int32 port = 3;
-	}
+message TaskRegisterCMD {
+    message ResultReceiverAddress {
+        string type = 1;
+        string ip = 2;
+        int32 port = 3;
+    }
 
-	message SleepTask
-	{
-		int32 seconds = 1;
-	}
+    message SleepTask {
+        int32 seconds = 1;
+    }
 
-	message DataProcessingTask
-	{
-		int32 data_file_num = 1;
+    message DataProcessingTask {
+        int32 data_file_num = 1;
         repeated string data_filename_list = 2;
-		string executable_code_filename = 3;
-	}
+        string executable_code_filename = 3;
+    }
 
-	message TensorflowTask
-	{
-		string data_filename = 1;
-		string executable_code_filename = 2;
-	}
+    message TensorflowTask {
+        string data_filename = 1;
+        string executable_code_filename = 2;
+    }
 
-	ResultReceiverAddress result_receiver_address = 1;
-	bytes task_token = 2;
-	oneof task
-	{
-		SleepTask sleep_task = 10;
-		DataProcessingTask data_processing_task = 11;
-		TensorflowTask tensorflow_task = 12;
-	}
+    ResultReceiverAddress result_receiver_address = 1;
+    bytes task_token = 2;
+    oneof task {
+        SleepTask sleep_task = 10;
+        DataProcessingTask data_processing_task = 11;
+        TensorflowTask tensorflow_task = 12;
+    }
 }
 
-message WorkerRegisterRequest
-{
-	bytes task_token = 1;
+message WorkerRegisterRequest {
+    bytes task_token = 1;
 }
 
-message WorkerRegisterResponse
-{
-	string status = 1;
-	string error_code = 2;
+message WorkerRegisterResponse {
+    string status = 1;
+    string error_code = 2;
 }
 
-message TaskCancelRequest
-{
-	bytes task_token = 1;
+message TaskCancelRequest {
+    bytes task_token = 1;
 }
 
-message TaskCancelResponse
-{
-	string status = 1;
-	string error_code = 2;
-	bytes task_token = 3;
+message TaskCancelResponse {
+    string status = 1;
+    string error_code = 2;
+    bytes task_token = 3;
 }
 
-message TaskFinishRequest
-{
-	bytes task_token = 1;
+message TaskFinishRequest {
+    bytes task_token = 1;
 }
 
-message TaskFinishResponse
-{
-	string status = 1;
-	string error_code = 2;
-	bytes task_token = 3;
+message TaskFinishResponse {
+    string status = 1;
+    string error_code = 2;
+    bytes task_token = 3;
 }
 
-message Message 
-{
-	oneof body
-	{
-		TaskRegisterCMD task_register_cmd = 1;
-		WorkerRegisterRequest worker_register_req = 2;
-		WorkerRegisterResponse worker_register_res = 3;
-		TaskCancelRequest task_cancel_req = 4;
-		TaskCancelResponse task_cancel_res = 5;
-		TaskFinishRequest task_finish_req = 6;
-		TaskFinishResponse task_finish_res = 7;
-	}
+message Message {
+    oneof body {
+        TaskRegisterCMD task_register_cmd = 1;
+        WorkerRegisterRequest worker_register_req = 2;
+        WorkerRegisterResponse worker_register_res = 3;
+        TaskCancelRequest task_cancel_req = 4;
+        TaskCancelResponse task_cancel_res = 5;
+        TaskFinishRequest task_finish_req = 6;
+        TaskFinishResponse task_finish_res = 7;
+    }
 }
 

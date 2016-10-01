@@ -2,7 +2,7 @@ from dist_system.library import SingletonMeta
 
 
 class SlaveValueError(ValueError):
-    def __init__(self, msg = ''):
+    def __init__(self, msg=''):
         self._msg = msg
 
     def __str__(self):
@@ -10,7 +10,7 @@ class SlaveValueError(ValueError):
 
 
 class NotAvailableSlaveError(Exception):
-    def __init__(self, msg = ''):
+    def __init__(self, msg=''):
         self._msg = msg
 
     def __str__(self):
@@ -18,7 +18,6 @@ class NotAvailableSlaveError(Exception):
 
 
 class SlaveIdentity(object):
-
     def __init__(self, addr):
         self._addr = addr
 
@@ -35,7 +34,6 @@ class SlaveIdentity(object):
 
 
 class Slave(SlaveIdentity):
-
     def __init__(self, addr):
         super().__init__(addr)
         self._tasks = []
@@ -86,7 +84,6 @@ class Slave(SlaveIdentity):
 
 
 class SlaveManager(metaclass=SingletonMeta):
-
     HEARTBEAT_LIVENESS = 3
     HEARTBEAT_INTERVAL = 1
 
@@ -117,7 +114,7 @@ class SlaveManager(metaclass=SingletonMeta):
             slave = identity_or_slave
         return slave
 
-    def check_slave_existence(self, slave_identity, find_flag = False):
+    def check_slave_existence(self, slave_identity, find_flag=False):
         targets = [slave for slave in self._slaves if slave == slave_identity]
         ret = len(targets) > 0
         if find_flag:
@@ -139,6 +136,7 @@ class SlaveManager(metaclass=SingletonMeta):
             if task in slave.tasks:
                 return slave
         raise SlaveValueError("Non-existent Slave.")
+
     """
     # Get proper slave for task.
     def get_proper_slave(self, task):
@@ -156,6 +154,7 @@ class SlaveManager(metaclass=SingletonMeta):
         else:
             return proper_slave
     """
+
     def purge(self):
         expired_slaves = []
         leak_tasks = []

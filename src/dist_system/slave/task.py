@@ -1,10 +1,12 @@
 from dist_system.library import (AutoIncrementEnum, SingletonMeta)
 from dist_system.task import CommonTaskManager
 
+
 class TaskStatus(AutoIncrementEnum):
     STATUS_REGISTERED = ()
     STATUS_PREPROCESSING = ()
     STATUS_PROCESSING = ()
+
 
 class TaskManager(CommonTaskManager, metaclass=SingletonMeta):
     def __init__(self):

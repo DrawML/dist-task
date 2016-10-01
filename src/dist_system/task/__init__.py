@@ -1,17 +1,16 @@
 #!/usr/bin/env python3
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 import random
-import string
 from abc import abstractmethod, ABCMeta
+
+from dist_system.information import AllocatedResource
 from dist_system.library import AutoIncrementEnum
 from dist_system.result_receiver import ResultReceiverAddress
-from dist_system.library import SingletonMeta
-from dist_system.information import AllocatedResource
 
 
 class TaskTypeValueError(ValueError):
-    def __init__(self, msg = ''):
+    def __init__(self, msg=''):
         self._msg = msg
 
     def __str__(self):
@@ -19,7 +18,7 @@ class TaskTypeValueError(ValueError):
 
 
 class TaskValueError(ValueError):
-    def __init__(self, msg = ''):
+    def __init__(self, msg=''):
         self._msg = msg
 
     def __str__(self):
@@ -40,7 +39,7 @@ class TaskType(AutoIncrementEnum):
     TYPE_TENSORFLOW_TASK = ()
 
     @staticmethod
-    def from_str(task_type_str : str):
+    def from_str(task_type_str: str):
         if task_type_str == 'sleep_task':
             return TaskType.TYPE_SLEEP_TASK
         elif task_type_str == 'data_processing_task':
@@ -61,14 +60,14 @@ class TaskType(AutoIncrementEnum):
             return TaskTypeValueError(self + ' is invalid task type.')
 
 
-class TaskJob(metaclass = ABCMeta):
+class TaskJob(metaclass=ABCMeta):
     @abstractmethod
     def _to_dict(self):
         pass
 
     @classmethod
     @abstractmethod
-    def _from_dict(cls, dict_ : dict):
+    def _from_dict(cls, dict_: dict):
         pass
 
     def to_dict(self):
@@ -85,14 +84,14 @@ class TaskJob(metaclass = ABCMeta):
             raise TaskValueError(str(e))
 
 
-class TaskResult(metaclass = ABCMeta):
+class TaskResult(metaclass=ABCMeta):
     @abstractmethod
     def _to_dict(self):
         pass
 
     @classmethod
     @abstractmethod
-    def _from_dict(cls, dict_ : dict):
+    def _from_dict(cls, dict_: dict):
         pass
 
     def to_dict(self):
@@ -126,7 +125,7 @@ class TaskToken(object):
         if TaskToken._allocated_tokens[self._raw_token] == 0:
             del TaskToken._allocated_tokens[self._raw_token]
 
-    def __eq__(self, other : 'TaskToken'):
+    def __eq__(self, other: 'TaskToken'):
         return self._raw_token == other._raw_token
 
     def __hash__(self):
@@ -155,17 +154,17 @@ class TaskToken(object):
         return self._raw_token
 
     @staticmethod
-    def from_bytes(bytes_ : bytes) -> 'TaskToken':
+    def from_bytes(bytes_: bytes) -> 'TaskToken':
         return TaskToken(bytes_)
 
 
-class Task(metaclass = ABCMeta):
-    def __init__(self, task_token : TaskToken, result_receiver_address : ResultReceiverAddress, job : TaskJob):
+class Task(metaclass=ABCMeta):
+    def __init__(self, task_token: TaskToken, result_receiver_address: ResultReceiverAddress, job: TaskJob):
         self._task_token = task_token
         self._result_receiver_address = result_receiver_address
         self._job = job
 
-    def __eq__(self, other : 'Task'):
+    def __eq__(self, other: 'Task'):
         return self._task_token == other._task_token
 
     # default __hash__ doesn't exist if __eq__ is overrided.
@@ -209,7 +208,7 @@ class Task(metaclass = ABCMeta):
         return self._result
 
     @result.setter
-    def result(self, result : TaskResult):
+    def result(self, result: TaskResult):
         self._result = result
 
     @property
@@ -222,7 +221,6 @@ class Task(metaclass = ABCMeta):
 
 
 class CommonTaskManager(object):
-
     """ Example of dic_status_queue
     dic_status_queue = {
             TaskStatus.STATUS_PENDING_ACK : self._pending_ack_tasks,
@@ -232,7 +230,7 @@ class CommonTaskManager(object):
         }
     """
 
-    def __init__(self, dic_status_queue : dict = None, initial_status = None):
+    def __init__(self, dic_status_queue: dict = None, initial_status=None):
         self._all_tasks = []
         self._dic_status_queue = dic_status_queue if dic_status_queue else {}
         self._initial_status = initial_status
@@ -244,7 +242,7 @@ class CommonTaskManager(object):
     def all_tasks(self):
         return tuple(self._all_tasks)
 
-    def add_task(self, task, status = None):
+    def add_task(self, task, status=None):
         if status is None: status = self._initial_status
         if self.check_task_existence(task.task_token):
             raise TaskValueError("Duplicated Task.")
@@ -274,7 +272,7 @@ class CommonTaskManager(object):
             self._dic_status_queue[cur_status].remove(task)
             task.status = new_status
 
-    def check_task_existence(self, task_token, find_flag = False):
+    def check_task_existence(self, task_token, find_flag=False):
         targets = [task for task in self._all_tasks if task.task_token == task_token]
         ret = len(targets) > 0
         if find_flag:

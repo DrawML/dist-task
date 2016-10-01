@@ -7,7 +7,6 @@ import time
 
 
 class StatsManager(object):
-
     RECENT_TASK_INPUT_NUM = 10
 
     def __init__(self):

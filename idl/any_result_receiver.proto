@@ -1,50 +1,42 @@
 syntax = "proto3";
 
 
-message TaskResultRequest
-{
-	message SleepTask
-	{
-		string comment = 1;
-	}
+message TaskResultRequest {
+    message SleepTask {
+        string comment = 1;
+    }
 
-	message DataProcessingTask
-	{
+    message DataProcessingTask {
         string stdout = 1;
-		string stderr = 2;
+        string stderr = 2;
         string result_file_token = 3;
-	}
+    }
 
-	message TensorflowTask
-	{
-		string stdout = 1;
-		string stderr = 2;
-		string result_file_token = 3;
-	}
+    message TensorflowTask {
+        string stdout = 1;
+        string stderr = 2;
+        string result_file_token = 3;
+    }
 
-	string status = 1;
-	string error_code = 2;
-	bytes task_token = 3;
-	oneof result 
-	{
-		SleepTask sleep_task = 10;
-		DataProcessingTask data_processing_task = 11;
-		TensorflowTask tensorflow_task = 12;
-	}
+    string status = 1;
+    string error_code = 2;
+    bytes task_token = 3;
+    oneof result {
+        SleepTask sleep_task = 10;
+        DataProcessingTask data_processing_task = 11;
+        TensorflowTask tensorflow_task = 12;
+    }
 }
 
-message TaskResultResponse
-{
-	string status = 1;
-	string error_code = 2;
+message TaskResultResponse {
+    string status = 1;
+    string error_code = 2;
 }
 
-message Message 
-{
-	oneof body
-	{
-		TaskResultRequest task_result_req = 1;
-		TaskResultResponse task_result_res = 2;
-	}
+message Message {
+    oneof body {
+        TaskResultRequest task_result_req = 1;
+        TaskResultResponse task_result_res = 2;
+    }
 }
 

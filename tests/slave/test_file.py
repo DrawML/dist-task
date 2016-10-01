@@ -1,10 +1,11 @@
-import unittest
 import os
-from dist_system.slave.file import FileManager, FileType, FileValueError
+import unittest
 
+from dist_system.slave.file import FileManager, FileType, FileValueError
 
 SRC_DIR = os.path.dirname(os.path.realpath(__file__))
 print("SRC_DIR:", SRC_DIR)
+
 
 class MyTestCase(unittest.TestCase):
     def test_file_manager(self):
@@ -35,7 +36,7 @@ class MyTestCase(unittest.TestCase):
         ]
         file_paths = []
 
-        def check_file_data(file_path : str, org_data : str):
+        def check_file_data(file_path: str, org_data: str):
             self.assertTrue(os.path.isfile(file_path))
             with open(file_path, 'r') as f:
                 file_data = f.read()

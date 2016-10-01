@@ -1,5 +1,9 @@
+import traceback
+
 from dist_system.information import AllocationInformation, AllocatedResource, SlaveInformation, \
     AllocationTensorflowGpuInformation
+from dist_system.library import SingletonMeta
+from dist_system.logger import Logger
 from dist_system.master.client import ClientSessionIdentity, ClientSession, ClientSessionManager, \
     ClientSessionValueError
 from dist_system.master.controller import Scheduler
@@ -7,10 +11,6 @@ from dist_system.master.msg_dispatcher import ClientMessageDispatcher, SlaveMess
 from dist_system.master.slave import SlaveManager, SlaveValueError, SlaveIdentity, Slave
 from dist_system.master.task import TaskManager, TaskStatus, TaskStatusValueError
 from dist_system.result_receiver import ResultReceiverAddress
-from dist_system.library import SingletonMeta
-from dist_system.logger import Logger
-import traceback
-
 from dist_system.task import TaskToken, TaskType, TaskValueError, TaskTypeValueError
 from dist_system.task.functions import make_task_with_task_type
 
@@ -48,8 +48,8 @@ class ClientMessageHandler(metaclass=SingletonMeta):
                 raise
 
             res_body = {
-                'status' : 'success',
-                'task_token' : task_token.to_bytes()
+                'status': 'success',
+                'task_token': task_token.to_bytes()
             }
         except TaskTypeValueError as e:
             # invalid message
@@ -69,8 +69,8 @@ class ClientMessageHandler(metaclass=SingletonMeta):
             # invalid message
             Logger().log('[!]', e)
             res_body = {
-                'status' : 'fail',
-                'error_code' : 'unknown'
+                'status': 'fail',
+                'error_code': 'unknown'
             }
 
         ClientMessageDispatcher().dispatch_msg(session_identity, 'task_register_res', res_body)
@@ -98,13 +98,13 @@ class ClientMessageHandler(metaclass=SingletonMeta):
                 slave.delete_task(task)
 
                 SlaveMessageDispatcher().dispatch_msg(slave, 'task_cancel_req', {
-                    'task_token' : task_token.to_bytes()
+                    'task_token': task_token.to_bytes()
                 })
             except SlaveValueError as e:
                 pass
 
             res_body = {
-                'status' : 'success'
+                'status': 'success'
             }
         except TaskValueError as e:
             # invalid message
@@ -155,14 +155,14 @@ class SlaveMessageHandler(metaclass=SingletonMeta):
         try:
             SlaveManager().add_slave(Slave.make_slave_from_identity(slave_identity))
             res_body = {
-                'status' : 'success'
+                'status': 'success'
             }
         except Exception as e:
             # invalid message
             Logger().log('[!]', e)
             res_body = {
                 'status': 'fail',
-                'error_code' : 'unknown'
+                'error_code': 'unknown'
             }
 
         SlaveMessageDispatcher().dispatch_msg(slave_identity, 'slave_register_res', res_body)
@@ -201,7 +201,6 @@ class SlaveMessageHandler(metaclass=SingletonMeta):
             # invalid message
             Logger().log('[!]', e)
 
-
     def _h_task_cancel_res(self, slave_identity, body):
         # no specific handling.
         pass
@@ -210,7 +209,7 @@ class SlaveMessageHandler(metaclass=SingletonMeta):
 
         Logger().log('task finish.')
 
-        def free_resource(alloc_info : AllocationInformation, allocated_resource : AllocatedResource):
+        def free_resource(alloc_info: AllocationInformation, allocated_resource: AllocatedResource):
 
             Logger().log("Free Resource :", allocated_resource)
 
@@ -247,9 +246,9 @@ class SlaveMessageHandler(metaclass=SingletonMeta):
             # invalid message
             Logger().log('[!]', e)
             res_body = {
-                'task_token' : task_token.to_bytes(),
-                'status' : 'fail',
-                'error_code' : 'unknown'
+                'task_token': task_token.to_bytes(),
+                'status': 'fail',
+                'error_code': 'unknown'
             }
 
         SlaveMessageDispatcher().dispatch_msg(slave_identity, 'task_finish_res', res_body)

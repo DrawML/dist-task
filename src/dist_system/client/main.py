@@ -1,26 +1,26 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 # !/usr/bin/env python
+import asyncio
 import queue
 import sys
+import traceback
+from queue import Queue
+
 import zmq
 from zmq.asyncio import Context, ZMQEventLoop
-import asyncio
 
 from dist_system.client import RequestMessage, CancelMessage
-from dist_system.client.msg_handler import ResultMessageHandler
 from dist_system.client.controller import register_task_to_master, cancel_task_to_master
-from dist_system.protocol import client_master, any_result_receiver
+from dist_system.client.msg_handler import ResultMessageHandler
+from dist_system.client.simulator import _coroutine_exception_callback
+from dist_system.client.task import TaskManager, TaskSyncManager
 from dist_system.library import SingletonMeta, coroutine_with_no_exception
+from dist_system.logger import Logger
+from dist_system.protocol import client_master, any_result_receiver
 from dist_system.task import TaskType
 from dist_system.task.data_processing_task import DataProcessingTaskJob
 from dist_system.task.tensorflow_task import TensorflowTaskJob
-from dist_system.client.task import TaskManager, TaskSyncManager
-from dist_system.client.simulator import _coroutine_exception_callback
-from dist_system.logger import Logger
-from queue import Queue
-
-import traceback
 
 
 class MasterConnection(object):
@@ -169,7 +169,8 @@ async def register_data_proc_task(context: Context, master_addr, result_receiver
 
     asyncio.ensure_future(coroutine_with_no_exception(
         register_task_to_master(context, master_addr, result_receiver_address, TaskType.TYPE_DATA_PROCESSING_TASK,
-                                DataProcessingTaskJob.from_dict_with_whose_job('master', msg.task_job_dict), msg.callback,
+                                DataProcessingTaskJob.from_dict_with_whose_job('master', msg.task_job_dict),
+                                msg.callback,
                                 msg.experiment_id),
         _coroutine_exception_callback)
     )

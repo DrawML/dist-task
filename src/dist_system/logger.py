@@ -1,7 +1,7 @@
 from dist_system.library import SingletonMeta
 
-class Logger(metaclass=SingletonMeta):
 
+class Logger(metaclass=SingletonMeta):
     def __init__(self, name, level=3):
         self.name = name
         self.level = level

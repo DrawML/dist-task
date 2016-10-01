@@ -1,11 +1,8 @@
 #!/usr/bin/python3
-import subprocess
 import os
-import sys
-import xml.etree.ElementTree as ET
-import copy
-from dist_system.information import TensorflowGpuInformation
+import subprocess
 
+from dist_system.information import TensorflowGpuInformation
 
 SRC_DIR = os.path.dirname(os.sys.modules[__name__].__file__)
 
@@ -24,9 +21,9 @@ def _get_tf_gpu_list():
         a = gpu_info.split(',')
         b = [l.split(': ') for l in a]
         tf_gpu = {
-            key.strip() : value.strip()
+            key.strip(): value.strip()
             for key, value in b
-        }
+            }
         tf_gpu['tf_device'] = tf_device
         tf_gpu_list.append(tf_gpu)
 
@@ -34,7 +31,6 @@ def _get_tf_gpu_list():
 
 
 def _get_cuda_device_info_list():
-    import pycuda.autoinit
     import pycuda.driver as cuda
 
     device_info_list = []

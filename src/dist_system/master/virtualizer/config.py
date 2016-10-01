@@ -14,6 +14,7 @@ gpu_memory_fraction = 1.0 (valid if tf_device='/gpu:*')
 and more if you think..(for logging..)
 """
 
+
 class RunConfig:
     def __init__(self,
                  tf_device="/cpu:0",
@@ -81,4 +82,3 @@ class RunConfig:
     @log_placement.setter
     def log_placement(self, val):
         self._log_placement = val
-

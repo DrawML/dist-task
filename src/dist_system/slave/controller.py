@@ -1,17 +1,18 @@
 import asyncio
 import subprocess
+
+from dist_system.library import SingletonMeta
+from dist_system.protocol.slave_worker import make_msg_data
+from dist_system.slave.file import FileManager, FileType
+from dist_system.slave.monitor import monitor
+from dist_system.slave.msg_dispatcher import MasterMessageDispatcher
 from dist_system.slave.result_receiver import ResultReceiverCommunicatorWithSlave
 from dist_system.slave.task import TaskManager
-from dist_system.slave.file import FileManager, FileType
-from dist_system.library import SingletonMeta
+from dist_system.slave.worker import WorkerManager
 from dist_system.task import TaskType
+from dist_system.task.data_processing_task import DataProcessingTaskWorkerJob
 from dist_system.task.functions import get_task_type_of_task
 from dist_system.task.tensorflow_task import TensorflowTaskWorkerJob
-from dist_system.task.data_processing_task import DataProcessingTaskWorkerJob
-from dist_system.slave.worker import WorkerManager
-from dist_system.slave.msg_dispatcher import MasterMessageDispatcher
-from dist_system.protocol.slave_worker import make_msg_data
-from dist_system.slave.monitor import monitor
 
 
 class WorkerCreator(metaclass=SingletonMeta):
@@ -20,10 +21,10 @@ class WorkerCreator(metaclass=SingletonMeta):
 
     def create(self, result_receiver_address, task_token, task_type, task):
         serialized_data = make_msg_data('task_register_cmd', {
-            'result_receiver_address' : result_receiver_address.to_dict(),
-            'task_token' : task_token.to_bytes(),
-            'task_type' : task_type.to_str(),
-            'task' : task.job.to_dict()
+            'result_receiver_address': result_receiver_address.to_dict(),
+            'task_token': task_token.to_bytes(),
+            'task_type': task_type.to_str(),
+            'task': task.job.to_dict()
         })
         hex_data = serialized_data.hex()
         proc = subprocess.Popen(['python3', self._worker_file_name, hex_data])
@@ -44,13 +45,15 @@ def preprocess_task(task):
             data_filename = FileManager().store(task, FileType.TYPE_DATA_FILE, data_file_token)
             data_filename_list.append(data_filename)
 
-        executable_code_filename = FileManager().store(task, FileType.TYPE_EXECUTABLE_CODE_FILE, task.job.executable_code)
+        executable_code_filename = FileManager().store(task, FileType.TYPE_EXECUTABLE_CODE_FILE,
+                                                       task.job.executable_code)
         task.job = DataProcessingTaskWorkerJob(data_file_num, data_filename_list, executable_code_filename)
 
     elif task_type == TaskType.TYPE_TENSORFLOW_TASK:
         # temporary usage of protocol for test
         data_filename = FileManager().store(task, FileType.TYPE_DATA_FILE, task.job.data_file_token)
-        executable_code_filename = FileManager().store(task, FileType.TYPE_EXECUTABLE_CODE_FILE, task.job.executable_code)
+        executable_code_filename = FileManager().store(task, FileType.TYPE_EXECUTABLE_CODE_FILE,
+                                                       task.job.executable_code)
         task.job = TensorflowTaskWorkerJob(data_filename, executable_code_filename)
 
     else:
@@ -70,8 +73,8 @@ async def run_polling_workers():
             FileManager().remove_files_using_key(leak_task)
 
             header, body = ResultReceiverCommunicatorWithSlave().communicate('task_finish_req', {
-                'status' : 'fail',
-                'task_token' : leak_task.task_token.to_bytes()
+                'status': 'fail',
+                'task_token': leak_task.task_token.to_bytes()
             })
             # nothing to do using response message...
 

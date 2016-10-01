@@ -1,5 +1,6 @@
-from dist_system.library import AutoIncrementEnum, SingletonMeta
 import os
+
+from dist_system.library import AutoIncrementEnum, SingletonMeta
 
 
 class FileType(AutoIncrementEnum):
@@ -16,7 +17,6 @@ class FileValueError(ValueError):
 
 
 class FileManager(metaclass=SingletonMeta):
-
     __FILE_NO_CREATION_NUMBER = 10
     __FILENAME_PREFIX = {
         FileType.TYPE_DATA_FILE: "data_",
@@ -27,18 +27,18 @@ class FileManager(metaclass=SingletonMeta):
         FileType.TYPE_EXECUTABLE_CODE_FILE: ".py"
     }
 
-    def __init__(self, root_dir : str):
+    def __init__(self, root_dir: str):
         if not os.path.isabs(root_dir):
             raise FileValueError('root_dir must be given by absolute directory.')
         self._ensure_dir(root_dir)
         self._root_dir = root_dir
         self._file_no_pool = {
-            FileType.TYPE_DATA_FILE : [],
-            FileType.TYPE_EXECUTABLE_CODE_FILE : []
+            FileType.TYPE_DATA_FILE: [],
+            FileType.TYPE_EXECUTABLE_CODE_FILE: []
         }
         self._file_no_end = {
-            FileType.TYPE_DATA_FILE : 0,
-            FileType.TYPE_EXECUTABLE_CODE_FILE : 0
+            FileType.TYPE_DATA_FILE: 0,
+            FileType.TYPE_EXECUTABLE_CODE_FILE: 0
         }
         self._dic_key_files = {
             # [(file_type, file_path)]
@@ -48,7 +48,7 @@ class FileManager(metaclass=SingletonMeta):
         if not os.path.exists(dir):
             os.makedirs(dir)
 
-    def _get_avail_file_no(self, file_type : FileType):
+    def _get_avail_file_no(self, file_type: FileType):
         pool = self._file_no_pool[file_type]
         if len(pool) < FileManager.__FILE_NO_CREATION_NUMBER:
             file_no_start = self._file_no_end[file_type]
@@ -59,13 +59,13 @@ class FileManager(metaclass=SingletonMeta):
 
         return pool.pop()
 
-    def _get_avail_filename(self, file_type : FileType):
+    def _get_avail_filename(self, file_type: FileType):
         return FileManager.__FILENAME_PREFIX[file_type] + \
-            str(self._get_avail_file_no(file_type)) + \
-            FileManager.__FILENAME_POSTFIX[file_type]
+               str(self._get_avail_file_no(file_type)) + \
+               FileManager.__FILENAME_POSTFIX[file_type]
 
     # exception handling will be added.
-    def store(self, key, file_type : FileType, file_data : str):
+    def store(self, key, file_type: FileType, file_data: str):
         file_path = os.path.join(self._root_dir, self._get_avail_filename(file_type))
         with open(file_path, 'w') as f:
             f.write(file_data)
@@ -84,12 +84,12 @@ class FileManager(metaclass=SingletonMeta):
             for file_type, file_path in files:
                 self.remove(file_type, file_path)
 
-    def remove(self, file_type : FileType, file_path : str):
+    def remove(self, file_type: FileType, file_path: str):
         try:
             filename = os.path.basename(file_path)
             file_no = int(
-                filename[len(FileManager.__FILENAME_PREFIX[file_type]) : \
-                -len(FileManager.__FILENAME_POSTFIX[file_type])]
+                filename[len(FileManager.__FILENAME_PREFIX[file_type]): \
+                    -len(FileManager.__FILENAME_POSTFIX[file_type])]
             )
             self._file_no_pool[file_type].append(file_no)
             os.remove(file_path)

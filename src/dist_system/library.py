@@ -11,15 +11,16 @@ class AutoIncrementEnum(Enum):
 
 class SingletonMeta(type):
     __instances = {}
+
     def __call__(cls, *args, **kwargs):
         if cls not in cls.__instances:
             cls.__instances[cls] = super(SingletonMeta, cls).__call__(*args, **kwargs)
         return cls.__instances[cls]
 
 
-async def coroutine_with_no_exception(coro, f_callback = None, *args, **kwargs):
+async def coroutine_with_no_exception(coro, f_callback=None, *args, **kwargs):
     try:
         await coro
     except BaseException as e:
-        if f_callback is not None :
+        if f_callback is not None:
             f_callback(coro, e, *args, **kwargs)

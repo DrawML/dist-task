@@ -3,8 +3,9 @@ case if client send invalid address??
 issue...
 """
 
+
 class ResultReceiverAddress(object):
-    def __init__(self, type_ : str, ip : str, port : int):
+    def __init__(self, type_: str, ip: str, port: int):
         assert type_ == 'tcp'
         self._type = type_
         self._ip = ip
@@ -12,13 +13,13 @@ class ResultReceiverAddress(object):
 
     def to_dict(self):
         return {
-            'type' : self._type,
-            'ip' : self._ip,
-            'port' : self._port
+            'type': self._type,
+            'ip': self._ip,
+            'port': self._port
         }
 
     @staticmethod
-    def from_dict(dict_ : dict):
+    def from_dict(dict_: dict):
         return ResultReceiverAddress(dict_['type'], dict_['ip'], dict_['port'])
 
     def to_zeromq_addr(self):

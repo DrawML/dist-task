@@ -1,29 +1,30 @@
 #!/usr/bin/python3
-#-*- coding: utf-8 -*-
-#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# !/usr/bin/env python
 
+import asyncio
 import sys
+import traceback
+
 import zmq
 from zmq.asyncio import Context, ZMQEventLoop
-import asyncio
-from dist_system.worker.msg_handler import SlaveMessageHandler
+
+from dist_system.library import SingletonMeta
+from dist_system.logger import Logger
+from dist_system.protocol import any_result_receiver, slave_worker
 from dist_system.worker.controller import (TaskInformation, do_task)
 from dist_system.worker.msg_dispatcher import SlaveMessageDispatcher
-from dist_system.protocol import any_result_receiver, slave_worker
+from dist_system.worker.msg_handler import SlaveMessageHandler
 from dist_system.worker.result_receiver import ResultReceiverCommunicatorWithWorker
-from dist_system.logger import Logger
-from dist_system.library import SingletonMeta
-import traceback
 
 
 class SlaveConnection(object):
-
     def __init__(self, context, slave_addr, msg_handler):
         self._context = context
         self._slave_addr = slave_addr
         self._msg_handler = msg_handler
 
-    async def run(self, task_information : TaskInformation):
+    async def run(self, task_information: TaskInformation):
         self._dealer = self._context.socket(zmq.DEALER)
         self._dealer.connect(self._slave_addr)
         Logger().log("slave connection to {0}".format(self._slave_addr))
@@ -65,7 +66,7 @@ class SlaveConnection(object):
 
 
 class ResultReceiverCommunicationIO(metaclass=SingletonMeta):
-    def __init__(self, context = None):
+    def __init__(self, context=None):
         self._context = context or zmq.Context()
         self._sock = None
 
@@ -95,8 +96,7 @@ class ResultReceiverCommunicationIO(metaclass=SingletonMeta):
         Logger().log('Close a connection to result receiver')
 
 
-async def run_worker(context : Context, slave_addr, serialized_data : bytes):
-
+async def run_worker(context: Context, slave_addr, serialized_data: bytes):
     import random
     import time
     Logger("Worker@" + str(time.time()) + "#" + str(random.randint(1, 10000000)), level=2)
@@ -122,7 +122,7 @@ async def run_worker(context : Context, slave_addr, serialized_data : bytes):
     ])
 
 
-def main(slave_addr, serialized_data : bytes):
+def main(slave_addr, serialized_data: bytes):
     try:
         loop = ZMQEventLoop()
         asyncio.set_event_loop(loop)

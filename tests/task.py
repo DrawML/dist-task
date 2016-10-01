@@ -1,13 +1,13 @@
 import unittest
-from dist_system.task import TaskToken, NotAvailableTaskTokenError
+
+from dist_system.task import TaskToken
 
 
 class MyTestCase(unittest.TestCase):
     def test_task_token(self):
-
         class TokenGeneratorForTest(object):
             def __init__(self):
-                self._order = [1,2,1,1,2,1,2,2,3]
+                self._order = [1, 2, 1, 1, 2, 1, 2, 2, 3]
                 self._no = 0
 
             def __call__(self, *args, **kwargs):
@@ -21,7 +21,7 @@ class MyTestCase(unittest.TestCase):
         task_token = TaskToken.get_avail_token()
         task_tokens.append(task_token)
         self.assertEqual(TaskToken._allocated_tokens, {
-            1:1
+            1: 1
         })
 
         task_token = TaskToken.get_avail_token()

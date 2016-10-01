@@ -1,26 +1,27 @@
 #!/usr/bin/python3
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
-import sys
 import asyncio
-import traceback
 import os
+import sys
+import traceback
+
 import zmq
 from zmq.asyncio import Context, ZMQEventLoop
-from dist_system.slave.msg_handler import MasterMessageHandler, WorkerMessageHandler
-from dist_system.slave.controller import monitor_information, run_polling_workers, WorkerCreator
-from dist_system.protocol import master_slave, slave_worker, any_result_receiver
-from dist_system.slave.msg_dispatcher import MasterMessageDispatcher, WorkerMessageDispatcher
-from dist_system.slave.result_receiver import ResultReceiverCommunicatorWithSlave
-from dist_system.logger import Logger
-from dist_system.slave.file import FileManager
+
 from dist_system.library import SingletonMeta, coroutine_with_no_exception
+from dist_system.logger import Logger
+from dist_system.protocol import master_slave, slave_worker, any_result_receiver
+from dist_system.slave.controller import monitor_information, run_polling_workers, WorkerCreator
+from dist_system.slave.file import FileManager
+from dist_system.slave.msg_dispatcher import MasterMessageDispatcher, WorkerMessageDispatcher
+from dist_system.slave.msg_handler import MasterMessageHandler, WorkerMessageHandler
+from dist_system.slave.result_receiver import ResultReceiverCommunicatorWithSlave
 from dist_system.slave.task import TaskManager
 from dist_system.slave.worker import WorkerManager
 
 
 class MasterConnection(metaclass=SingletonMeta):
-
     def __init__(self, context, master_addr, msg_handler):
         self._context = context
         self._master_addr = master_addr
@@ -66,7 +67,6 @@ class MasterConnection(metaclass=SingletonMeta):
 
 
 class WorkerRouter(metaclass=SingletonMeta):
-
     def __init__(self, context, addr, msg_handler):
         self._context = context
         self._addr = addr
@@ -112,7 +112,7 @@ class WorkerRouter(metaclass=SingletonMeta):
 
 
 class ResultReceiverCommunicationIO(metaclass=SingletonMeta):
-    def __init__(self, context = None):
+    def __init__(self, context=None):
         self._context = context or zmq.Context()
         self._sock = None
 
@@ -138,8 +138,7 @@ class ResultReceiverCommunicationIO(metaclass=SingletonMeta):
         self._sock = None
 
 
-async def run_slave(context : Context, master_addr, worker_router_addr, worker_file_name):
-
+async def run_slave(context: Context, master_addr, worker_router_addr, worker_file_name):
     def _coroutine_exception_callback(_, e):
         Logger().log('[!] exception occurs in coroutine :', e)
 

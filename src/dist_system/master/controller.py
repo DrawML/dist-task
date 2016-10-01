@@ -1,17 +1,18 @@
 import asyncio
-from typing import Iterable
 import random
+from typing import Iterable
+
+from dist_system.information import AllocatedResource
 from dist_system.library import SingletonMeta
+from dist_system.logger import Logger
+from dist_system.master.msg_dispatcher import SlaveMessageDispatcher
 from dist_system.master.slave import SlaveManager, NotAvailableSlaveError, Slave
 from dist_system.master.task import TaskManager, TaskStatus
+from dist_system.master.virtualizer.config import RunConfig
+from dist_system.master.virtualizer.linker import link
 from dist_system.task import TaskType
 from dist_system.task.data_processing_task import DataProcessingTaskMasterJob, DataProcessingTaskSlaveJob
 from dist_system.task.functions import get_task_type_of_task
-from dist_system.master.msg_dispatcher import SlaveMessageDispatcher
-from dist_system.master.virtualizer.linker import link
-from dist_system.master.virtualizer.config import RunConfig
-from dist_system.logger import Logger
-from dist_system.information import AllocatedResource
 from dist_system.task.tensorflow_task import TensorflowTaskMasterJob, TensorflowTaskSlaveJob
 
 
@@ -32,7 +33,6 @@ async def run_heartbeat():
 
 
 class Scheduler(metaclass=SingletonMeta):
-
     def invoke(self):
         # 현재 waiting하고 있는 task가 있는 지 보고 available한 slave 있는지 판단하여 task를 slave에 배치한다.
         Logger().log('**** Scheduler is invoked.')
@@ -59,13 +59,13 @@ class Scheduler(metaclass=SingletonMeta):
             task.allocated_resource = allocated_resource
 
             SlaveMessageDispatcher().dispatch_msg(slave, 'task_register_req', {
-                'result_receiver_address' : task.result_receiver_address.to_dict(),
-                'task_token' : task.task_token.to_bytes(),
-                'task_type' : get_task_type_of_task(task).to_str(),
-                'task' : task.job.to_dict()
+                'result_receiver_address': task.result_receiver_address.to_dict(),
+                'task_token': task.task_token.to_bytes(),
+                'task_type': get_task_type_of_task(task).to_str(),
+                'task': task.job.to_dict()
             })
 
-    def _preprocess_task(self, task, run_config : RunConfig):
+    def _preprocess_task(self, task, run_config: RunConfig):
         task_type = get_task_type_of_task(task)
         if task_type == TaskType.TYPE_SLEEP_TASK:
             pass
@@ -84,21 +84,21 @@ class Scheduler(metaclass=SingletonMeta):
         else:
             raise NotImplementedError
 
-    def _schedule(self, slaves : Iterable, task) -> Slave:
+    def _schedule(self, slaves: Iterable, task) -> Slave:
         __schedule_dict = {
-            TaskType.TYPE_SLEEP_TASK : self._schedule_sleep_task,
-            TaskType.TYPE_DATA_PROCESSING_TASK : self._schedule_data_processing_task,
-            TaskType.TYPE_TENSORFLOW_TASK : self._schedule_tensorflow_task
+            TaskType.TYPE_SLEEP_TASK: self._schedule_sleep_task,
+            TaskType.TYPE_DATA_PROCESSING_TASK: self._schedule_data_processing_task,
+            TaskType.TYPE_TENSORFLOW_TASK: self._schedule_tensorflow_task
         }
         return __schedule_dict[get_task_type_of_task(task)](slaves, task)
 
-    def _schedule_sleep_task(self, slaves : Iterable, task) -> Slave:
+    def _schedule_sleep_task(self, slaves: Iterable, task) -> Slave:
         Logger().log('**** Schedule of sleep task')
         if not slaves:
             raise NotAvailableSlaveError
         return random.choice(slaves), None, AllocatedResource()
 
-    def _schedule_data_processing_task(self, slaves : Iterable, task) -> Slave:
+    def _schedule_data_processing_task(self, slaves: Iterable, task) -> Slave:
         Logger().log('**** Schedule of data processing task. slaves = {0}'.format(slaves))
         best_slave = None
         best_cpu_rest = None
@@ -130,7 +130,7 @@ class Scheduler(metaclass=SingletonMeta):
         best_slave.alloc_info.alloc_cpu_count = best_slave.alloc_info.all_cpu_count
         return best_slave, RunConfig(), AllocatedResource(alloc_cpu_count=best_slave.alloc_info.all_cpu_count)
 
-    def _schedule_tensorflow_task(self, slaves : Iterable, task) -> Slave:
+    def _schedule_tensorflow_task(self, slaves: Iterable, task) -> Slave:
         Logger().log('**** Schedule of tensorflow task')
         best_slave = None
         best_alloc_tf_gpu_info = None
@@ -146,8 +146,8 @@ class Scheduler(metaclass=SingletonMeta):
                 if not alloc_tf_gpu_info.available:
                     continue
                 if best_slave is None or alloc_tf_gpu_info.compute_capability_major > best_cc_major or \
-                    (alloc_tf_gpu_info.compute_capability_major == best_cc_major and
-                     alloc_tf_gpu_info.compute_capability_minor > best_cc_minor):
+                        (alloc_tf_gpu_info.compute_capability_major == best_cc_major and
+                                 alloc_tf_gpu_info.compute_capability_minor > best_cc_minor):
                     best_slave = slave
                     best_alloc_tf_gpu_info = alloc_tf_gpu_info
                     best_cc_major = alloc_tf_gpu_info.compute_capability_major

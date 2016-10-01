@@ -3,7 +3,7 @@ from dist_system.task import CommonTaskManager
 
 
 class TaskStatusValueError(ValueError):
-    def __init__(self, msg = ''):
+    def __init__(self, msg=''):
         self._msg = msg
 
     def __str__(self):
@@ -19,7 +19,6 @@ class TaskStatus(AutoIncrementEnum):
 
 
 class TaskManager(CommonTaskManager, metaclass=SingletonMeta):
-
     def __init__(self):
         self._pending_ack_tasks = []
         self._waiting_tasks = []
@@ -27,11 +26,11 @@ class TaskManager(CommonTaskManager, metaclass=SingletonMeta):
         self._processing_tasks = []
         self._complete_tasks = []
         self._dic_status_queue = {
-            TaskStatus.STATUS_PENDING_ACK : self._pending_ack_tasks,
-            TaskStatus.STATUS_WAITING : self._waiting_tasks,
-            TaskStatus.STATUS_PREPROCESSING : self._preprocessing_tasks,
-            TaskStatus.STATUS_PROCESSING : self._processing_tasks,
-            TaskStatus.STATUS_COMPLETE : self._complete_tasks
+            TaskStatus.STATUS_PENDING_ACK: self._pending_ack_tasks,
+            TaskStatus.STATUS_WAITING: self._waiting_tasks,
+            TaskStatus.STATUS_PREPROCESSING: self._preprocessing_tasks,
+            TaskStatus.STATUS_PROCESSING: self._processing_tasks,
+            TaskStatus.STATUS_COMPLETE: self._complete_tasks
         }
         super().__init__(self._dic_status_queue, TaskStatus.STATUS_PENDING_ACK)
 
@@ -42,8 +41,8 @@ class TaskManager(CommonTaskManager, metaclass=SingletonMeta):
             l = [task_token_or_task_or_list]
         for task_token_or_task in l:
             task = self._from_generic_to_task(task_token_or_task)
-            #self.cancel_task(task)
-            #self.add_task(task)
+            # self.cancel_task(task)
+            # self.add_task(task)
             self.change_task_status(task, TaskStatus.STATUS_WAITING)
 
     @property

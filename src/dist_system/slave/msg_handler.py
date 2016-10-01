@@ -1,15 +1,15 @@
-
-from dist_system.task import TaskType, TaskValueError, TaskToken
-from dist_system.result_receiver import ResultReceiverAddress
-from dist_system.library import SingletonMeta
-from dist_system.slave.worker import Worker, WorkerIdentity, WorkerManager, WorkerValueError
-from dist_system.slave.task import TaskManager, TaskStatus
-from dist_system.slave.controller import WorkerCreator, preprocess_task
-from dist_system.slave.msg_dispatcher import MasterMessageDispatcher, WorkerMessageDispatcher
-from dist_system.task.functions import make_task_with_task_type
-from dist_system.logger import Logger
 import traceback
+
+from dist_system.library import SingletonMeta
+from dist_system.logger import Logger
+from dist_system.result_receiver import ResultReceiverAddress
+from dist_system.slave.controller import WorkerCreator, preprocess_task
 from dist_system.slave.file import FileManager
+from dist_system.slave.msg_dispatcher import MasterMessageDispatcher, WorkerMessageDispatcher
+from dist_system.slave.task import TaskManager, TaskStatus
+from dist_system.slave.worker import Worker, WorkerIdentity, WorkerManager, WorkerValueError
+from dist_system.task import TaskType, TaskValueError, TaskToken
+from dist_system.task.functions import make_task_with_task_type
 
 
 class MasterMessageHandler(metaclass=SingletonMeta):
@@ -116,7 +116,6 @@ class MasterMessageHandler(metaclass=SingletonMeta):
         # no specific handling.
         pass
 
-
     __handler_dict = {
         "heart_beat_req": _h_heart_beat_req,
         "slave_register_res": _h_slave_register_res,
@@ -169,7 +168,6 @@ class WorkerMessageHandler(metaclass=SingletonMeta):
 
         WorkerMessageDispatcher().dispatch_msg(worker_identity, 'worker_register_res', res_body)
 
-
     def _h_task_cancel_res(self, worker_identity, body):
         # 현재 흐름상 이 message는 절대 수신될 수 없음!!
         # So, ignore this message.
@@ -188,8 +186,8 @@ class WorkerMessageHandler(metaclass=SingletonMeta):
             }
 
             MasterMessageDispatcher().dispatch_msg('task_finish_req', {
-                                                       'task_token': worker.task.task_token.to_bytes()
-                                                   })
+                'task_token': worker.task.task_token.to_bytes()
+            })
         except Exception as e:
             # invalid message
             Logger().log('[!]', e)

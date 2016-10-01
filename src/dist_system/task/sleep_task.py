@@ -1,17 +1,17 @@
-from dist_system.task import TaskJob, TaskResult, Task, TaskToken
 from dist_system.result_receiver import ResultReceiverAddress
+from dist_system.task import TaskJob, TaskResult, Task, TaskToken
 
 
 class SleepTaskJob(TaskJob):
-    def __init__(self, seconds : int):
+    def __init__(self, seconds: int):
         super().__init__()
         self._seconds = seconds
 
     def _to_dict(self) -> dict:
-        return {'seconds' : self._seconds }
+        return {'seconds': self._seconds}
 
     @classmethod
-    def _from_dict(cls, dict_ : dict) -> 'SleepTaskJob':
+    def _from_dict(cls, dict_: dict) -> 'SleepTaskJob':
         return SleepTaskJob(dict_['seconds'])
 
     @property
@@ -20,15 +20,15 @@ class SleepTaskJob(TaskJob):
 
 
 class SleepTaskResult(TaskResult):
-    def __init__(self, comment : str):
+    def __init__(self, comment: str):
         super().__init__()
         self._comment = comment
 
     def _to_dict(self) -> dict:
-        return {'comment' : self._comment }
+        return {'comment': self._comment}
 
     @classmethod
-    def _from_dict(cls, dict_ : dict) -> 'SleepTaskResult':
+    def _from_dict(cls, dict_: dict) -> 'SleepTaskResult':
         return SleepTaskResult(dict_['comment'])
 
     @property
@@ -40,8 +40,8 @@ class SleepTaskResult(TaskResult):
 
 
 class SleepTask(Task):
-    def __init__(self,  task_token : TaskToken, result_receiver_address : ResultReceiverAddress,
-                 job : SleepTaskJob):
+    def __init__(self, task_token: TaskToken, result_receiver_address: ResultReceiverAddress,
+                 job: SleepTaskJob):
         assert isinstance(job, SleepTaskJob)
         super().__init__(task_token, result_receiver_address, job)
 

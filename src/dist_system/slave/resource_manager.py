@@ -1,5 +1,6 @@
 import psutil
 
+
 class ResourceManager:
     def __init__(self):
         self._cpu_count = psutil.cpu_count()
@@ -53,4 +54,4 @@ class ResourceManager:
 
     def _rebalance_cpu(self, process):
         if self._cpu_available > 0:
-            process.cpu_affinity() # need to inspect
+            process.cpu_affinity()  # need to inspect

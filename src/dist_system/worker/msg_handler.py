@@ -1,6 +1,7 @@
+import traceback
+
 from dist_system.library import SingletonMeta
 from dist_system.logger import Logger
-import traceback
 
 
 class SlaveMessageHandler(metaclass=SingletonMeta):
