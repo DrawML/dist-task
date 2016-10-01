@@ -108,6 +108,9 @@ class TaskToken(object):
     def __eq__(self, other : 'TaskToken'):
         return self._token == other._token
 
+    def __hash__(self):
+        return hash(self._token)
+
     @staticmethod
     def generate_random_token(bytes_size : int = 512//8) -> 'TaskToken':
         return TaskToken(bytes(random.getrandbits(8) for _ in range(bytes_size)))
@@ -131,7 +134,7 @@ class Task(metaclass = ABCMeta):
 
     # default __hash__ doesn't exist if __eq__ is overrided.
     def __hash__(self):
-        return id(self)
+        return hash(self._task_token)
 
     @property
     def result_receiver_address(self):
