@@ -232,9 +232,9 @@ class CommonTaskManager(object):
         }
     """
 
-    def __init__(self, dic_status_queue = {}, initial_status = None):
+    def __init__(self, dic_status_queue : dict = None, initial_status = None):
         self._all_tasks = []
-        self._dic_status_queue = dic_status_queue
+        self._dic_status_queue = dic_status_queue if dic_status_queue else {}
         self._initial_status = initial_status
         if not None in self._dic_status_queue:
             self._none_status_tasks = []
