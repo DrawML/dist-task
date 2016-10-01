@@ -26,6 +26,14 @@ class TaskValueError(ValueError):
         return "TaskValueError : %s" % self._msg
 
 
+class NotAvailableTaskTokenError(Exception):
+    def __init__(self, msg=''):
+        self._msg = msg
+
+    def __str__(self):
+        return "NotAvailableTaskTokenError : %s" % self._msg
+
+
 class TaskType(AutoIncrementEnum):
     TYPE_SLEEP_TASK = ()
     TYPE_DATA_PROCESSING_TASK = ()
@@ -102,21 +110,49 @@ class TaskResult(metaclass = ABCMeta):
 
 
 class TaskToken(object):
-    def __init__(self, token : bytes):
-        self._token = token
+    MAX_GENERATE_TRYING_CNT = 100
+    _allocated_tokens = {}
+
+    def __init__(self, raw_token):
+        if raw_token in TaskToken._allocated_tokens:
+            TaskToken._allocated_tokens[raw_token] += 1
+        else:
+            TaskToken._allocated_tokens[raw_token] = 1
+        self._raw_token = raw_token
+
+    def __del__(self):
+        assert self._raw_token in TaskToken._allocated_tokens
+        TaskToken._allocated_tokens[self._raw_token] -= 1
+        if TaskToken._allocated_tokens[self._raw_token] == 0:
+            del TaskToken._allocated_tokens[self._raw_token]
 
     def __eq__(self, other : 'TaskToken'):
-        return self._token == other._token
+        return self._raw_token == other._raw_token
 
     def __hash__(self):
-        return hash(self._token)
+        return hash(self._raw_token)
 
     @staticmethod
-    def generate_random_token(bytes_size : int = 512//8) -> 'TaskToken':
-        return TaskToken(bytes(random.getrandbits(8) for _ in range(bytes_size)))
+    def _generate_random_token(bytes_size: int = 512 // 8):
+        return bytes(random.getrandbits(8) for _ in range(bytes_size))
+
+    @classmethod
+    def get_avail_token(cls):
+        trying_cnt = 1
+        raw_token = cls._generate_random_token()
+        avail = not raw_token in cls._allocated_tokens
+        while trying_cnt <= cls.MAX_GENERATE_TRYING_CNT and not avail:
+            raw_token = cls._generate_random_token()
+            avail = not raw_token in cls._allocated_tokens
+            trying_cnt += 1
+
+        if not avail:
+            raise NotAvailableTaskTokenError
+
+        return cls(raw_token)
 
     def to_bytes(self):
-        return self._token
+        return self._raw_token
 
     @staticmethod
     def from_bytes(bytes_ : bytes) -> 'TaskToken':

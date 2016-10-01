@@ -29,7 +29,7 @@ class ClientMessageHandler(metaclass=SingletonMeta):
     def _h_task_register_req(self, session_identity, body):
         try:
             result_receiver_address = ResultReceiverAddress.from_dict(body['result_receiver_address'])
-            task_token = TaskToken.generate_random_token()
+            task_token = TaskToken.get_avail_token()
             task_type = TaskType.from_str(body['task_type'])
             task = make_task_with_task_type(task_type, body['task'], 'master',
                                             task_token, result_receiver_address)
