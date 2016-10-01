@@ -30,7 +30,6 @@ class FileManager(metaclass=SingletonMeta):
     def __init__(self, root_dir : str):
         if not os.path.isabs(root_dir):
             raise FileValueError('root_dir must be given by absolute directory.')
-        root_dir = os.path.dirname(root_dir)
         self._ensure_dir(root_dir)
         self._root_dir = root_dir
         self._file_no_pool = {
@@ -67,7 +66,7 @@ class FileManager(metaclass=SingletonMeta):
 
     # exception handling will be added.
     def store(self, key, file_type : FileType, file_data : str):
-        file_path = self._root_dir + '/' + self._get_avail_filename(file_type)
+        file_path = os.path.join(self._root_dir, self._get_avail_filename(file_type))
         with open(file_path, 'w') as f:
             f.write(file_data)
         if not key in self._dic_key_files:
@@ -92,5 +91,7 @@ class FileManager(metaclass=SingletonMeta):
                 filename[len(FileManager.__FILENAME_PREFIX[file_type]) : \
                 -len(FileManager.__FILENAME_POSTFIX[file_type])]
             )
+            self._file_no_pool[file_type].append(file_no)
+            os.remove(file_path)
         except Exception as e:
             raise FileValueError('invalid file_path. ' + str(e))
