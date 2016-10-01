@@ -1,19 +1,17 @@
 import asyncio
 import subprocess
-from dist_system.result_receiver import *
-from dist_system.slave.result_receiver import *
+from dist_system.slave.result_receiver import ResultReceiverCommunicatorWithSlave
 from dist_system.slave.task import TaskManager
+from dist_system.slave.file import FileManager, FileType
 from dist_system.library import SingletonMeta
+from dist_system.task import TaskType
 from dist_system.task.functions import get_task_type_of_task
-from dist_system.task.tensorflow_task import *
-from dist_system.task.data_processing_task import *
+from dist_system.task.tensorflow_task import TensorflowTaskWorkerJob
+from dist_system.task.data_processing_task import DataProcessingTaskWorkerJob
 from dist_system.slave.worker import WorkerManager
-from dist_system.slave.msg_dispatcher import *
-from dist_system.protocol.slave_worker import *
-import binascii
+from dist_system.slave.msg_dispatcher import MasterMessageDispatcher
+from dist_system.protocol.slave_worker import make_msg_data
 from dist_system.slave.monitor import monitor
-from dist_system.logger import Logger
-from dist_system.slave.file import *
 
 
 class WorkerCreator(metaclass=SingletonMeta):

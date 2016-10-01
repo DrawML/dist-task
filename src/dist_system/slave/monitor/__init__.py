@@ -1,5 +1,5 @@
 import psutil
-from dist_system.information import *
+from dist_system.information import SlaveInformation, CpuInformation, MemoryInformation
 from dist_system.slave.monitor.gpu_monitor import monitor_tf_gpu
 import asyncio
 

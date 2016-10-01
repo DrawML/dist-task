@@ -9,14 +9,14 @@ import asyncio
 
 from dist_system.client import RequestMessage, CancelMessage
 from dist_system.client.msg_handler import ResultMessageHandler
-from dist_system.client.controller import *
+from dist_system.client.controller import register_task_to_master, cancel_task_to_master
 from dist_system.protocol import client_master, any_result_receiver
-from functools import partial
 from dist_system.library import SingletonMeta, coroutine_with_no_exception
-from dist_system.task import *
-from dist_system.task.functions import *
+from dist_system.task import TaskType
+from dist_system.task.data_processing_task import DataProcessingTaskJob
+from dist_system.task.tensorflow_task import TensorflowTaskJob
 from dist_system.client.task import TaskManager, TaskSyncManager
-from dist_system.client.simulator import simulate_task, _coroutine_exception_callback
+from dist_system.client.simulator import _coroutine_exception_callback
 from dist_system.logger import Logger
 from queue import Queue
 

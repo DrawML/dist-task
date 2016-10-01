@@ -1,5 +1,5 @@
 import unittest
-from dist_system.information import *
+from dist_system.information import TensorflowGpuInformation, AllocationTensorflowGpuInformation
 
 
 class MyTestCase(unittest.TestCase):

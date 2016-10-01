@@ -1,4 +1,4 @@
-from dist_system.protocol.exceptions import *
+from dist_system.protocol import HeaderError
 
 
 class BaseProtocol:

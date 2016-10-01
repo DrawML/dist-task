@@ -5,8 +5,8 @@ import functools
 
 from dist_system.client import main
 from dist_system.task.functions import make_task_with_task_type
-from dist_system.task import *
-from dist_system.client.task import TaskManager
+from dist_system.task import TaskToken
+from dist_system.client.task import TaskManager, TaskSyncManager
 from dist_system.logger import Logger
 
 

@@ -1,4 +1,5 @@
-from dist_system.task import *
+from dist_system.task import TaskJob, TaskResult, Task, TaskToken
+from dist_system.result_receiver import ResultReceiverAddress
 
 
 class SleepTaskJob(TaskJob):

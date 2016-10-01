@@ -1,23 +1,22 @@
 #!/usr/bin/python3
 #-*- coding: utf-8 -*-
-#!/usr/bin/env python
 
 import sys
+import asyncio
+import traceback
+import os
 import zmq
 from zmq.asyncio import Context, ZMQEventLoop
-import asyncio
-from dist_system.slave.msg_handler import (MasterMessageHandler, WorkerMessageHandler)
-from dist_system.slave.controller import *
+from dist_system.slave.msg_handler import MasterMessageHandler, WorkerMessageHandler
+from dist_system.slave.controller import monitor_information, run_polling_workers, WorkerCreator
 from dist_system.protocol import master_slave, slave_worker, any_result_receiver
-from functools import partial
-from dist_system.slave.msg_dispatcher import *
-from dist_system.slave.result_receiver import *
-from dist_system.slave.monitor import monitor
+from dist_system.slave.msg_dispatcher import MasterMessageDispatcher, WorkerMessageDispatcher
+from dist_system.slave.result_receiver import ResultReceiverCommunicatorWithSlave
 from dist_system.logger import Logger
-import traceback
 from dist_system.slave.file import FileManager
-import os
-from dist_system.library import coroutine_with_no_exception
+from dist_system.library import SingletonMeta, coroutine_with_no_exception
+from dist_system.slave.task import TaskManager
+from dist_system.slave.worker import WorkerManager
 
 
 class MasterConnection(metaclass=SingletonMeta):

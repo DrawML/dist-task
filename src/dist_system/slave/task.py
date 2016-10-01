@@ -1,5 +1,5 @@
 from dist_system.library import (AutoIncrementEnum, SingletonMeta)
-from dist_system.task import *
+from dist_system.task import CommonTaskManager
 
 class TaskStatus(AutoIncrementEnum):
     STATUS_REGISTERED = ()

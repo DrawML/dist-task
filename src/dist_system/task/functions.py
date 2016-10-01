@@ -1,7 +1,7 @@
-from dist_system.task import *
-from dist_system.task.sleep_task import *
-from dist_system.task.data_processing_task import *
-from dist_system.task.tensorflow_task import *
+from dist_system.task import Task, TaskType, TaskTypeValueError, TaskValueError
+from dist_system.task.sleep_task import SleepTask, SleepTaskJob, SleepTaskResult
+from dist_system.task.data_processing_task import DataProcessingTask, DataProcessingTaskJob, DataProcessingTaskResult
+from dist_system.task.tensorflow_task import TensorflowTask, TensorflowTaskJob, TensorflowTaskResult
 
 
 def make_task_with_task_type(task_type: TaskType, job_dict: dict, whose_job, *args, **kwargs):

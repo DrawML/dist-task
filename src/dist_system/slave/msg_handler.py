@@ -1,15 +1,15 @@
 
-from dist_system.task.sleep_task import *
+from dist_system.task import TaskType, TaskValueError, TaskToken
 from dist_system.result_receiver import ResultReceiverAddress
 from dist_system.library import SingletonMeta
-from dist_system.slave.worker import *
-from dist_system.slave.task import *
-from dist_system.slave.controller import *
-from dist_system.slave.msg_dispatcher import *
-from dist_system.task.functions import *
+from dist_system.slave.worker import Worker, WorkerIdentity, WorkerManager, WorkerValueError
+from dist_system.slave.task import TaskManager, TaskStatus
+from dist_system.slave.controller import WorkerCreator, preprocess_task
+from dist_system.slave.msg_dispatcher import MasterMessageDispatcher, WorkerMessageDispatcher
+from dist_system.task.functions import make_task_with_task_type
 from dist_system.logger import Logger
 import traceback
-from dist_system.slave.file import *
+from dist_system.slave.file import FileManager
 
 
 class MasterMessageHandler(metaclass=SingletonMeta):
@@ -87,7 +87,7 @@ class MasterMessageHandler(metaclass=SingletonMeta):
             try:
                 # why?? 나중에 보자!!!
                 WorkerManager().del_worker(worker)
-                FileManager().remove_files_of_task(task)
+                FileManager().remove_files_using_key(task)
 
                 WorkerMessageDispatcher().dispatch_msg(worker, 'task_cancel_req', {})
                 # 여기서 worker를 지우므로 worker로 부터 Task Cancel Res는 받을 수 없다.

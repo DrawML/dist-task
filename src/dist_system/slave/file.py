@@ -1,4 +1,4 @@
-from dist_system.library import (AutoIncrementEnum, SingletonMeta)
+from dist_system.library import AutoIncrementEnum, SingletonMeta
 import os
 
 

@@ -1,11 +1,9 @@
-from dist_system.task.sleep_task import *
-from dist_system.result_receiver import ResultReceiverAddress
-from dist_system.library import SingletonMeta
-from dist_system.client.task import *
-from dist_system.client.controller import *
-from dist_system.task.functions import *
+from dist_system.client.task import TaskManager
+from dist_system.task import TaskToken, TaskValueError
+from dist_system.task.functions import make_task_with_task_type, set_result_dict_to_task
 from dist_system.client import main
 from dist_system.logger import Logger
+from dist_system.library import SingletonMeta
 import traceback
 
 

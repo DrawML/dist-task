@@ -1,15 +1,18 @@
-from dist_system.master.client import *
-from dist_system.master.slave import *
-from dist_system.master.task import *
-from dist_system.task.sleep_task import *
-from dist_system.master.controller import *
+from dist_system.information import AllocationInformation, AllocatedResource, SlaveInformation, \
+    AllocationTensorflowGpuInformation
+from dist_system.master.client import ClientSessionIdentity, ClientSession, ClientSessionManager, \
+    ClientSessionValueError
+from dist_system.master.controller import Scheduler
+from dist_system.master.msg_dispatcher import ClientMessageDispatcher, SlaveMessageDispatcher
+from dist_system.master.slave import SlaveManager, SlaveValueError, SlaveIdentity, Slave
+from dist_system.master.task import TaskManager, TaskStatus, TaskStatusValueError
 from dist_system.result_receiver import ResultReceiverAddress
 from dist_system.library import SingletonMeta
-from dist_system.master.msg_dispatcher import *
-from dist_system.task.functions import *
 from dist_system.logger import Logger
 import traceback
-from dist_system.information import *
+
+from dist_system.task import TaskToken, TaskType, TaskValueError, TaskTypeValueError
+from dist_system.task.functions import make_task_with_task_type
 
 
 class ClientMessageHandler(metaclass=SingletonMeta):

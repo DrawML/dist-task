@@ -3,7 +3,7 @@
 
 import random
 import string
-from abc import *
+from abc import abstractmethod, ABCMeta
 from dist_system.library import AutoIncrementEnum
 from dist_system.result_receiver import ResultReceiverAddress
 from dist_system.library import SingletonMeta
