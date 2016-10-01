@@ -1,4 +1,4 @@
-from dist_system.task.task import *
+from dist_system.task import *
 
 
 class DataProcessingTaskJob(TaskJob):

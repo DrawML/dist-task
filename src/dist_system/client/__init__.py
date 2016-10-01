@@ -1,4 +1,4 @@
-from dist_system.task.task import TaskType
+from dist_system.task import TaskType
 from dist_system.library import SingletonMeta
 from threading import Thread
 from queue import Queue

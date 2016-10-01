@@ -1,5 +1,5 @@
 import unittest
-import dist_system.slave.monitor.monitor as monitor
+import dist_system.slave.monitor as monitor
 import asyncio
 
 

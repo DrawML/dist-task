@@ -13,7 +13,7 @@ from dist_system.master.virtualizer.linker import link
 from dist_system.master.virtualizer.config import RunConfig
 import heapq
 from dist_system.logger import Logger
-from dist_system.information.information import AllocatedResource
+from dist_system.information import AllocatedResource
 
 
 async def run_heartbeat():

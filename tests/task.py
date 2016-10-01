@@ -1,5 +1,5 @@
 import unittest
-from dist_system.task.task import TaskToken, NotAvailableTaskTokenError
+from dist_system.task import TaskToken, NotAvailableTaskTokenError
 
 
 class MyTestCase(unittest.TestCase):

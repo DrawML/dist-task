@@ -9,7 +9,7 @@ from dist_system.master.msg_dispatcher import *
 from dist_system.task.functions import *
 from dist_system.logger import Logger
 import traceback
-from dist_system.information.information import *
+from dist_system.information import *
 
 
 class ClientMessageHandler(metaclass=SingletonMeta):

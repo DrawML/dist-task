@@ -1,4 +1,4 @@
-from dist_system.task.task import *
+from dist_system.task import *
 from dist_system.task.sleep_task import *
 from dist_system.task.data_processing_task import *
 from dist_system.task.tensorflow_task import *

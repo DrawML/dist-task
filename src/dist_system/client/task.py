@@ -1,6 +1,6 @@
 from dist_system.logger import Logger
 from dist_system.library import (AutoIncrementEnum, SingletonMeta)
-from dist_system.task.task import *
+from dist_system.task import *
 
 
 class TaskSyncManager(metaclass=SingletonMeta):

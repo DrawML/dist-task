@@ -11,7 +11,7 @@ from dist_system.slave.worker import WorkerManager
 from dist_system.slave.msg_dispatcher import *
 from dist_system.protocol.slave_worker import *
 import binascii
-from dist_system.slave.monitor.monitor import monitor
+from dist_system.slave.monitor import monitor
 from dist_system.logger import Logger
 from dist_system.slave.file import *
 

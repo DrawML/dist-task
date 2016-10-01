@@ -12,7 +12,7 @@ from dist_system.protocol import master_slave, slave_worker, any_result_receiver
 from functools import partial
 from dist_system.slave.msg_dispatcher import *
 from dist_system.slave.result_receiver import *
-from dist_system.slave.monitor.monitor import monitor
+from dist_system.slave.monitor import monitor
 from dist_system.logger import Logger
 import traceback
 from dist_system.slave.file import FileManager

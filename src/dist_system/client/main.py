@@ -13,7 +13,7 @@ from dist_system.client.controller import *
 from dist_system.protocol import client_master, any_result_receiver
 from functools import partial
 from dist_system.library import SingletonMeta, coroutine_with_no_exception
-from dist_system.task.task import *
+from dist_system.task import *
 from dist_system.task.functions import *
 from dist_system.client.task import TaskManager, TaskSyncManager
 from dist_system.client.simulator import simulate_task, _coroutine_exception_callback
