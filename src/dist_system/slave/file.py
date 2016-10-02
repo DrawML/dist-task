@@ -6,6 +6,7 @@ from dist_system.library import AutoIncrementEnum, SingletonMeta
 class FileType(AutoIncrementEnum):
     TYPE_DATA_FILE = ()
     TYPE_EXECUTABLE_CODE_FILE = ()
+    TYPE_RESULT_FILE = ()
 
 
 class FileValueError(ValueError):
@@ -20,11 +21,13 @@ class FileManager(metaclass=SingletonMeta):
     __FILE_NO_CREATION_NUMBER = 10
     __FILENAME_PREFIX = {
         FileType.TYPE_DATA_FILE: "data_",
-        FileType.TYPE_EXECUTABLE_CODE_FILE: "executable_code_"
+        FileType.TYPE_EXECUTABLE_CODE_FILE: "executable_code_",
+        FileType.TYPE_RESULT_FILE: "result_file_"
     }
     __FILENAME_POSTFIX = {
         FileType.TYPE_DATA_FILE: ".txt",
-        FileType.TYPE_EXECUTABLE_CODE_FILE: ".py"
+        FileType.TYPE_EXECUTABLE_CODE_FILE: ".py",
+        FileType.TYPE_RESULT_FILE: ".txt"
     }
 
     def __init__(self, root_dir: str):
@@ -34,14 +37,16 @@ class FileManager(metaclass=SingletonMeta):
         self._root_dir = root_dir
         self._file_no_pool = {
             FileType.TYPE_DATA_FILE: [],
-            FileType.TYPE_EXECUTABLE_CODE_FILE: []
+            FileType.TYPE_EXECUTABLE_CODE_FILE: [],
+            FileType.TYPE_RESULT_FILE: []
         }
         self._file_no_end = {
             FileType.TYPE_DATA_FILE: 0,
-            FileType.TYPE_EXECUTABLE_CODE_FILE: 0
+            FileType.TYPE_EXECUTABLE_CODE_FILE: 0,
+            FileType.TYPE_RESULT_FILE: 0
         }
         self._dic_key_files = {
-            # [(file_type, file_path)]
+            # key: (file_type, file_no, file_path)
         }
 
     def _ensure_dir(self, dir):
@@ -59,19 +64,31 @@ class FileManager(metaclass=SingletonMeta):
 
         return pool.pop()
 
-    def _get_avail_filename(self, file_type: FileType):
+    def _salt_to_filename(self, file_type: FileType, identity : str):
         return FileManager.__FILENAME_PREFIX[file_type] + \
-               str(self._get_avail_file_no(file_type)) + \
+               identity + \
                FileManager.__FILENAME_POSTFIX[file_type]
 
-    # exception handling will be added.
-    def store(self, key, file_type: FileType, file_data: str):
-        file_path = os.path.join(self._root_dir, self._get_avail_filename(file_type))
-        with open(file_path, 'w') as f:
-            f.write(file_data)
+    def _reserve(self, key, file_type: FileType):
+        file_no = self._get_avail_file_no(file_type)
+        file_path = os.path.join(self._root_dir, self._salt_to_filename(file_type, str(file_no)))
         if not key in self._dic_key_files:
             self._dic_key_files[key] = []
-        self._dic_key_files[key].append((file_type, file_path))
+        self._dic_key_files[key].append((file_type, file_no, file_path))
+        return file_path, file_no
+
+    def store(self, key, file_type: FileType, file_data: str):
+        file_path, file_no = self._reserve(key, file_type)
+        try:
+            with open(file_path, 'w') as f:
+                f.write(file_data)
+        except OSError:
+            self._remove(file_type, file_no, file_path)
+            raise
+        return file_path
+
+    def reserve(self, key, file_type: FileType):
+        file_path, _ = self._reserve(key, file_type)
         return file_path
 
     def remove_files_using_key(self, key):
@@ -81,17 +98,16 @@ class FileManager(metaclass=SingletonMeta):
             pass
         else:
             del self._dic_key_files[key]
-            for file_type, file_path in files:
-                self.remove(file_type, file_path)
+            for file_type, file_no, file_path in files:
+                self._remove(file_type, file_no, file_path)
 
-    def remove(self, file_type: FileType, file_path: str):
+    def _remove(self, file_type: FileType, file_no: int, file_path: str):
         try:
-            filename = os.path.basename(file_path)
-            file_no = int(
-                filename[len(FileManager.__FILENAME_PREFIX[file_type]): \
-                    -len(FileManager.__FILENAME_POSTFIX[file_type])]
-            )
             self._file_no_pool[file_type].append(file_no)
-            os.remove(file_path)
+            try:
+                os.remove(file_path)
+            except FileNotFoundError:
+                # for reserve files.
+                pass
         except Exception as e:
             raise FileValueError('invalid file_path. ' + str(e))

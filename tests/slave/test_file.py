@@ -22,17 +22,19 @@ class MyTestCase(unittest.TestCase):
         self.assertTrue(os.path.exists(TEST_FILES_DIR))
 
         keys = [
-            'key0', 'key0', 'key1', 'key0'
+            'key0', 'key0', 'key1', 'key0', 'key2'
         ]
         types = [
             FileType.TYPE_DATA_FILE, FileType.TYPE_EXECUTABLE_CODE_FILE,
-            FileType.TYPE_EXECUTABLE_CODE_FILE, FileType.TYPE_DATA_FILE
+            FileType.TYPE_EXECUTABLE_CODE_FILE, FileType.TYPE_DATA_FILE,
+            FileType.TYPE_RESULT_FILE
         ]
         data_list = [
             'data0',
             'data1\nseveral lines\nhahaha',
             'data2\nseveral lines, too\nha\tha\tha\n',
-            '\ndata3'
+            None,
+            'data4'
         ]
         file_paths = []
 
@@ -62,6 +64,7 @@ class MyTestCase(unittest.TestCase):
         self.assertFalse(os.path.isfile(file_paths[1]))
         print("After Remove, file no pool(DATA) :", file_manager._file_no_pool[FileType.TYPE_DATA_FILE])
         print("After Remove, file no pool(EXE) :", file_manager._file_no_pool[FileType.TYPE_EXECUTABLE_CODE_FILE])
+        print("After Remove, file no pool(RESULT) :", file_manager._file_no_pool[FileType.TYPE_RESULT_FILE])
 
         try:
             file_manager._dic_key_files[keys[0]]
@@ -70,24 +73,25 @@ class MyTestCase(unittest.TestCase):
         else:
             self.assertEqual(True, False)
 
-        file_path = file_manager.store(keys[3], types[3], data_list[3])
-        print("Created File Path :", file_path)
+        file_path = file_manager.reserve(keys[3], types[3])
+        print("Reserved File Path :", file_path)
         file_paths.append(file_path)
-        check_file_data(file_path, data_list[3])
+        self.assertFalse(os.path.isfile(file_paths[3]))
 
         file_manager.remove_files_using_key(keys[3])
-        file_manager.remove(types[2], file_paths[2])
+        file_manager.remove_files_using_key(keys[2])
         self.assertFalse(os.path.isfile(file_paths[2]))
         self.assertFalse(os.path.isfile(file_paths[3]))
         print("After Remove, file no pool(DATA) :", file_manager._file_no_pool[FileType.TYPE_DATA_FILE])
         print("After Remove, file no pool(EXE) :", file_manager._file_no_pool[FileType.TYPE_EXECUTABLE_CODE_FILE])
+        print("After Remove, file no pool(RESULT) :", file_manager._file_no_pool[FileType.TYPE_RESULT_FILE])
 
-        try:
-            file_manager.remove(types[3], file_paths[3])
-        except FileValueError:
-            pass
-        else:
-            self.assertEqual(True, False)
+        file_path = file_manager.store(keys[4], types[4], data_list[4])
+        print("Created File Path :", file_path)
+        file_paths.append(file_path)
+        check_file_data(file_path, data_list[4])
+
+
 
 
 if __name__ == '__main__':
