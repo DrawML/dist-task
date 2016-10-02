@@ -1,0 +1,3 @@
+[submodule "src/cloud_dfs"]
+	path = src/cloud_dfs
+	url = git://github.com/drawml/cloud-dfs.git
