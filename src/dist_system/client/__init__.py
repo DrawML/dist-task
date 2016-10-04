@@ -1,3 +1,11 @@
+import sys
+from os.path import dirname
+
+src_root_path = dirname(dirname(dirname(__file__)))
+
+if not src_root_path in sys.path:
+    sys.path.append(src_root_path)
+
 from queue import Queue
 from threading import Thread
 
@@ -102,12 +110,3 @@ class Client(metaclass=SingletonMeta):
     @property
     def is_running(self):
         return self._is_running
-
-
-import sys
-from os.path import dirname
-
-src_root_path = dirname(dirname(dirname(__file__)))
-
-if not src_root_path in sys.path:
-    sys.path.append(src_root_path)
