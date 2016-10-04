@@ -48,7 +48,7 @@ class Client(metaclass=SingletonMeta):
 
         self._msg_queue = Queue()
 
-        from .main import main
+        from dist_system.client.main import main
         self._client_thd = Thread(target=main,
                                   args=(self._master_addr,
                                         self._result_router_addr,
@@ -102,3 +102,12 @@ class Client(metaclass=SingletonMeta):
     @property
     def is_running(self):
         return self._is_running
+
+
+import sys
+from os.path import dirname
+
+src_root_path = dirname(dirname(dirname(__file__)))
+
+if not src_root_path in sys.path:
+    sys.path.append(src_root_path)
