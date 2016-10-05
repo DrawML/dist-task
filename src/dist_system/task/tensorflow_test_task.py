@@ -104,6 +104,10 @@ class TensorflowTestTaskWorkerJob(TensorflowTestTaskJob):
     def session_filename(self):
         return self._session_filename
 
+    @property
+    def result_filename(self):
+        return self._result_filename
+
 
 class TensorflowTestTaskResult(TaskResult):
     def __init__(self, stdout: str, stderr: str, result_file_token: str = ''):
