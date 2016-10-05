@@ -7,6 +7,7 @@ class FileType(AutoIncrementEnum):
     TYPE_DATA_FILE = ()
     TYPE_EXECUTABLE_CODE_FILE = ()
     TYPE_RESULT_FILE = ()
+    TYPE_SESSION_FILE = ()
 
 
 class FileValueError(ValueError):
@@ -22,12 +23,14 @@ class FileManager(metaclass=SingletonMeta):
     __FILENAME_PREFIX = {
         FileType.TYPE_DATA_FILE: "data_",
         FileType.TYPE_EXECUTABLE_CODE_FILE: "executable_code_",
-        FileType.TYPE_RESULT_FILE: "result_file_"
+        FileType.TYPE_RESULT_FILE: "result_file_",
+        FileType.TYPE_SESSION_FILE: "session_file_"
     }
     __FILENAME_POSTFIX = {
         FileType.TYPE_DATA_FILE: ".txt",
         FileType.TYPE_EXECUTABLE_CODE_FILE: ".py",
-        FileType.TYPE_RESULT_FILE: ".txt"
+        FileType.TYPE_RESULT_FILE: ".txt",
+        FileType.TYPE_SESSION_FILE: ".ckpt"
     }
 
     def __init__(self, root_dir: str):

@@ -32,9 +32,15 @@ message TaskRegisterRequest {
         string executable_code = 3;
     }
 
-    message TensorflowTask {
-        string data_file_token = 1;
-        string executable_code = 2;
+    message TensorflowTrainTask {
+        string executable_code = 1;
+        string data_file_token = 2;
+    }
+
+    message TensorflowTestTask {
+        string executable_code = 1;
+        string data_file_token = 2;
+        string session_file_token = 3;
     }
 
     ResultReceiverAddress result_receiver_address = 1;
@@ -42,7 +48,8 @@ message TaskRegisterRequest {
     oneof task {
         SleepTask sleep_task = 10;
         DataProcessingTask data_processing_task = 11;
-        TensorflowTask tensorflow_task = 12;
+        TensorflowTrainTask tensorflow_train_task = 12;
+        TensorflowTestTask tensorflow_test_task = 13;
     }
 }
 

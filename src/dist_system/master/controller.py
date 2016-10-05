@@ -13,7 +13,8 @@ from dist_system.master.virtualizer.linker import link
 from dist_system.task import TaskType
 from dist_system.task.data_processing_task import DataProcessingTaskMasterJob, DataProcessingTaskSlaveJob
 from dist_system.task.functions import get_task_type_of_task
-from dist_system.task.tensorflow_task import TensorflowTaskMasterJob, TensorflowTaskSlaveJob
+from dist_system.task.tensorflow_train_task import TensorflowTrainTaskMasterJob, TensorflowTrainTaskSlaveJob
+from dist_system.task.tensorflow_test_task import TensorflowTestTaskMasterJob, TensorflowTestTaskSlaveJob
 
 
 async def run_heartbeat():
@@ -67,20 +68,31 @@ class Scheduler(metaclass=SingletonMeta):
 
     def _preprocess_task(self, task, run_config: RunConfig):
         task_type = get_task_type_of_task(task)
+
         if task_type == TaskType.TYPE_SLEEP_TASK:
             pass
+
         elif task_type == TaskType.TYPE_DATA_PROCESSING_TASK:
             if not isinstance(task.job, DataProcessingTaskMasterJob):
                 task.job = task.prev_job
             executable_code = link(task.job.object_code, run_config)
             task.prev_job = task.job
             task.job = DataProcessingTaskSlaveJob.from_master_job(task.prev_job, executable_code)
-        elif task_type == TaskType.TYPE_TENSORFLOW_TASK:
-            if not isinstance(task.job, TensorflowTaskMasterJob):
+
+        elif task_type == TaskType.TYPE_TENSORFLOW_TRAIN_TASK:
+            if not isinstance(task.job, TensorflowTrainTaskMasterJob):
                 task.job = task.prev_job
             executable_code = link(task.job.object_code, run_config)
             task.prev_job = task.job
-            task.job = TensorflowTaskSlaveJob(task.job.data_file_token, executable_code)
+            task.job = TensorflowTrainTaskSlaveJob(task.job.data_file_token, executable_code)
+
+        elif task_type == TaskType.TYPE_TENSORFLOW_TEST_TASK:
+            if not isinstance(task.job, TensorflowTestTaskMasterJob):
+                task.job = task.prev_job
+            executable_code = link(task.job.object_code, run_config)
+            task.prev_job = task.job
+            task.job = TensorflowTestTaskSlaveJob(task.job.data_file_token, executable_code, task.job.session_file_token)
+
         else:
             raise NotImplementedError
 
@@ -88,7 +100,8 @@ class Scheduler(metaclass=SingletonMeta):
         __schedule_dict = {
             TaskType.TYPE_SLEEP_TASK: self._schedule_sleep_task,
             TaskType.TYPE_DATA_PROCESSING_TASK: self._schedule_data_processing_task,
-            TaskType.TYPE_TENSORFLOW_TASK: self._schedule_tensorflow_task
+            TaskType.TYPE_TENSORFLOW_TRAIN_TASK: self._schedule_tensorflow_task,
+            TaskType.TYPE_TENSORFLOW_TEST_TASK: self._schedule_tensorflow_task,
         }
         return __schedule_dict[get_task_type_of_task(task)](slaves, task)
 

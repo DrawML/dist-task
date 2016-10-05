@@ -8,7 +8,8 @@ message_table = {
         'task': {
             'sleep_task': cm_proto.TaskRegisterRequest.SleepTask,
             'data_processing_task': cm_proto.TaskRegisterRequest.DataProcessingTask,
-            'tensorflow_task': cm_proto.TaskRegisterRequest.TensorflowTask
+            'tensorflow_train_task': cm_proto.TaskRegisterRequest.TensorflowTrainTask,
+            'tensorflow_test_task': cm_proto.TaskRegisterRequest.TensorflowTestTask,
         }
     },
     'task_register_res': {

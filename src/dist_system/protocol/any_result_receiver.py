@@ -7,7 +7,8 @@ message_table = {
         'result': {
             'sleep_task': arr_proto.TaskResultRequest.SleepTask,
             'data_processing_task': arr_proto.TaskResultRequest.DataProcessingTask,
-            'tensorflow_task': arr_proto.TaskResultRequest.TensorflowTask
+            'tensorflow_train_task': arr_proto.TaskResultRequest.TensorflowTrainTask,
+            'tensorflow_test_task': arr_proto.TaskResultRequest.TensorflowTestTask,
         }
     },
     'task_result_res': {

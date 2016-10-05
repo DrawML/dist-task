@@ -36,7 +36,8 @@ class NotAvailableTaskTokenError(Exception):
 class TaskType(AutoIncrementEnum):
     TYPE_SLEEP_TASK = ()
     TYPE_DATA_PROCESSING_TASK = ()
-    TYPE_TENSORFLOW_TASK = ()
+    TYPE_TENSORFLOW_TRAIN_TASK = ()
+    TYPE_TENSORFLOW_TEST_TASK = ()
 
     @staticmethod
     def from_str(task_type_str: str):
@@ -44,8 +45,10 @@ class TaskType(AutoIncrementEnum):
             return TaskType.TYPE_SLEEP_TASK
         elif task_type_str == 'data_processing_task':
             return TaskType.TYPE_DATA_PROCESSING_TASK
-        elif task_type_str == 'tensorflow_task':
-            return TaskType.TYPE_TENSORFLOW_TASK
+        elif task_type_str == 'tensorflow_train_task':
+            return TaskType.TYPE_TENSORFLOW_TRAIN_TASK
+        elif task_type_str == 'tensorflow_test_task':
+            return TaskType.TYPE_TENSORFLOW_TEST_TASK
         else:
             return TaskTypeValueError(task_type_str + ' is invalid task type.')
 
@@ -54,8 +57,10 @@ class TaskType(AutoIncrementEnum):
             return 'sleep_task'
         elif self == TaskType.TYPE_DATA_PROCESSING_TASK:
             return 'data_processing_task'
-        elif self == TaskType.TYPE_TENSORFLOW_TASK:
-            return 'tensorflow_task'
+        elif self == TaskType.TYPE_TENSORFLOW_TRAIN_TASK:
+            return 'tensorflow_train_task'
+        elif self == TaskType.TYPE_TENSORFLOW_TEST_TASK:
+            return 'tensorflow_test_task'
         else:
             return TaskTypeValueError(self + ' is invalid task type.')
 

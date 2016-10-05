@@ -12,7 +12,8 @@ from dist_system.slave.worker import WorkerManager
 from dist_system.task import TaskType
 from dist_system.task.data_processing_task import DataProcessingTaskWorkerJob
 from dist_system.task.functions import get_task_type_of_task
-from dist_system.task.tensorflow_task import TensorflowTaskWorkerJob
+from dist_system.task.tensorflow_train_task import TensorflowTrainTaskWorkerJob
+from dist_system.task.tensorflow_test_task import TensorflowTestTaskWorkerJob
 
 
 class WorkerCreator(metaclass=SingletonMeta):
@@ -49,12 +50,22 @@ def preprocess_task(task):
                                                        task.job.executable_code)
         task.job = DataProcessingTaskWorkerJob(data_file_num, data_filename_list, executable_code_filename)
 
-    elif task_type == TaskType.TYPE_TENSORFLOW_TASK:
+    elif task_type == TaskType.TYPE_TENSORFLOW_TRAIN_TASK:
         # temporary usage of protocol for test
         data_filename = FileManager().store(task, FileType.TYPE_DATA_FILE, task.job.data_file_token)
         executable_code_filename = FileManager().store(task, FileType.TYPE_EXECUTABLE_CODE_FILE,
                                                        task.job.executable_code)
-        task.job = TensorflowTaskWorkerJob(data_filename, executable_code_filename)
+        session_filename = FileManager().reserve(task, FileType.TYPE_SESSION_FILE)
+        task.job = TensorflowTrainTaskWorkerJob(data_filename, executable_code_filename, session_filename)
+
+    elif task_type == TaskType.TYPE_TENSORFLOW_TEST_TASK:
+        # temporary usage of protocol for test
+        data_filename = FileManager().store(task, FileType.TYPE_DATA_FILE, task.job.data_file_token)
+        executable_code_filename = FileManager().store(task, FileType.TYPE_EXECUTABLE_CODE_FILE,
+                                                       task.job.executable_code)
+        # temporary usage of protocol for test
+        session_filename = FileManager().store(task, FileType.TYPE_SESSION_FILE, task.job.session_file_token)
+        task.job = TensorflowTestTaskWorkerJob(data_filename, executable_code_filename, session_filename)
 
     else:
         raise NotImplementedError

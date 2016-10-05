@@ -22,6 +22,12 @@ from dist_system.task import TaskType
 from dist_system.task.data_processing_task import DataProcessingTaskJob
 from dist_system.task.tensorflow_task import TensorflowTaskJob
 
+"""
+CLIENT MODULE is not updated about new protocol(2016/10/6)
+Hey, Sangbong please update!
+And, After updating, remove these lines.
+"""
+
 
 class MasterConnection(object):
     def __init__(self, context: zmq.asyncio.Context, master_addr):

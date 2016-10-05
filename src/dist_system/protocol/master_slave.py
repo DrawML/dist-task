@@ -20,7 +20,8 @@ message_table = {
         'task': {
             'sleep_task': ms_proto.TaskRegisterRequest.SleepTask,
             'data_processing_task': ms_proto.TaskRegisterRequest.DataProcessingTask,
-            'tensorflow_task': ms_proto.TaskRegisterRequest.TensorflowTask
+            'tensorflow_train_task': ms_proto.TaskRegisterRequest.TensorflowTrainTask,
+            'tensorflow_test_task': ms_proto.TaskRegisterRequest.TensorflowTestTask,
         }
     },
     'task_register_res': {

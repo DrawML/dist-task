@@ -10,7 +10,8 @@ from dist_system.result_receiver import ResultReceiverAddress
 from dist_system.task import Task, TaskType, TaskToken, TaskTypeValueError
 from dist_system.task.functions import make_task_with_task_type
 from dist_system.task.sleep_task import SleepTask, SleepTaskResult
-from dist_system.task.tensorflow_task import TensorflowTask, TensorflowTaskResult
+from dist_system.task.tensorflow_train_task import TensorflowTrainTask, TensorflowTrainTaskResult
+from dist_system.task.tensorflow_test_task import TensorflowTestTask, TensorflowTestTaskResult
 from dist_system.worker.msg_dispatcher import SlaveMessageDispatcher
 from dist_system.worker.result_receiver import ResultReceiverCommunicatorWithWorker
 
@@ -59,19 +60,36 @@ async def _do_sleep_task(sleep_task: SleepTask):
 tensorflow_task_no = 0
 
 
-async def _do_tensorflow_task(tensorflow_task: TensorflowTask):
+async def _do_tensorflow_train_task(tensorflow_task: TensorflowTrainTask):
     job = tensorflow_task.job
 
-    Logger().log("-------before tensorflow--------")
+    Logger().log("-------before tensorflow train task--------")
     proc = await asyncio.create_subprocess_exec('python3', job.executable_code_filename, job.data_filename,
+                                                job.session_filename,
                                                 stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
     stdout, stderr = await proc.communicate()
-    Logger().log("-------after tensorflow--------")
+    Logger().log("-------after tensorflow train task--------")
 
     global tensorflow_task_no
     tensorflow_task_no += 1
-    tensorflow_task.result = TensorflowTaskResult(stdout.decode(), stderr.decode(),
-                                                  str(tensorflow_task_no))  # will be modified.
+    tensorflow_task.result = TensorflowTrainTaskResult(stdout.decode(), stderr.decode(),
+                                                       '<session_file_token>',  str(tensorflow_task_no))  # will be modified.
+
+
+async def _do_tensorflow_test_task(tensorflow_task: TensorflowTestTask):
+    job = tensorflow_task.job
+
+    Logger().log("-------before tensorflow test task--------")
+    proc = await asyncio.create_subprocess_exec('python3', job.executable_code_filename, job.data_filename,
+                                                job.session_filename,
+                                                stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+    stdout, stderr = await proc.communicate()
+    Logger().log("-------after tensorflow test task--------")
+
+    global tensorflow_task_no
+    tensorflow_task_no += 1
+    tensorflow_task.result = TensorflowTestTaskResult(stdout.decode(), stderr.decode(),
+                                                      str(tensorflow_task_no))  # will be modified.
 
 
 async def _report_task_result(context: Context, task_info: TaskInformation):
@@ -98,8 +116,10 @@ async def do_task(context: Context, task_info: TaskInformation):
     try:
         if task_info.task_type == TaskType.TYPE_SLEEP_TASK:
             await _do_sleep_task(task_info.task)
-        elif task_info.task_type == TaskType.TYPE_TENSORFLOW_TASK:
-            await _do_tensorflow_task(task_info.task)
+        elif task_info.task_type == TaskType.TYPE_TENSORFLOW_TRAIN_TASK:
+            await _do_tensorflow_train_task(task_info.task)
+        elif task_info.task_type == TaskType.TYPE_TENSORFLOW_TEST_TASK:
+            await _do_tensorflow_test_task(task_info.task)
         else:
             raise TaskTypeValueError("Invalid Task Type.")
 

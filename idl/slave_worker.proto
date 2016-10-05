@@ -18,9 +18,16 @@ message TaskRegisterCMD {
         string executable_code_filename = 3;
     }
 
-    message TensorflowTask {
-        string data_filename = 1;
-        string executable_code_filename = 2;
+    message TensorflowTrainTask {
+        string executable_code_filename = 1;
+        string data_filename = 2;
+        string session_filename = 3;
+    }
+
+    message TensorflowTestTask {
+        string executable_code_filename = 1;
+        string data_filename = 2;
+        string session_filename = 3;
     }
 
     ResultReceiverAddress result_receiver_address = 1;
@@ -28,7 +35,8 @@ message TaskRegisterCMD {
     oneof task {
         SleepTask sleep_task = 10;
         DataProcessingTask data_processing_task = 11;
-        TensorflowTask tensorflow_task = 12;
+        TensorflowTrainTask tensorflow_train_task = 12;
+        TensorflowTestTask tensorflow_test_task = 13;
     }
 }
 
