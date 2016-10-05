@@ -10,6 +10,11 @@ class FileType(AutoIncrementEnum):
     TYPE_SESSION_FILE = ()
 
 
+class FileDataType(AutoIncrementEnum):
+    TYPE_TEXT = ()
+    TYPE_BINARY = ()
+
+
 class FileValueError(ValueError):
     def __init__(self, msg=''):
         self._msg = msg
@@ -82,10 +87,33 @@ class FileManager(metaclass=SingletonMeta):
         self._dic_key_files[key].append((file_type, file_no, file_path))
         return file_path, file_no
 
-    def store(self, key, file_type: FileType, file_data: str):
+    def store(self, key, file_type: FileType, file_data, data_type: FileDataType = None):
+        """Store data file to local file system.
+
+        :param key: associated key to file :hashable object
+        :param file_type: file type
+        :param file_data: file data
+        :param data_type: data type
+        :return: a file path which a file is stored at
+        """
+        if data_type is None:
+            if isinstance(file_data, str):
+                data_type = FileDataType.TYPE_TEXT
+            elif isinstance(file_data, bytes):
+                data_type = FileDataType.TYPE_BINARY
+            else:
+                raise FileValueError('invalid file data.')
+
+        if data_type == FileDataType.TYPE_TEXT:
+            mode = 'wt'
+        elif data_type == FileDataType.TYPE_BINARY:
+            mode = 'wb'
+        else:
+            raise FileValueError('invalid data type.')
+
         file_path, file_no = self._reserve(key, file_type)
         try:
-            with open(file_path, 'w') as f:
+            with open(file_path, mode) as f:
                 f.write(file_data)
         except OSError:
             self._remove(file_type, file_no, file_path)
