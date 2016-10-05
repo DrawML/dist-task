@@ -41,12 +41,14 @@ class FileManager(metaclass=SingletonMeta):
         self._file_no_pool = {
             FileType.TYPE_DATA_FILE: [],
             FileType.TYPE_EXECUTABLE_CODE_FILE: [],
-            FileType.TYPE_RESULT_FILE: []
+            FileType.TYPE_RESULT_FILE: [],
+            FileType.TYPE_SESSION_FILE: []
         }
         self._file_no_end = {
             FileType.TYPE_DATA_FILE: 0,
             FileType.TYPE_EXECUTABLE_CODE_FILE: 0,
-            FileType.TYPE_RESULT_FILE: 0
+            FileType.TYPE_RESULT_FILE: 0,
+            FileType.TYPE_SESSION_FILE: 0
         }
         self._dic_key_files = {
             # key: (file_type, file_no, file_path)
