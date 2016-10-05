@@ -28,7 +28,7 @@ message TaskResultRequest {
     string status = 1;
     string error_code = 2;
     bytes task_token = 3;
-    oneof resul {
+    oneof result {
         SleepTask sleep_task = 10;
         DataProcessingTask data_processing_task = 11;
         TensorflowTrainTask tensorflow_train_task = 12;
