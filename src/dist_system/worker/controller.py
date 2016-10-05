@@ -86,8 +86,14 @@ async def _do_data_processing_task(data_processing_task):
     # exception handling is needed about cloud_dfs??
 
     # file open mode what???
-    with open(job.result_filename, 'rt') as f:
-        result_file_data = f.read()
+    try:
+        with open(job.result_filename, 'rt') as f:
+            result_file_data = f.read()
+    except OSError as e:
+        Logger().log("There is no result file :", job.result_filename)
+        # handling if there is no file.
+        result_file_data = ''
+
     result_file_token = CloudDFSConnector().put_data_file(job.result_filename, result_file_data, 'text')
 
     data_processing_task.result = TensorflowTestTaskResult(stdout.decode(), stderr.decode(), result_file_token)
@@ -106,13 +112,25 @@ async def _do_tensorflow_train_task(tensorflow_train_task):
     # exception handling is needed about cloud_dfs??
 
     # file open mode what???
-    with open(job.result_filename, 'rt') as f:
-        result_file_data = f.read()
+    try:
+        with open(job.result_filename, 'rt') as f:
+            result_file_data = f.read()
+    except OSError as e:
+        Logger().log("There is no result file :", job.result_filename)
+        # handling if there is no file.
+        result_file_data = ''
+
     result_file_token = CloudDFSConnector().put_data_file(job.result_filename, result_file_data, 'text')
 
     # file open mode what???
-    with open(job.session_filename, 'rb') as f:
-        session_file_data = f.read()
+    try:
+        with open(job.session_filename, 'rb') as f:
+            session_file_data = f.read()
+    except OSError as e:
+        Logger().log("There is no session file :", job.result_filename)
+        # handling if there is no file.
+        session_file_data = b''
+
     session_file_token = CloudDFSConnector().put_data_file(job.session_filename, session_file_data, 'binary')
 
     tensorflow_train_task.result = TensorflowTrainTaskResult(stdout.decode(), stderr.decode(),
