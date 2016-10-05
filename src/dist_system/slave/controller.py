@@ -14,20 +14,25 @@ from dist_system.task.data_processing_task import DataProcessingTaskWorkerJob
 from dist_system.task.functions import get_task_type_of_task
 from dist_system.task.tensorflow_train_task import TensorflowTrainTaskWorkerJob
 from dist_system.task.tensorflow_test_task import TensorflowTestTaskWorkerJob
-from dist_system.cloud_dfs import CloudDFSConnector
+from dist_system.address import SlaveAddress
+from dist_system.cloud_dfs import CloudDFSConnector, CloudDFSAddress
 import dist_system.cloud_dfs as cloud_dfs
 
 
 class WorkerCreator(metaclass=SingletonMeta):
-    def __init__(self, worker_file_name):
+    def __init__(self, worker_file_name, slave_address: SlaveAddress, cloud_dfs_address: CloudDFSAddress):
         self._worker_file_name = worker_file_name
+        self._slave_address = slave_address
+        self._cloud_dfs_address = cloud_dfs_address
 
     def create(self, result_receiver_address, task_token, task_type, task):
         serialized_data = make_msg_data('task_register_cmd', {
             'result_receiver_address': result_receiver_address.to_dict(),
             'task_token': task_token.to_bytes(),
             'task_type': task_type.to_str(),
-            'task': task.job.to_dict()
+            'task': task.job.to_dict(),
+            'slave_address': self._slave_address.to_dict(),
+            'cloud_dfs_address': self._cloud_dfs_address.to_dict()
         })
         hex_data = serialized_data.hex()
         proc = subprocess.Popen(['python3', self._worker_file_name, hex_data])

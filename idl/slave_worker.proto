@@ -8,6 +8,17 @@ message TaskRegisterCMD {
         int32 port = 3;
     }
 
+    message SlaveAddress {
+        string type = 1;
+        string ip = 2;
+        int32 port = 3;
+    }
+
+    message CloudDFSAddress {
+        string ip = 1;
+        int32 port = 2;
+    }
+
     message SleepTask {
         int32 seconds = 1;
     }
@@ -40,6 +51,8 @@ message TaskRegisterCMD {
         TensorflowTrainTask tensorflow_train_task = 12;
         TensorflowTestTask tensorflow_test_task = 13;
     }
+    SlaveAddress slave_address = 3;
+    CloudDFSAddress cloud_dfs_address = 4;
 }
 
 message WorkerRegisterRequest {

@@ -139,7 +139,7 @@ class ResultReceiverCommunicationIO(metaclass=SingletonMeta):
         self._sock = None
 
 
-async def run_slave(context: Context, master_addr, worker_router_addr, worker_file_name, cloud_dfs_addr):
+async def run_slave(context: Context, master_addr, worker_router_addr, slave_address, worker_file_name, cloud_dfs_addr):
     def _coroutine_exception_callback(_, e):
         Logger().log('[!] exception occurs in coroutine :', e)
 
@@ -162,7 +162,7 @@ async def run_slave(context: Context, master_addr, worker_router_addr, worker_fi
         result_receiver_communication_io.close,
     )
 
-    WorkerCreator(worker_file_name)
+    WorkerCreator(worker_file_name, slave_address, cloud_dfs_addr)
 
     await asyncio.wait([
         asyncio.ensure_future(worker_router.run()),  # must be first.
@@ -172,14 +172,15 @@ async def run_slave(context: Context, master_addr, worker_router_addr, worker_fi
     ])
 
 
-def main(master_addr, worker_router_addr, worker_file_name, cloud_dfs_addr):
+def main(master_addr, worker_router_addr, slave_address, worker_file_name, cloud_dfs_addr):
     try:
         loop = ZMQEventLoop()
         asyncio.set_event_loop(loop)
 
         context = Context()
 
-        loop.run_until_complete(run_slave(context, master_addr, worker_router_addr, worker_file_name, cloud_dfs_addr))
+        loop.run_until_complete(run_slave(context, master_addr, worker_router_addr, slave_address,
+                                          worker_file_name, cloud_dfs_addr))
     except KeyboardInterrupt:
         print('\nFinished (interrupted)')
         sys.exit(0)

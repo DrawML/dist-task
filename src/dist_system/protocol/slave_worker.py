@@ -11,6 +11,8 @@ message_table = {
             'tensorflow_train_task': sw_proto.TaskRegisterCMD.TensorflowTrainTask,
             'tensorflow_test_task': sw_proto.TaskRegisterCMD.TensorflowTestTask,
         },
+        'slave_address': sw_proto.TaskRegisterCMD.SlaveAddress,
+        'cloud_dfs_address': sw_proto.TaskRegisterCMD.CloudDFSAddress,
     },
     'worker_register_req': {
         'this': sw_proto.WorkerRegisterRequest,
