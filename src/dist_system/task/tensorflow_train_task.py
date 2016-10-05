@@ -60,21 +60,23 @@ class TensorflowTrainTaskSlaveJob(TensorflowTrainTaskJob):
 
 
 class TensorflowTrainTaskWorkerJob(TensorflowTrainTaskJob):
-    def __init__(self, data_filename: str, executable_code_filename: str, session_filename : str):
+    def __init__(self, data_filename: str, executable_code_filename: str, session_filename: str, result_filename: str):
         super().__init__()
         self._data_filename = data_filename
         self._executable_code_filename = executable_code_filename
         self._session_filename = session_filename
+        self._result_filename = result_filename
 
     def _to_dict(self) -> dict:
         return {'data_filename': self._data_filename,
                 'executable_code_filename': self._executable_code_filename,
-                'session_filename': self._session_filename}
+                'session_filename': self._session_filename,
+                'result_filename': self._result_filename}
 
     @classmethod
     def _from_dict(cls, dict_: dict) -> 'TensorflowTrainTaskWorkerJob':
         return TensorflowTrainTaskWorkerJob(dict_['data_filename'], dict_['executable_code_filename'],
-                                            dict_['session_filename'])
+                                            dict_['session_filename'], dict_['result_filename'])
 
     @property
     def data_filename(self):
@@ -87,6 +89,10 @@ class TensorflowTrainTaskWorkerJob(TensorflowTrainTaskJob):
     @property
     def session_filename(self):
         return self._session_filename
+
+    @property
+    def result_filename(self):
+        return self._result_filename
 
 
 class TensorflowTrainTaskResult(TaskResult):

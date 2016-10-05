@@ -22,12 +22,14 @@ message TaskRegisterCMD {
         string executable_code_filename = 1;
         string data_filename = 2;
         string session_filename = 3;
+        string result_filename = 4;
     }
 
     message TensorflowTestTask {
         string executable_code_filename = 1;
         string data_filename = 2;
         string session_filename = 3;
+        string result_filename = 4;
     }
 
     ResultReceiverAddress result_receiver_address = 1;

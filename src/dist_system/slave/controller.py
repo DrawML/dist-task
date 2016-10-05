@@ -60,8 +60,10 @@ def preprocess_task(task):
                                                        task.job.executable_code)
 
         session_filename = FileManager().reserve(task, FileType.TYPE_SESSION_FILE)
+        result_filename = FileManager().reserve(task, FileType.TYPE_RESULT_FILE)
 
-        task.job = TensorflowTrainTaskWorkerJob(data_filename, executable_code_filename, session_filename)
+        task.job = TensorflowTrainTaskWorkerJob(data_filename, executable_code_filename,
+                                                session_filename, result_filename)
 
     elif task_type == TaskType.TYPE_TENSORFLOW_TEST_TASK:
         _, file_data = CloudDFSConnector().get_data_file(task.job.data_file_token)
@@ -71,8 +73,10 @@ def preprocess_task(task):
 
         _, file_data = CloudDFSConnector().get_data_file(task.job.session_file_token)
         session_filename = FileManager().store(task, FileType.TYPE_SESSION_FILE, task.job.file_data)
+        result_filename = FileManager().reserve(task, FileType.TYPE_RESULT_FILE)
 
-        task.job = TensorflowTestTaskWorkerJob(data_filename, executable_code_filename, session_filename)
+        task.job = TensorflowTestTaskWorkerJob(data_filename, executable_code_filename,
+                                               session_filename, result_filename)
 
     else:
         raise NotImplementedError
