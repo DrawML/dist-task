@@ -3,7 +3,6 @@ import unittest
 
 class MyTestCase(unittest.TestCase):
     def test_import(self):
-        import dist_system
         from cloud_dfs.connector import CloudDFSConnector
         CloudDFSConnector('127.0.0.1', 5000)
 
