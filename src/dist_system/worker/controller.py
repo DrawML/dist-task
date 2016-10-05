@@ -66,7 +66,7 @@ class TaskInformation(object):
         return TaskInformation(result_receiver_address, task_token, task_type, task, slave_address, cloud_dfs_address)
 
 
-async def _do_sleep_task(sleep_task: SleepTask):
+async def _do_sleep_task(sleep_task):
     Logger().log("-------before sleep--------")
     await asyncio.sleep(sleep_task.job.seconds)
     Logger().log("+++++++after sleep++++++++")
@@ -93,8 +93,8 @@ async def _do_data_processing_task(data_processing_task):
     data_processing_task.result = TensorflowTestTaskResult(stdout.decode(), stderr.decode(), result_file_token)
 
 
-async def _do_tensorflow_train_task(tensorflow_task: TensorflowTrainTask):
-    job = tensorflow_task.job
+async def _do_tensorflow_train_task(tensorflow_train_task):
+    job = tensorflow_train_task.job
 
     Logger().log("-------before tensorflow TRAIN task--------")
     proc = await asyncio.create_subprocess_exec('python3', job.executable_code_filename, job.data_filename,
@@ -115,12 +115,12 @@ async def _do_tensorflow_train_task(tensorflow_task: TensorflowTrainTask):
         session_file_data = f.read()
     session_file_token = CloudDFSConnector().put_data_file(job.session_filename, session_file_data, 'binary')
 
-    tensorflow_task.result = TensorflowTrainTaskResult(stdout.decode(), stderr.decode(),
+    tensorflow_train_task.result = TensorflowTrainTaskResult(stdout.decode(), stderr.decode(),
                                                        session_file_token,  result_file_token)
 
 
-async def _do_tensorflow_test_task(tensorflow_task: TensorflowTestTask):
-    job = tensorflow_task.job
+async def _do_tensorflow_test_task(tensorflow_test_task):
+    job = tensorflow_test_task.job
 
     Logger().log("-------before tensorflow TEST task--------")
     proc = await asyncio.create_subprocess_exec('python3', job.executable_code_filename, job.data_filename,
@@ -136,7 +136,7 @@ async def _do_tensorflow_test_task(tensorflow_task: TensorflowTestTask):
         result_file_data = f.read()
     result_file_token = CloudDFSConnector().put_data_file(job.result_filename, result_file_data, 'text')
 
-    tensorflow_task.result = TensorflowTestTaskResult(stdout.decode(), stderr.decode(), result_file_token)
+    tensorflow_test_task.result = TensorflowTestTaskResult(stdout.decode(), stderr.decode(), result_file_token)
 
 
 async def _report_task_result(context: Context, task_info: TaskInformation):
