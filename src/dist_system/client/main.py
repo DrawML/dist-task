@@ -20,13 +20,9 @@ from dist_system.logger import Logger
 from dist_system.protocol import client_master, any_result_receiver
 from dist_system.task import TaskType
 from dist_system.task.data_processing_task import DataProcessingTaskJob
-from dist_system.task.tensorflow_task import TensorflowTaskJob
 
-"""
-CLIENT MODULE is not updated about new protocol(2016/10/6)
-Hey, Sangbong please update!
-And, After updating, remove these lines.
-"""
+from dist_system.task.tensorflow_test_task import TensorflowTestTaskJob
+from dist_system.task.tensorflow_train_task import TensorflowTrainTaskJob
 
 
 class MasterConnection(object):
@@ -147,9 +143,12 @@ class TaskDeliverer(metaclass=SingletonMeta):
         print('[TaskDeliverer] ', 'start to request! in process')
 
         if isinstance(msg, RequestMessage):
-            if msg.task_type == TaskType.TYPE_TENSORFLOW_TASK:
-                print('[TaskDeliverer] ', 'TENSORFLOW_TASK request! in process')
-                await register_tensorflow_task(self._context, self._master_addr, self._result_receiver_address, msg)
+            if msg.task_type == TaskType.TYPE_TENSORFLOW_TRAIN_TASK:
+                print('[TaskDeliverer] ', 'TENSORFLOW_TRAIN_TASK request! in process')
+                await register_tensorflow_train_task(self._context, self._master_addr, self._result_receiver_address, msg)
+            elif msg.task_type == TaskType.TYPE_TENSORFLOW_TEST_TASK:
+                print('[TaskDeliverer] ', 'TENSORFLOW_TEST_TASK request! in process')
+                await register_tensorflow_test_task(self._context, self._master_addr, self._result_receiver_address, msg)
             elif msg.task_type == TaskType.TYPE_DATA_PROCESSING_TASK:
                 print('[TaskDeliverer] ', 'DATA_PROCESSING_TASK request! in process')
                 await register_data_proc_task(self._context, self._master_addr, self._result_receiver_address, msg)
@@ -159,12 +158,23 @@ class TaskDeliverer(metaclass=SingletonMeta):
             register_task_cancel(self._context, self._master_addr, msg)
 
 
-async def register_tensorflow_task(context: Context, master_addr, result_receiver_address, msg: RequestMessage):
+async def register_tensorflow_train_task(context: Context, master_addr, result_receiver_address, msg: RequestMessage):
     TaskSyncManager().pend_experiment(msg.experiment_id)
 
     asyncio.ensure_future(coroutine_with_no_exception(
-        register_task_to_master(context, master_addr, result_receiver_address, TaskType.TYPE_TENSORFLOW_TASK,
-                                TensorflowTaskJob.from_dict_with_whose_job('master', msg.task_job_dict), msg.callback,
+        register_task_to_master(context, master_addr, result_receiver_address, TaskType.TYPE_TENSORFLOW_TRAIN_TASK,
+                                TensorflowTrainTaskJob.from_dict_with_whose_job('master', msg.task_job_dict), msg.callback,
+                                msg.experiment_id),
+        _coroutine_exception_callback)
+    )
+
+
+async def register_tensorflow_test_task(context: Context, master_addr, result_receiver_address, msg: RequestMessage):
+    TaskSyncManager().pend_experiment(msg.experiment_id)
+
+    asyncio.ensure_future(coroutine_with_no_exception(
+        register_task_to_master(context, master_addr, result_receiver_address, TaskType.TYPE_TENSORFLOW_TEST_TASK,
+                                TensorflowTestTaskJob.from_dict_with_whose_job('master', msg.task_job_dict), msg.callback,
                                 msg.experiment_id),
         _coroutine_exception_callback)
     )
