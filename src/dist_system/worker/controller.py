@@ -14,15 +14,20 @@ from dist_system.task.tensorflow_train_task import TensorflowTrainTask, Tensorfl
 from dist_system.task.tensorflow_test_task import TensorflowTestTask, TensorflowTestTaskResult
 from dist_system.worker.msg_dispatcher import SlaveMessageDispatcher
 from dist_system.worker.result_receiver import ResultReceiverCommunicatorWithWorker
+from dist_system.address import SlaveAddress
+from dist_system.cloud_dfs import CloudDFSConnector, CloudDFSAddress
 
 
 class TaskInformation(object):
     def __init__(self, result_receiver_address: ResultReceiverAddress,
-                 task_token: TaskToken, task_type: TaskType, task: Task):
+                 task_token: TaskToken, task_type: TaskType, task: Task,
+                 slave_address: SlaveAddress, cloud_dfs_address: CloudDFSAddress):
         self._result_receiver_address = result_receiver_address
         self._task_token = task_token
         self._task_type = task_type
         self._task = task
+        self._slave_address = slave_address
+        self._cloud_dfs_address = cloud_dfs_address
 
     @property
     def result_receiver_address(self):
@@ -40,13 +45,24 @@ class TaskInformation(object):
     def task(self):
         return self._task
 
-    @staticmethod
+    @property
+    def slave_address(self):
+        return self._slave_address
+
+    @property
+    def cloud_dfs_address(self):
+        return self._cloud_dfs_address
+
+    @classmethod
     def from_dict(dict_: dict) -> 'TaskInformation':
         result_receiver_address = ResultReceiverAddress.from_dict(dict_['result_receiver_address'])
         task_token = TaskToken.from_bytes(dict_['task_token'])
         task_type = TaskType.from_str(dict_['task_type'])
         task = make_task_with_task_type(task_type, dict_['task'], 'worker', task_token, result_receiver_address)
-        return TaskInformation(result_receiver_address, task_token, task_type, task)
+        slave_address = SlaveAddress.from_dict(dict_['slave_address'])
+        cloud_dfs_address = CloudDFSAddress.from_dict(dict_['cloud_dfs_address'])
+
+        return TaskInformation(result_receiver_address, task_token, task_type, task, slave_address, cloud_dfs_address)
 
 
 async def _do_sleep_task(sleep_task: SleepTask):
@@ -56,40 +72,50 @@ async def _do_sleep_task(sleep_task: SleepTask):
     sleep_task.result = SleepTaskResult('sleep{0}..'.format(random.randint(1, 1000000)))
 
 
-# temporary variable for test. It will be deleted.
-tensorflow_task_no = 0
-
-
 async def _do_tensorflow_train_task(tensorflow_task: TensorflowTrainTask):
     job = tensorflow_task.job
 
-    Logger().log("-------before tensorflow train task--------")
+    Logger().log("-------before tensorflow TRAIN task--------")
     proc = await asyncio.create_subprocess_exec('python3', job.executable_code_filename, job.data_filename,
-                                                job.session_filename,
+                                                job.session_filename, job.result_filename,
                                                 stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
     stdout, stderr = await proc.communicate()
-    Logger().log("-------after tensorflow train task--------")
+    Logger().log("-------after tensorflow TRAIN task--------")
 
-    global tensorflow_task_no
-    tensorflow_task_no += 1
+    # exception handling is needed about cloud_dfs??
+
+    # file open mode what???
+    with open(job.result_filename, 'rt') as f:
+        result_file_data = f.read()
+    result_file_token = CloudDFSConnector().put_data_file(job.result_filename, result_file_data, 'text')
+
+    # file open mode what???
+    with open(job.session_filename, 'rb') as f:
+        session_file_data = f.read()
+    session_file_token = CloudDFSConnector().put_data_file(job.session_filename, session_file_data, 'binary')
+
     tensorflow_task.result = TensorflowTrainTaskResult(stdout.decode(), stderr.decode(),
-                                                       '<session_file_token>',  str(tensorflow_task_no))  # will be modified.
+                                                       session_file_token,  result_file_token)
 
 
 async def _do_tensorflow_test_task(tensorflow_task: TensorflowTestTask):
     job = tensorflow_task.job
 
-    Logger().log("-------before tensorflow test task--------")
+    Logger().log("-------before tensorflow TEST task--------")
     proc = await asyncio.create_subprocess_exec('python3', job.executable_code_filename, job.data_filename,
-                                                job.session_filename,
+                                                job.session_filename, job.result_filename,
                                                 stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
     stdout, stderr = await proc.communicate()
-    Logger().log("-------after tensorflow test task--------")
+    Logger().log("-------after tensorflow TEST task--------")
 
-    global tensorflow_task_no
-    tensorflow_task_no += 1
-    tensorflow_task.result = TensorflowTestTaskResult(stdout.decode(), stderr.decode(),
-                                                      str(tensorflow_task_no))  # will be modified.
+    # exception handling is needed about cloud_dfs??
+
+    # file open mode what???
+    with open(job.result_filename, 'rt') as f:
+        result_file_data = f.read()
+    result_file_token = CloudDFSConnector().put_data_file(job.result_filename, result_file_data, 'text')
+
+    tensorflow_task.result = TensorflowTestTaskResult(stdout.decode(), stderr.decode(), result_file_token)
 
 
 async def _report_task_result(context: Context, task_info: TaskInformation):

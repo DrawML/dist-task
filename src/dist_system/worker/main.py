@@ -16,6 +16,7 @@ from dist_system.worker.controller import (TaskInformation, do_task)
 from dist_system.worker.msg_dispatcher import SlaveMessageDispatcher
 from dist_system.worker.msg_handler import SlaveMessageHandler
 from dist_system.worker.result_receiver import ResultReceiverCommunicatorWithWorker
+from dist_system.cloud_dfs import CloudDFSConnector
 
 
 class SlaveConnection(object):
@@ -96,7 +97,7 @@ class ResultReceiverCommunicationIO(metaclass=SingletonMeta):
         Logger().log('Close a connection to result receiver')
 
 
-async def run_worker(context: Context, slave_addr, serialized_data: bytes):
+async def run_worker(context: Context, serialized_data: bytes):
     import random
     import time
     Logger("Worker@" + str(time.time()) + "#" + str(random.randint(1, 10000000)), level=2)
@@ -105,8 +106,9 @@ async def run_worker(context: Context, slave_addr, serialized_data: bytes):
     assert header == 'task_register_cmd'
     task_information = TaskInformation.from_dict(body)
 
-    slave_conn = SlaveConnection(context, slave_addr, SlaveMessageHandler())
+    slave_conn = SlaveConnection(context, task_information.slave_address.to_zeromq_addr(), SlaveMessageHandler())
     SlaveMessageDispatcher(slave_conn.dispatch_msg)
+    CloudDFSConnector(task_information.cloud_dfs_address.ip, task_information.cloud_dfs_address.port)
     result_receiver_communication_io = ResultReceiverCommunicationIO()
 
     ResultReceiverCommunicatorWithWorker(
@@ -122,14 +124,14 @@ async def run_worker(context: Context, slave_addr, serialized_data: bytes):
     ])
 
 
-def main(slave_addr, serialized_data: bytes):
+def main(serialized_data: bytes):
     try:
         loop = ZMQEventLoop()
         asyncio.set_event_loop(loop)
 
         context = Context()
 
-        loop.run_until_complete(run_worker(context, slave_addr, serialized_data))
+        loop.run_until_complete(run_worker(context, serialized_data))
     except KeyboardInterrupt:
         print('\nFinished (interrupted)')
         sys.exit(0)
