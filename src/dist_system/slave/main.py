@@ -19,6 +19,7 @@ from dist_system.slave.msg_handler import MasterMessageHandler, WorkerMessageHan
 from dist_system.slave.result_receiver import ResultReceiverCommunicatorWithSlave
 from dist_system.slave.task import TaskManager
 from dist_system.slave.worker import WorkerManager
+from dist_system.cloud_dfs import CloudDFSConnector
 
 
 class MasterConnection(metaclass=SingletonMeta):
@@ -138,7 +139,7 @@ class ResultReceiverCommunicationIO(metaclass=SingletonMeta):
         self._sock = None
 
 
-async def run_slave(context: Context, master_addr, worker_router_addr, worker_file_name):
+async def run_slave(context: Context, master_addr, worker_router_addr, worker_file_name, cloud_dfs_addr):
     def _coroutine_exception_callback(_, e):
         Logger().log('[!] exception occurs in coroutine :', e)
 
@@ -146,6 +147,7 @@ async def run_slave(context: Context, master_addr, worker_router_addr, worker_fi
     TaskManager()
     WorkerManager()
     FileManager(os.path.dirname(os.sys.modules[__name__].__file__) + '/files')
+    CloudDFSConnector(cloud_dfs_addr.ip, cloud_dfs_addr.port)
 
     master_conn = MasterConnection(context, master_addr, MasterMessageHandler())
     worker_router = WorkerRouter(context, worker_router_addr, WorkerMessageHandler())
@@ -170,14 +172,14 @@ async def run_slave(context: Context, master_addr, worker_router_addr, worker_fi
     ])
 
 
-def main(master_addr, worker_router_addr, worker_file_name):
+def main(master_addr, worker_router_addr, worker_file_name, cloud_dfs_addr):
     try:
         loop = ZMQEventLoop()
         asyncio.set_event_loop(loop)
 
         context = Context()
 
-        loop.run_until_complete(run_slave(context, master_addr, worker_router_addr, worker_file_name))
+        loop.run_until_complete(run_slave(context, master_addr, worker_router_addr, worker_file_name, cloud_dfs_addr))
     except KeyboardInterrupt:
         print('\nFinished (interrupted)')
         sys.exit(0)
