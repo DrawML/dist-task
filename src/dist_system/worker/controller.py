@@ -10,6 +10,7 @@ from dist_system.result_receiver import ResultReceiverAddress
 from dist_system.task import Task, TaskType, TaskToken, TaskTypeValueError
 from dist_system.task.functions import make_task_with_task_type
 from dist_system.task.sleep_task import SleepTask, SleepTaskResult
+from dist_system.task.data_processing_task import DataProcessingTask, DataProcessingTaskResult
 from dist_system.task.tensorflow_train_task import TensorflowTrainTask, TensorflowTrainTaskResult
 from dist_system.task.tensorflow_test_task import TensorflowTestTask, TensorflowTestTaskResult
 from dist_system.worker.msg_dispatcher import SlaveMessageDispatcher
@@ -70,6 +71,26 @@ async def _do_sleep_task(sleep_task: SleepTask):
     await asyncio.sleep(sleep_task.job.seconds)
     Logger().log("+++++++after sleep++++++++")
     sleep_task.result = SleepTaskResult('sleep{0}..'.format(random.randint(1, 1000000)))
+
+
+async def _do_data_processing_task(data_processing_task):
+    job = data_processing_task.job
+
+    Logger().log("-------before data processing task--------")
+    proc = await asyncio.create_subprocess_exec('python3', job.executable_code_filename, job.data_file_num,
+                                                *job.data_files, job.result_filename,
+                                                stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+    stdout, stderr = await proc.communicate()
+    Logger().log("-------after data processing task--------")
+
+    # exception handling is needed about cloud_dfs??
+
+    # file open mode what???
+    with open(job.result_filename, 'rt') as f:
+        result_file_data = f.read()
+    result_file_token = CloudDFSConnector().put_data_file(job.result_filename, result_file_data, 'text')
+
+    data_processing_task.result = TensorflowTestTaskResult(stdout.decode(), stderr.decode(), result_file_token)
 
 
 async def _do_tensorflow_train_task(tensorflow_task: TensorflowTrainTask):
@@ -142,6 +163,8 @@ async def do_task(context: Context, task_info: TaskInformation):
     try:
         if task_info.task_type == TaskType.TYPE_SLEEP_TASK:
             await _do_sleep_task(task_info.task)
+        elif task_info.task_type == TaskType.TYPE_DATA_PROCESSING_TASK:
+            await _do_data_processing_task(task_info.task)
         elif task_info.task_type == TaskType.TYPE_TENSORFLOW_TRAIN_TASK:
             await _do_tensorflow_train_task(task_info.task)
         elif task_info.task_type == TaskType.TYPE_TENSORFLOW_TEST_TASK:

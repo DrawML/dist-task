@@ -24,9 +24,10 @@ message TaskRegisterCMD {
     }
 
     message DataProcessingTask {
-        int32 data_file_num = 1;
-        repeated string data_filename_list = 2;
-        string executable_code_filename = 3;
+        string executable_code_filename = 1;
+        int32 data_file_num = 2;
+        repeated string data_filename_list = 3;
+        string result_filename = 4;
     }
 
     message TensorflowTrainTask {

@@ -82,22 +82,25 @@ class DataProcessingTaskSlaveJob(DataProcessingTaskJob):
 
 
 class DataProcessingTaskWorkerJob(DataProcessingTaskJob):
-    def __init__(self, data_file_num: int, data_filename_list: list, executable_code_filename: str):
+    def __init__(self, data_file_num: int, data_filename_list: list, executable_code_filename: str, result_filename: str):
         super().__init__()
         self._data_file_num = data_file_num
         self._data_filename_list = data_filename_list
         self._executable_code_filename = executable_code_filename
+        self._result_filename = result_filename
 
     def _to_dict(self) -> dict:
         return {'data_file_num': self._data_file_num,
                 'data_filename_list': self._data_filename_list,
-                'executable_code_filename': self._executable_code_filename}
+                'executable_code_filename': self._executable_code_filename,
+                'result_filename': self._result_filename}
 
     @classmethod
     def _from_dict(cls, dict_: dict) -> 'DataProcessingTaskWorkerJob':
         return DataProcessingTaskWorkerJob(dict_['data_file_num'],
                                            dict_['data_filename_list'],
-                                           dict_['executable_code_filename'])
+                                           dict_['executable_code_filename'],
+                                           dict_['result_filename'])
 
     @property
     def data_file_num(self):
@@ -110,6 +113,10 @@ class DataProcessingTaskWorkerJob(DataProcessingTaskJob):
     @property
     def executable_code_filename(self):
         return self._executable_code_filename
+
+    @property
+    def result_filename(self):
+        return self._result_filename
 
 
 class DataProcessingTaskResult(TaskResult):

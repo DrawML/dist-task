@@ -55,8 +55,10 @@ def preprocess_task(task):
 
         executable_code_filename = FileManager().store(task, FileType.TYPE_EXECUTABLE_CODE_FILE,
                                                        task.job.executable_code)
+        result_filename = FileManager().reserve(task, FileType.TYPE_RESULT_FILE)
 
-        task.job = DataProcessingTaskWorkerJob(data_file_num, data_filename_list, executable_code_filename)
+        task.job = DataProcessingTaskWorkerJob(data_file_num, data_filename_list,
+                                               executable_code_filename, result_filename)
 
     elif task_type == TaskType.TYPE_TENSORFLOW_TRAIN_TASK:
         _, file_data = CloudDFSConnector().get_data_file(task.job.data_file_token)
