@@ -21,8 +21,9 @@ class MasterMessageHandler(metaclass=SingletonMeta):
         Logger().log("from master, header={0}, body={1}".format(header, body), level=2)
         try:
             MasterMessageHandler.__handler_dict[msg_name](self, body)
-        except Exception as e:
-            Logger().log("Unknown Exception occurs! Pass it for continuous running.\n" + traceback.format_exc())
+        except:
+            Logger().log("Unknown Exception occurs! Pass it for continuous running.\n{0}".
+                format(traceback.format_exc()))
         Logger().log("finish of handling master message", level=2)
 
     def _h_heart_beat_req(self, body):
@@ -42,10 +43,10 @@ class MasterMessageHandler(metaclass=SingletonMeta):
                 sys.exit(1)
             else:
                 # invalid message.
+                Logger().log('{0} is invalid status'.format(status))
                 sys.exit(1)
-        except Exception as e:
-            # invalid message
-            Logger().log('[!]', e)
+        except:
+            Logger().log('\n', traceback.format_exc())
             sys.exit(1)
 
     def _h_task_register_req(self, body):
@@ -75,50 +76,49 @@ class MasterMessageHandler(metaclass=SingletonMeta):
                 # for consistency of task manager
                 TaskManager().del_task(task)
                 raise
-        except Exception as e:
+        except:
             # invalid message
-            Logger().log('[!]', e)
             res_body = {
                 'task_token': task_token.to_bytes(),
                 'status': 'fail',
                 'error_code': 'unknown'
             }
-
-        # send "Task Register Res" to master using protocol.
-        MasterMessageDispatcher().dispatch_msg('task_register_res', res_body)
+            raise
+        finally:
+            # send "Task Register Res" to master using protocol.
+            MasterMessageDispatcher().dispatch_msg('task_register_res', res_body)
 
     def _h_task_cancel_req(self, body):
         task_token = TaskToken.from_bytes(body['task_token'])
         try:
-            task = TaskManager().find_task(task_token)
-            worker = WorkerManager().find_worker_having_task(task)
             try:
-                # why?? 나중에 보자!!!
-                WorkerManager().del_worker(worker)
-                FileManager().remove_files_using_key(task)
-
-                WorkerMessageDispatcher().dispatch_msg(worker, 'task_cancel_req', {})
-                # 여기서 worker를 지우므로 worker로 부터 Task Cancel Res는 받을 수 없다.
-            except WorkerValueError as e:
-                pass
-
-            TaskManager().del_task(task)
-        except TaskValueError as e:
-            # invalid message
-            Logger().log('[!]', e)
-            res_body = {
-                'task_token': task_token,
-                'status': 'fail',
-                'error_code': 'invalid_token'
-            }
-        except Exception as e:
-            # invalid message
-            Logger().log('[!]', e)
+                task = TaskManager().find_task(task_token)
+                worker = WorkerManager().find_worker_having_task(task)
+                try:
+                    WorkerManager().del_worker(worker)
+                finally:
+                    try:
+                        FileManager().remove_files_using_key(task)
+                    finally:
+                        try:
+                            TaskManager().del_task(task)
+                        finally:
+                            # 여기서 worker를 지우므로 worker로 부터 Task Cancel Res는 받을 수 없다.
+                            WorkerMessageDispatcher().dispatch_msg(worker, 'task_cancel_req', {})
+            except TaskValueError:
+                res_body = {
+                    'task_token': task_token,
+                    'status': 'fail',
+                    'error_code': 'invalid_token'
+                }
+        except:
             res_body = {
                 'task_token': task_token,
                 'status': 'fail',
                 'error_code': 'unknown'
             }
+        finally:
+            MasterMessageDispatcher().dispatch_msg('task_cancel_res', res_body)
 
     def _h_task_finish_res(self, body):
         # no specific handling.
@@ -143,8 +143,9 @@ class WorkerMessageHandler(metaclass=SingletonMeta):
         Logger().log("worker identity={0} header={1}, body={2}".format(worker_identity, header, body), level=2)
         try:
             WorkerMessageHandler.__handler_dict[msg_name](self, worker_identity, body)
-        except Exception as e:
-            Logger().log("Unknown Exception occurs! Pass it for continuous running.\n" + traceback.format_exc())
+        except:
+            Logger().log("Unknown Exception occurs! Pass it for continuous running.\n{0}".
+                         format(traceback.format_exc()))
         Logger().log("finish of handling worker message", level=2)
 
     def _h_worker_register_req(self, worker_identity, body):
@@ -159,22 +160,18 @@ class WorkerMessageHandler(metaclass=SingletonMeta):
             res_body = {
                 'status': 'success',
             }
-        except TaskValueError as e:
-            # invalid message
-            Logger().log('[!]', e)
+        except TaskValueError:
             res_body = {
                 'status': 'fail',
                 'error_code': 'invalid_token'
             }
-        except Exception as e:
-            # invalid message
-            Logger().log('[!]', e)
+        except:
             res_body = {
                 'status': 'fail',
                 'error_code': 'unknown'
             }
-
-        WorkerMessageDispatcher().dispatch_msg(worker_identity, 'worker_register_res', res_body)
+        finally:
+            WorkerMessageDispatcher().dispatch_msg(worker_identity, 'worker_register_res', res_body)
 
     def _h_task_cancel_res(self, worker_identity, body):
         # 현재 흐름상 이 message는 절대 수신될 수 없음!!
@@ -185,26 +182,28 @@ class WorkerMessageHandler(metaclass=SingletonMeta):
         Logger().log('task finish.')
         try:
             worker = WorkerManager().find_worker(worker_identity)
-            WorkerManager().del_worker(worker)
-            TaskManager().del_task(worker.task)
-            FileManager().remove_files_using_key(worker.task)
+
+            try:
+                WorkerManager().del_worker(worker)
+            finally:
+                try:
+                    TaskManager().del_task(worker.task)
+                finally:
+                    FileManager().remove_files_using_key(worker.task)
 
             res_body = {
                 'status': 'success',
             }
-
             MasterMessageDispatcher().dispatch_msg('task_finish_req', {
                 'task_token': worker.task.task_token.to_bytes()
             })
-        except Exception as e:
-            # invalid message
-            Logger().log('[!]', e)
+        except:
             res_body = {
                 'status': 'fail',
                 'error_code': 'unknown'
             }
-
-        WorkerMessageDispatcher().dispatch_msg(worker_identity, 'task_finish_res', res_body)
+        finally:
+            WorkerMessageDispatcher().dispatch_msg(worker_identity, 'task_finish_res', res_body)
 
     __handler_dict = {
         "worker_register_req": _h_worker_register_req,
