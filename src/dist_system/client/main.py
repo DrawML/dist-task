@@ -75,7 +75,9 @@ class ResultReceiverCommunicationRouter(metaclass=SingletonMeta):
         self._msg_handler = msg_handler
 
     async def run(self):
+        Logger().log("result router try to bind to {0}".format(self._addr))
         self._router = self._context.socket(zmq.ROUTER)
+        Logger().log("result router created socket {0}".format(self._addr))
         self._router.bind(self._addr)
         Logger().log("result router bind to {0}".format(self._addr))
 
