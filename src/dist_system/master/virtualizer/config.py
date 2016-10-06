@@ -15,7 +15,7 @@ and more if you think..(for logging..)
 """
 
 
-class RunConfig:
+class RunConfig(object):
     def __init__(self,
                  tf_device="/cpu:0",
                  cpu_count=0,
@@ -32,6 +32,21 @@ class RunConfig:
         for_iter = self.dictify()
         for key, value in for_iter.items():
             yield (key, value)
+
+    def __repr__(self):
+        if "gpu" in self._tf_device:
+            return "RunConfig(tf_device={0}, gpu_memory_fraction={1}, " \
+                   "allow_soft_placement={2}, log_placement={3})".format(
+                self._tf_device, self._gpu_memory_fraction,
+                self._allow_soft_placement, self._log_placement
+            )
+        else:
+            return "RunConfig(tf_device={0}, cpu_count={1}, " \
+                   "allow_soft_placement={2}, log_placement={3})".format(
+                self._tf_device, self._cpu_count,
+                self._allow_soft_placement, self._log_placement
+            )
+
 
     def dictify(self):
         config = dict()

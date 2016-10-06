@@ -51,7 +51,10 @@ class Scheduler(metaclass=SingletonMeta):
                 Logger().log('Not Available Slave Error!')
                 continue
 
-            Logger().log('**** GO Schedule!')
+            Logger().log('**** GO Schedule! Task : {0}, Slave : {1}, run_config : {2}, '
+                         'allocated_resource : {3}'.format(
+                task, slave, run_config, allocated_resource
+            ))
 
             task_manager.change_task_status(task, TaskStatus.STATUS_PREPROCESSING)
             self._preprocess_task(task, run_config)
