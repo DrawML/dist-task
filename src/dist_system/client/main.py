@@ -13,9 +13,8 @@ from zmq.asyncio import Context, ZMQEventLoop
 from dist_system.client import RequestMessage, CancelMessage
 from dist_system.client.controller import register_task_to_master, cancel_task_to_master
 from dist_system.client.msg_handler import ResultMessageHandler
-from dist_system.client.simulator import _coroutine_exception_callback
 from dist_system.client.task import TaskManager, TaskSyncManager
-from dist_system.library import SingletonMeta, coroutine_with_no_exception
+from dist_system.library import SingletonMeta, coroutine_with_no_exception, default_coroutine_exception_callback
 from dist_system.logger import Logger
 from dist_system.protocol import client_master, any_result_receiver
 from dist_system.task import TaskType
@@ -75,7 +74,9 @@ class ResultReceiverCommunicationRouter(metaclass=SingletonMeta):
         self._msg_handler = msg_handler
 
     async def run(self):
+        Logger().log("result router try to bind to {0}".format(self._addr))
         self._router = self._context.socket(zmq.ROUTER)
+        Logger().log("result router created socket {0}".format(self._addr))
         self._router.bind(self._addr)
         Logger().log("result router bind to {0}".format(self._addr))
 
@@ -169,7 +170,7 @@ async def register_sleep_task(context: Context, master_addr, result_receiver_add
         register_task_to_master(context, master_addr, result_receiver_address, TaskType.TYPE_SLEEP_TASK,
                                 SleepTaskJob._from_dict(msg.task_job_dict), msg.callback,
                                 msg.experiment_id),
-        _coroutine_exception_callback)
+        default_coroutine_exception_callback)
     )
 
 
@@ -180,7 +181,7 @@ async def register_tensorflow_train_task(context: Context, master_addr, result_r
         register_task_to_master(context, master_addr, result_receiver_address, TaskType.TYPE_TENSORFLOW_TRAIN_TASK,
                                 TensorflowTrainTaskJob.from_dict_with_whose_job('master', msg.task_job_dict), msg.callback,
                                 msg.experiment_id),
-        _coroutine_exception_callback)
+        default_coroutine_exception_callback)
     )
 
 
@@ -191,7 +192,7 @@ async def register_tensorflow_test_task(context: Context, master_addr, result_re
         register_task_to_master(context, master_addr, result_receiver_address, TaskType.TYPE_TENSORFLOW_TEST_TASK,
                                 TensorflowTestTaskJob.from_dict_with_whose_job('master', msg.task_job_dict), msg.callback,
                                 msg.experiment_id),
-        _coroutine_exception_callback)
+        default_coroutine_exception_callback)
     )
 
 
@@ -203,7 +204,7 @@ async def register_data_proc_task(context: Context, master_addr, result_receiver
                                 DataProcessingTaskJob.from_dict_with_whose_job('master', msg.task_job_dict),
                                 msg.callback,
                                 msg.experiment_id),
-        _coroutine_exception_callback)
+        default_coroutine_exception_callback)
     )
 
 
@@ -212,7 +213,7 @@ async def register_task_cancel(context: Context, master_addr, msg: CancelMessage
         task = TaskManager().find_task_by_exp_id(msg.experiment_id)
         asyncio.ensure_future(coroutine_with_no_exception(
             cancel_task_to_master(context, master_addr, task),
-            _coroutine_exception_callback)
+            default_coroutine_exception_callback)
         )
     elif TaskSyncManager().check_pending_exp_id(msg.experiment_id):
         TaskSyncManager().reserve_cancel(msg.experiment_id)
