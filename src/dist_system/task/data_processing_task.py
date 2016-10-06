@@ -132,7 +132,8 @@ class DataProcessingTaskResult(TaskResult):
 
     @classmethod
     def _from_dict(cls, dict_: dict) -> 'DataProcessingTaskResult':
-        return DataProcessingTaskResult(dict_['stdout'], dict_['stderr'], dict_['result_file_token'])
+        return DataProcessingTaskResult(dict_.get('stdout', ''), dict_.get('stderr', ''),
+                                        dict_['result_file_token'])
 
     @property
     def stdout(self):

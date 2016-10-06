@@ -112,7 +112,7 @@ class TensorflowTrainTaskResult(TaskResult):
     def _from_dict(cls, dict_: dict) -> 'TensorflowTrainTaskResult':
         return TensorflowTrainTaskResult(dict_.get('stdout', ''), dict_.get('stderr', ''),
                                          dict_['session_file_token'],
-                                    dict_.get('result_file_token', ''))
+                                    dict_['result_file_token'])
 
     @property
     def stdout(self):
