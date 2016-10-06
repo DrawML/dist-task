@@ -93,15 +93,15 @@ class MasterMessageHandler(metaclass=SingletonMeta):
         try:
             try:
                 task = TaskManager().find_task(task_token)
-                worker = WorkerManager().find_worker_having_task(task)
                 try:
-                    WorkerManager().del_worker(worker)
+                    TaskManager().del_task(task)
                 finally:
                     try:
                         FileManager().remove_files_using_key(task)
                     finally:
+                        worker = WorkerManager().find_worker_having_task(task)
                         try:
-                            TaskManager().del_task(task)
+                            WorkerManager().del_worker(worker)
                         finally:
                             # 여기서 worker를 지우므로 worker로 부터 Task Cancel Res는 받을 수 없다.
                             WorkerMessageDispatcher().dispatch_msg(worker, 'task_cancel_req', {})
@@ -186,7 +186,6 @@ class WorkerMessageHandler(metaclass=SingletonMeta):
         Logger().log('task finish.')
         try:
             worker = WorkerManager().find_worker(worker_identity)
-
             try:
                 WorkerManager().del_worker(worker)
             finally:
