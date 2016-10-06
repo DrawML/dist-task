@@ -129,6 +129,7 @@ async def _do_tensorflow_train_task(tensorflow_train_task):
     except OSError as e:
         Logger().log("There is no session file :", job.result_filename)
         # handling if there is no file.
+        # TODO: it can occur a bug...
         session_file_data = b''
 
     session_file_token = CloudDFSConnector().put_data_file(job.session_filename, session_file_data, 'binary')
