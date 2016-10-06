@@ -25,8 +25,9 @@ class ClientMessageHandler(metaclass=SingletonMeta):
         Logger().log("client identity={0}, header={1}, body={2}".format(session_identity, header, body), level=2)
         try:
             ClientMessageHandler.__handler_dict[msg_name](self, session_identity, body)
-        except Exception as e:
-            Logger().log("Unknown Exception occurs! Pass it for continuous running.\n" + traceback.format_exc())
+        except:
+            Logger().log("Unknown Exception occurs! Pass it for continuous running.\n{0}".
+                         format(traceback.format_exc()))
         Logger().log("finish of handling client message.", level=2)
 
     def _h_task_register_req(self, session_identity, body):
@@ -54,40 +55,34 @@ class ClientMessageHandler(metaclass=SingletonMeta):
                     raise
             except:
                 raise
-
-        except TaskTypeValueError as e:
-            # invalid message
-            Logger().log('[!]', e)
+        except TaskTypeValueError:
             res_body = {
                 'status': 'fail',
                 'error_code': 'invalid_task'
             }
-        except TaskValueError as e:
-            # invalid message
-            Logger().log('[!]', e)
+            raise
+        except TaskValueError:
             res_body = {
                 'status': 'fail',
                 'error_code': 'invalid_task'
             }
-        except Exception as e:
-            # invalid message
-            Logger().log('[!]', e)
+            raise
+        except:
             res_body = {
                 'status': 'fail',
                 'error_code': 'unknown'
             }
-
-        ClientMessageDispatcher().dispatch_msg(session_identity, 'task_register_res', res_body)
+            raise
+        finally:
+            ClientMessageDispatcher().dispatch_msg(session_identity, 'task_register_res', res_body)
 
     def _h_task_register_ack(self, session_identity, body):
+        session = ClientSessionManager().find_session(session_identity)
         try:
-            session = ClientSessionManager().find_session(session_identity)
             task = session.task
             TaskManager().change_task_status(task, TaskStatus.STATUS_WAITING)
+        finally:
             ClientSessionManager().del_session(session)
-        except ClientSessionValueError as e:
-            # invalid message
-            Logger().log('[!]', e)
 
         Scheduler().invoke()
 
@@ -96,36 +91,33 @@ class ClientMessageHandler(metaclass=SingletonMeta):
             task_token = TaskToken.from_bytes(body['task_token'])
 
             task = TaskManager().find_task(task_token)
-            TaskManager().del_task(task)
+
             try:
+                TaskManager().del_task(task)
+            finally:
                 slave = SlaveManager().find_slave_having_task(task)
                 slave.delete_task(task)
 
                 SlaveMessageDispatcher().dispatch_msg(slave, 'task_cancel_req', {
                     'task_token': task_token.to_bytes()
                 })
-            except SlaveValueError as e:
-                pass
-
             res_body = {
                 'status': 'success'
             }
-        except TaskValueError as e:
-            # invalid message
-            Logger().log('[!]', e)
+        except TaskValueError:
             res_body = {
                 'status': 'fail',
                 'error_code': 'invalid_token'
             }
-        except Exception as e:
-            # invalid message
-            Logger().log('[!]', e)
+            raise
+        except:
             res_body = {
                 'status': 'fail',
                 'error_code': 'unknown'
             }
-
-        ClientMessageDispatcher().dispatch_msg(session_identity, 'task_cancel_res', res_body)
+            raise
+        finally:
+            ClientMessageDispatcher().dispatch_msg(session_identity, 'task_cancel_res', res_body)
 
     __handler_dict = {
         "task_register_req": _h_task_register_req,
@@ -144,16 +136,13 @@ class SlaveMessageHandler(metaclass=SingletonMeta):
         Logger().log("slave identity={0}, header={1}, body={2}".format(slave_identity, header, body), level=2)
         try:
             SlaveMessageHandler.__handler_dict[msg_name](self, slave_identity, body)
-        except Exception as e:
-            Logger().log("Unknown Exception occurs! Pass it for continuous running.\n" + traceback.format_exc())
+        except:
+            Logger().log("Unknown Exception occurs! Pass it for continuous running.\n{0}".
+                         format(traceback.format_exc()))
         Logger().log("finish of handling slave message", level=2)
 
     def _h_heart_beat_res(self, slave_identity, body):
-        try:
-            SlaveManager().find_slave(slave_identity).heartbeat()
-        except SlaveValueError as e:
-            # invalid message
-            Logger().log('[!]', e)
+        SlaveManager().find_slave(slave_identity).heartbeat()
 
     def _h_slave_register_req(self, slave_identity, body):
         try:
@@ -161,49 +150,43 @@ class SlaveMessageHandler(metaclass=SingletonMeta):
             res_body = {
                 'status': 'success'
             }
-        except Exception as e:
-            # invalid message
-            Logger().log('[!]', e)
+        except:
             res_body = {
                 'status': 'fail',
                 'error_code': 'unknown'
             }
+            raise
+        finally:
+            SlaveMessageDispatcher().dispatch_msg(slave_identity, 'slave_register_res', res_body)
 
-        SlaveMessageDispatcher().dispatch_msg(slave_identity, 'slave_register_res', res_body)
         Scheduler().invoke()
 
     def _h_task_register_res(self, slave_identity, body):
 
-        try:
-            slave = SlaveManager().find_slave(slave_identity)
-            task_token = TaskToken.from_bytes(body['task_token'])
-            status = body['status']
-            task = TaskManager().find_task(task_token)
+        slave = SlaveManager().find_slave(slave_identity)
+        status = body['status']
+        task_token = TaskToken.from_bytes(body['task_token'])
+        task = TaskManager().find_task(task_token)
 
-            # check if task's status == TaskStatus.STATUS_WAITING
-            # or(and)
-            # check task register req가 갔었는지 올바른 res인지 check가 필요.
-            # 여기부분외에도 여러부분에서 이런 처리가 필요할 것이다.
-            # 그러나 일단 이부분은 후순위로 두고 일단 빠른 구현을 목표로 한다.
-            # 추후에 구현완료 후 보완하도록 하자.
-            # ...
-            # status 검사정도면 충분할 것 같다. (그 외의 경우는 보안상 이슈가 없다.)
-            if task.status != TaskStatus.STATUS_PROCESSING:
-                raise TaskStatusValueError('Invalid Task Status')
+        if task.status != TaskStatus.STATUS_PROCESSING:
+            raise TaskStatusValueError('Invalid Task Status')
 
-            if status == 'success':
-                pass
-            elif status == 'fail':
-                error_code = body['error_code']
-                slave.delete_task(task)
-                TaskManager().redo_leak_task(task)
-                Scheduler().invoke()
-            else:
-                # invalid message
-                pass
-        except Exception as e:
+        if status == 'success':
+            pass
+        elif status == 'fail':
+            error_code = body['error_code']
+            # if a exception occurs in here, that means a invalid message.
+            slave.delete_task(task)
+            try:
+                self._free_resource(slave.alloc_info, task.allocated_resource)
+            finally:
+                try:
+                    TaskManager().redo_leak_task(task)
+                finally:
+                    Scheduler().invoke()
+        else:
             # invalid message
-            Logger().log('[!]', e)
+            raise ValueError('Invalid Task Register Status.')
 
     def _h_task_cancel_res(self, slave_identity, body):
         # no specific handling.
@@ -211,77 +194,75 @@ class SlaveMessageHandler(metaclass=SingletonMeta):
 
     def _h_task_finish_req(self, slave_identity, body):
 
-        Logger().log('task finish.')
-
-        def free_resource(alloc_info: AllocationInformation, allocated_resource: AllocatedResource):
-
-            Logger().log("Free Resource :", allocated_resource)
-
-            if alloc_info.alloc_cpu_count < allocated_resource.alloc_cpu_count:
-                raise ValueError('Invalid allocated resource. (alloc_cpu_count)')
-
-            alloc_info.alloc_cpu_count -= allocated_resource.alloc_cpu_count
-            if allocated_resource.alloc_tf_gpu_info is not None:
-                allocated_resource.alloc_tf_gpu_info.available = True
+        Logger().log('* TASK FINISH.')
 
         task_token = TaskToken.from_bytes(body['task_token'])
         try:
-            slave = SlaveManager().find_slave(slave_identity)
             task = TaskManager().find_task(task_token)
 
+            if task.status != TaskStatus.STATUS_PROCESSING:
+                raise TaskStatusValueError('Invalid Task Status')
+
             TaskManager().change_task_status(task, TaskStatus.STATUS_COMPLETE)  # yes, there is no need of this code.
-            TaskManager().del_task(task)
-            slave.delete_task(task)
-            free_resource(slave.alloc_info, task.allocated_resource)
+
+            try:
+                TaskManager().del_task(task)
+            finally:
+                slave = SlaveManager().find_slave(slave_identity)
+                slave.delete_task(task)
+                self._free_resource(slave.alloc_info, task.allocated_resource)
 
             res_body = {
                 'task_token': task_token.to_bytes(),
                 'status': 'success'
             }
-        except TaskValueError as e:
-            # invalid message
-            Logger().log('[!]', e)
+        except TaskValueError:
             res_body = {
                 'task_token': task_token.to_bytes(),
                 'status': 'fail',
                 'error_code': 'invalid_token'
             }
-        except Exception as e:
-            # invalid message
-            Logger().log('[!]', e)
+            raise
+        except:
             res_body = {
                 'task_token': task_token.to_bytes(),
                 'status': 'fail',
                 'error_code': 'unknown'
             }
+            raise
+        finally:
+            SlaveMessageDispatcher().dispatch_msg(slave_identity, 'task_finish_res', res_body)
 
-        SlaveMessageDispatcher().dispatch_msg(slave_identity, 'task_finish_res', res_body)
-
-    # not considered about exception guarantee
     def _h_slave_information_req(self, slave_identity, body):
-        try:
-            slave = SlaveManager().find_slave(slave_identity)
-            slave_info = SlaveInformation.from_dict(body)
+
+        slave = SlaveManager().find_slave(slave_identity)
+        slave_info = SlaveInformation.from_dict(body)
+
+        if slave.alloc_info is None:
+            slave.alloc_info = AllocationInformation(
+                0,
+                slave_info.cpu_info.cpu_count,
+                [AllocationTensorflowGpuInformation(True, tf_gpu_info)
+                 for tf_gpu_info in slave_info.tf_gpu_info_list]
+            )
+        else:
+            assert slave_info.cpu_info.cpu_count == slave.alloc_info.all_cpu_count
+
+            alloc_tf_gpu_info_list = slave.alloc_info.alloc_tf_gpu_info_list
+            new_tf_gpu_info_list = []
+
+            for alloc_tf_gpu_info in alloc_tf_gpu_info_list:
+                targets = [x for x in slave_info.tf_gpu_info_list if alloc_tf_gpu_info.tf_device == x.tf_device]
+                assert len(targets) == 1
+                new_tf_gpu_info_list.append(targets[0])
+
+            # for strong guarantee
+            for alloc_tf_gpu_info, new_tf_gpu_info in zip(alloc_tf_gpu_info_list, new_tf_gpu_info_list):
+                alloc_tf_gpu_info.tf_gpu_info = new_tf_gpu_info
+
+            # for strong guarantee
             slave.slave_info = slave_info
-            if slave.alloc_info is None:
-                slave.alloc_info = AllocationInformation(
-                    0,
-                    slave_info.cpu_info.cpu_count,
-                    [AllocationTensorflowGpuInformation(True, tf_gpu_info)
-                     for tf_gpu_info in slave_info.tf_gpu_info_list]
-                )
-            else:
-                assert slave_info.cpu_info.cpu_count == slave.alloc_info.all_cpu_count
-                for alloc_tf_gpu_info in slave.alloc_info.alloc_tf_gpu_info_list:
-                    targets = [x for x in slave_info.tf_gpu_info_list if alloc_tf_gpu_info.tf_device == x.tf_device]
-                    assert len(targets) == 1
-                    alloc_tf_gpu_info.tf_gpu_info = targets[0]
-
             Scheduler().invoke(invoke_log=False)
-
-        except Exception as e:
-            Logger().log('!!!!!!!!!!!!!!' + traceback.format_exc())
-            pass
 
     __handler_dict = {
         "heart_beat_res": _h_heart_beat_res,
@@ -291,3 +272,14 @@ class SlaveMessageHandler(metaclass=SingletonMeta):
         "task_finish_req": _h_task_finish_req,
         "slave_information_req": _h_slave_information_req
     }
+
+    def _free_resource(self, alloc_info: AllocationInformation, allocated_resource: AllocatedResource):
+
+        Logger().log("Free Resource :", allocated_resource)
+
+        if alloc_info.alloc_cpu_count < allocated_resource.alloc_cpu_count:
+            raise ValueError('Invalid allocated resource. (alloc_cpu_count)')
+
+        alloc_info.alloc_cpu_count -= allocated_resource.alloc_cpu_count
+        if allocated_resource.alloc_tf_gpu_info is not None:
+            allocated_resource.alloc_tf_gpu_info.available = True
