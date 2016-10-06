@@ -4,7 +4,7 @@ from dist_system.task import CommonTaskManager, TaskValueError
 
 
 class TaskSyncManager(metaclass=SingletonMeta):
-    def __index__(self):
+    def __init__(self):
         self._pending_queue = list()
         self._cancel_queue = list()
 
