@@ -15,7 +15,7 @@ class DataProcessingTaskJob(TaskJob):
             raise TaskValueError('Invalid whose_job.')
 
 
-class DataProcessingTaskMasterJob(TaskJob):
+class DataProcessingTaskMasterJob(DataProcessingTaskJob):
     def __init__(self, data_file_num: int, data_file_token_list: list, object_code: str):
         super().__init__()
         self._data_file_num = data_file_num

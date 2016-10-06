@@ -41,16 +41,20 @@ class ClientMessageHandler(metaclass=SingletonMeta):
                 ClientSessionManager().add_session(session)
                 try:
                     TaskManager().add_task(task)
-                except TaskValueError as e:
+                    try:
+                        res_body = {
+                            'status': 'success',
+                            'task_token': task_token.to_bytes()
+                        }
+                    except:
+                        TaskManager().del_task(task)
+                        raise
+                except:
                     ClientSessionManager().del_session(session)
                     raise
-            except ClientSessionValueError as e:
+            except:
                 raise
 
-            res_body = {
-                'status': 'success',
-                'task_token': task_token.to_bytes()
-            }
         except TaskTypeValueError as e:
             # invalid message
             Logger().log('[!]', e)

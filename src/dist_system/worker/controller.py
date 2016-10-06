@@ -55,7 +55,7 @@ class TaskInformation(object):
         return self._cloud_dfs_address
 
     @classmethod
-    def from_dict(dict_: dict) -> 'TaskInformation':
+    def from_dict(cls, dict_: dict) -> 'TaskInformation':
         result_receiver_address = ResultReceiverAddress.from_dict(dict_['result_receiver_address'])
         task_token = TaskToken.from_bytes(dict_['task_token'])
         task_type = TaskType.from_str(dict_['task_type'])

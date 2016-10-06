@@ -49,6 +49,7 @@ class MasterMessageHandler(metaclass=SingletonMeta):
             sys.exit(1)
 
     def _h_task_register_req(self, body):
+        Logger().log("* TASK REGISTER")
         task_token = TaskToken.from_bytes(body['task_token'])
         try:
             result_receiver_address = ResultReceiverAddress.from_dict(body['result_receiver_address'])
@@ -56,17 +57,24 @@ class MasterMessageHandler(metaclass=SingletonMeta):
             task = make_task_with_task_type(task_type, body['task'], 'slave',
                                             task_token, result_receiver_address)
 
-            TaskManager().add_task(task)
-            TaskManager().change_task_status(task, TaskStatus.STATUS_PREPROCESSING)
-            preprocess_task(task)
-            TaskManager().change_task_status(task, TaskStatus.STATUS_PROCESSING)
-            proc = WorkerCreator().create(result_receiver_address, task_token, task_type, task)
-            WorkerManager().add_worker(Worker(proc, task))
+            Logger().log("* task : {0}".format(task))
 
-            res_body = {
-                'task_token': task_token.to_bytes(),
-                'status': 'success'
-            }
+            TaskManager().add_task(task)
+            try:
+                TaskManager().change_task_status(task, TaskStatus.STATUS_PREPROCESSING)
+                preprocess_task(task)
+                TaskManager().change_task_status(task, TaskStatus.STATUS_PROCESSING)
+                proc = WorkerCreator().create(result_receiver_address, task_token, task_type, task)
+                WorkerManager().add_worker(Worker(proc, task))
+
+                res_body = {
+                    'task_token': task_token.to_bytes(),
+                    'status': 'success'
+                }
+            except:
+                # for consistency of task manager
+                TaskManager().del_task(task)
+                raise
         except Exception as e:
             # invalid message
             Logger().log('[!]', e)

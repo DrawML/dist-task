@@ -35,8 +35,8 @@ class SleepTaskResult(TaskResult):
     def comment(self):
         return self._comment
 
-    def __str__(self):
-        return "Sleep Task Comment = {0}".format(self._comment)
+    def __repr__(self):
+        return "SleepTaskResult(comment = {0})".format(self._comment)
 
 
 class SleepTask(Task):
