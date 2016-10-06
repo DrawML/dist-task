@@ -1,6 +1,6 @@
 import os
 
-from dist_system.slave.main import main
+from dist_system.slave import main
 from dist_system.address import SlaveAddress
 from dist_system.cloud_dfs import CloudDFSAddress
 

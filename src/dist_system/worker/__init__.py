@@ -1,0 +1,54 @@
+import asyncio
+import sys
+
+from zmq.asyncio import Context, ZMQEventLoop
+
+from dist_system.logger import Logger
+from dist_system.worker.network import SlaveConnection, ResultReceiverCommunicationIO
+from dist_system.protocol import slave_worker
+from dist_system.worker.controller import TaskInformation, do_task
+from dist_system.worker.msg_dispatcher import SlaveMessageDispatcher
+from dist_system.worker.msg_handler import SlaveMessageHandler
+from dist_system.worker.result_receiver import ResultReceiverCommunicatorWithWorker
+from dist_system.cloud_dfs import CloudDFSConnector
+
+
+
+async def run_worker(context: Context, serialized_data: bytes):
+    import random
+    import time
+    Logger("Worker@" + str(time.time()) + "#" + str(random.randint(1, 10000000)), level=2)
+
+    header, body = slave_worker.parse_msg_data(serialized_data)
+    assert header == 'task_register_cmd'
+    task_information = TaskInformation.from_dict(body)
+
+    slave_conn = SlaveConnection(context, task_information.slave_address.to_zeromq_addr(), SlaveMessageHandler())
+    SlaveMessageDispatcher(slave_conn.dispatch_msg)
+    CloudDFSConnector(task_information.cloud_dfs_address.ip, task_information.cloud_dfs_address.port)
+    result_receiver_communication_io = ResultReceiverCommunicationIO()
+
+    ResultReceiverCommunicatorWithWorker(
+        result_receiver_communication_io.connect,
+        result_receiver_communication_io.send_msg,
+        result_receiver_communication_io.recv_msg,
+        result_receiver_communication_io.close,
+    )
+
+    await asyncio.wait([
+        asyncio.ensure_future(slave_conn.run(task_information)),
+        asyncio.ensure_future(do_task(context, task_information))
+    ])
+
+
+def main(serialized_data: bytes):
+    try:
+        loop = ZMQEventLoop()
+        asyncio.set_event_loop(loop)
+
+        context = Context()
+
+        loop.run_until_complete(run_worker(context, serialized_data))
+    except KeyboardInterrupt:
+        print('\nFinished (interrupted)')
+        sys.exit(0)
