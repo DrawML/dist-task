@@ -2,6 +2,7 @@ import asyncio
 import subprocess
 
 from dist_system.library import SingletonMeta
+from dist_system.logger import Logger
 from dist_system.protocol.slave_worker import make_msg_data
 from dist_system.slave.file import FileManager, FileType
 from dist_system.slave.monitor import monitor
@@ -26,6 +27,7 @@ class WorkerCreator(metaclass=SingletonMeta):
         self._cloud_dfs_address = cloud_dfs_address
 
     def create(self, result_receiver_address, task_token, task_type, task):
+        Logger().log("* Create Worker")
         serialized_data = make_msg_data('task_register_cmd', {
             'result_receiver_address': result_receiver_address.to_dict(),
             'task_token': task_token.to_bytes(),
@@ -35,11 +37,13 @@ class WorkerCreator(metaclass=SingletonMeta):
             'cloud_dfs_address': self._cloud_dfs_address.to_dict()
         })
         hex_data = serialized_data.hex()
-        proc = subprocess.Popen(['python3', self._worker_file_name, hex_data])
+        proc = subprocess.Popen(["python3 -u " + self._worker_file_name + " " + hex_data], shell=True)
+        #proc = subprocess.Popen([self._worker_file_name, hex_data])
         return proc
 
 
 def preprocess_task(task):
+    Logger().log("* PREPROCESS OF TASK")
     task_type = get_task_type_of_task(task)
 
     if task_type == TaskType.TYPE_SLEEP_TASK:
