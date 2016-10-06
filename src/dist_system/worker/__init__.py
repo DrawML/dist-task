@@ -13,11 +13,12 @@ from dist_system.worker.result_receiver import ResultReceiverCommunicatorWithWor
 from dist_system.cloud_dfs import CloudDFSConnector
 
 
-
 async def run_worker(context: Context, serialized_data: bytes):
     import random
     import time
     Logger("Worker@" + str(time.time()) + "#" + str(random.randint(1, 10000000)), level=2)
+
+    Logger().log("Hello World!")
 
     header, body = slave_worker.parse_msg_data(serialized_data)
     assert header == 'task_register_cmd'
