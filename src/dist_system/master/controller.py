@@ -114,17 +114,25 @@ class Scheduler(metaclass=SingletonMeta):
 
     def _schedule_data_processing_task(self, slaves: Iterable, task) -> Slave:
         Logger().log('**** Schedule of data processing task. slaves = {0}'.format(slaves))
+        return self._schedule_cpu_to_task(slaves, task)
+
+
+    def _schedule_tensorflow_task(self, slaves: Iterable, task) -> Slave:
+        Logger().log('**** Schedule of tensorflow task')
+        try:
+            return self._schedule_gpu_to_task(slaves, task)
+        except NotAvailableSlaveError:
+            return self._schedule_cpu_to_task(slaves, task)
+
+    def _schedule_cpu_to_task(self, slaves: Iterable, task) -> Slave:
         best_slave = None
         best_cpu_rest = None
         best_avail_cpu_count = None
         for slave in slaves:
-            Logger().log('---------------------')
             slave_info = slave.slave_info
             alloc_info = slave.alloc_info
             if alloc_info is None or not alloc_info.cpu_available:
                 continue
-
-            Logger().log('***************')
 
             cpu_rest = 0
             for cpu_percent in slave_info.cpu_info.cpu_percents:
@@ -144,8 +152,7 @@ class Scheduler(metaclass=SingletonMeta):
         best_slave.alloc_info.alloc_cpu_count = best_slave.alloc_info.all_cpu_count
         return best_slave, RunConfig(), AllocatedResource(alloc_cpu_count=best_slave.alloc_info.all_cpu_count)
 
-    def _schedule_tensorflow_task(self, slaves: Iterable, task) -> Slave:
-        Logger().log('**** Schedule of tensorflow task')
+    def _schedule_gpu_to_task(self, slaves: Iterable, task) -> Slave:
         best_slave = None
         best_alloc_tf_gpu_info = None
         best_cc_major = None
@@ -168,9 +175,8 @@ class Scheduler(metaclass=SingletonMeta):
                     best_cc_minor = alloc_tf_gpu_info.compute_capability_minor
 
         if best_slave is None:
-            # will be refactored..
-            return self._schedule_data_processing_task(slaves, task)
-        else:
-            best_alloc_tf_gpu_info.available = False
-            return best_slave, RunConfig(tf_device=best_alloc_tf_gpu_info.tf_device), \
-                   AllocatedResource(alloc_tf_gpu_info=best_alloc_tf_gpu_info)
+            raise NotAvailableSlaveError
+
+        best_alloc_tf_gpu_info.available = False
+        return best_slave, RunConfig(tf_device=best_alloc_tf_gpu_info.tf_device), \
+               AllocatedResource(alloc_tf_gpu_info=best_alloc_tf_gpu_info)
