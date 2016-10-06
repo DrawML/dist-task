@@ -1,3 +1,4 @@
+import traceback
 from enum import Enum
 
 
@@ -24,3 +25,9 @@ async def coroutine_with_no_exception(coro, f_callback=None, *args, **kwargs):
     except BaseException as e:
         if f_callback is not None:
             f_callback(coro, e, *args, **kwargs)
+
+
+def default_coroutine_exception_callback(_, e):
+    from dist_system.logger import Logger
+    Logger().log('[!] exception occurs in coroutine :', e)
+    Logger().log(traceback.format_exc())
