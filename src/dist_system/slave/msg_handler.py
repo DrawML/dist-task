@@ -111,12 +111,14 @@ class MasterMessageHandler(metaclass=SingletonMeta):
                     'status': 'fail',
                     'error_code': 'invalid_token'
                 }
+                raise
         except:
             res_body = {
                 'task_token': task_token,
                 'status': 'fail',
                 'error_code': 'unknown'
             }
+            raise
         finally:
             MasterMessageDispatcher().dispatch_msg('task_cancel_res', res_body)
 
@@ -165,11 +167,13 @@ class WorkerMessageHandler(metaclass=SingletonMeta):
                 'status': 'fail',
                 'error_code': 'invalid_token'
             }
+            raise
         except:
             res_body = {
                 'status': 'fail',
                 'error_code': 'unknown'
             }
+            raise
         finally:
             WorkerMessageDispatcher().dispatch_msg(worker_identity, 'worker_register_res', res_body)
 
@@ -202,6 +206,7 @@ class WorkerMessageHandler(metaclass=SingletonMeta):
                 'status': 'fail',
                 'error_code': 'unknown'
             }
+            raise
         finally:
             WorkerMessageDispatcher().dispatch_msg(worker_identity, 'task_finish_res', res_body)
 
