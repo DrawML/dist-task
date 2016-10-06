@@ -34,9 +34,10 @@ async def run_heartbeat():
 
 
 class Scheduler(metaclass=SingletonMeta):
-    def invoke(self):
+    def invoke(self, invoke_log = True):
         # 현재 waiting하고 있는 task가 있는 지 보고 available한 slave 있는지 판단하여 task를 slave에 배치한다.
-        Logger().log('**** Scheduler is invoked.')
+        if invoke_log is True:
+            Logger().log('**** Scheduler is invoked.')
         self._assign_waiting_task_to_slave()
 
     def _assign_waiting_task_to_slave(self):
