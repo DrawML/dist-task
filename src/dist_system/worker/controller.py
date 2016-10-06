@@ -77,8 +77,8 @@ async def _do_data_processing_task(data_processing_task):
     job = data_processing_task.job
 
     Logger().log("-------before data processing task--------")
-    proc = await asyncio.create_subprocess_exec('python3', job.executable_code_filename, job.data_file_num,
-                                                *job.data_files, job.result_filename,
+    proc = await asyncio.create_subprocess_exec('python3', job.executable_code_filename, str(job.data_file_num),
+                                                *job.data_filenames, job.result_filename,
                                                 stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
     stdout, stderr = await proc.communicate()
     Logger().log("-------after data processing task--------")
@@ -96,7 +96,7 @@ async def _do_data_processing_task(data_processing_task):
 
     result_file_token = CloudDFSConnector().put_data_file(job.result_filename, result_file_data, 'text')
 
-    data_processing_task.result = TensorflowTestTaskResult(stdout.decode(), stderr.decode(), result_file_token)
+    data_processing_task.result = DataProcessingTaskResult(stdout.decode(), stderr.decode(), result_file_token)
 
 
 async def _do_tensorflow_train_task(tensorflow_train_task):
