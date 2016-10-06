@@ -97,7 +97,7 @@ class SlaveInformation(object):
 
     @staticmethod
     def from_dict(dict_: dict):
-        tf_gpu_info_list = [TensorflowGpuInformation.from_dict(x) for x in dict_['tf_gpu_info_list']]
+        tf_gpu_info_list = [TensorflowGpuInformation.from_dict(x) for x in dict_.get('tf_gpu_info_list', [])]
         return SlaveInformation(CpuInformation.from_dict(dict_['cpu_info']),
                                 MemoryInformation.from_dict(dict_['mem_info']),
                                 tf_gpu_info_list)

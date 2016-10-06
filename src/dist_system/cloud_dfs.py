@@ -18,6 +18,14 @@ class CloudDFSAddress(object):
     def from_dict(cls, dict_: dict):
         return cls(dict_['ip'], dict_['port'])
 
+    @property
+    def ip(self):
+        return self._ip
+
+    @property
+    def port(self):
+        return self._port
+
 
 class CloudDFSConnector(BaseCloudDFSConnector, metaclass=SingletonMeta):
     pass

@@ -31,7 +31,10 @@ def _get_tf_gpu_list():
 
 
 def _get_cuda_device_info_list():
-    import pycuda.driver as cuda
+    try:
+        import pycuda.driver as cuda
+    except ImportError:
+        return []
 
     device_info_list = []
 
