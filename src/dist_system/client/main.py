@@ -20,6 +20,7 @@ from dist_system.logger import Logger
 from dist_system.protocol import client_master, any_result_receiver
 from dist_system.task import TaskType
 from dist_system.task.data_processing_task import DataProcessingTaskJob
+from dist_system.task.sleep_task import SleepTaskJob
 
 from dist_system.task.tensorflow_test_task import TensorflowTestTaskJob
 from dist_system.task.tensorflow_train_task import TensorflowTrainTaskJob
@@ -152,10 +153,24 @@ class TaskDeliverer(metaclass=SingletonMeta):
             elif msg.task_type == TaskType.TYPE_DATA_PROCESSING_TASK:
                 print('[TaskDeliverer] ', 'DATA_PROCESSING_TASK request! in process')
                 await register_data_proc_task(self._context, self._master_addr, self._result_receiver_address, msg)
+            elif msg.task_type == TaskType.TYPE_SLEEP_TASK:
+                print('[TaskDeliverer] ', 'SLEEP_TASK request! in process')
+                await register_sleep_task(self._context, self._master_addr, self._result_receiver_address, msg)
             else:
                 pass
         elif isinstance(msg, CancelMessage):
             register_task_cancel(self._context, self._master_addr, msg)
+
+
+async def register_sleep_task(context: Context, master_addr, result_receiver_address, msg: RequestMessage):
+    TaskSyncManager().pend_experiment(msg.experiment_id)
+
+    asyncio.ensure_future(coroutine_with_no_exception(
+        register_task_to_master(context, master_addr, result_receiver_address, TaskType.TYPE_SLEEP_TASK,
+                                SleepTaskJob._from_dict(msg.task_job_dict), msg.callback,
+                                msg.experiment_id),
+        _coroutine_exception_callback)
+    )
 
 
 async def register_tensorflow_train_task(context: Context, master_addr, result_receiver_address, msg: RequestMessage):
