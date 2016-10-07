@@ -21,7 +21,7 @@ class MasterMessageHandler(metaclass=SingletonMeta):
         Logger().log("from master, header={0}, body={1}".format(header, body), level=2)
         try:
             MasterMessageHandler.__handler_dict[msg_name](self, body)
-        except:
+        except Exception:
             Logger().log("Unknown Exception occurs! Pass it for continuous running.\n{0}".
                 format(traceback.format_exc()))
         Logger().log("finish of handling master message", level=2)
@@ -145,7 +145,7 @@ class WorkerMessageHandler(metaclass=SingletonMeta):
         Logger().log("worker identity={0} header={1}, body={2}".format(worker_identity, header, body), level=2)
         try:
             WorkerMessageHandler.__handler_dict[msg_name](self, worker_identity, body)
-        except:
+        except Exception:
             Logger().log("Unknown Exception occurs! Pass it for continuous running.\n{0}".
                          format(traceback.format_exc()))
         Logger().log("finish of handling worker message", level=2)

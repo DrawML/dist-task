@@ -25,7 +25,7 @@ class ClientMessageHandler(metaclass=SingletonMeta):
         Logger().log("client identity={0}, header={1}, body={2}".format(session_identity, header, body), level=2)
         try:
             ClientMessageHandler.__handler_dict[msg_name](self, session_identity, body)
-        except:
+        except Exception:
             Logger().log("Unknown Exception occurs! Pass it for continuous running.\n{0}".
                          format(traceback.format_exc()))
         Logger().log("finish of handling client message.", level=2)
@@ -136,7 +136,7 @@ class SlaveMessageHandler(metaclass=SingletonMeta):
         Logger().log("slave identity={0}, header={1}, body={2}".format(slave_identity, header, body), level=2)
         try:
             SlaveMessageHandler.__handler_dict[msg_name](self, slave_identity, body)
-        except:
+        except Exception:
             Logger().log("Unknown Exception occurs! Pass it for continuous running.\n{0}".
                          format(traceback.format_exc()))
         Logger().log("finish of handling slave message", level=2)
