@@ -11,7 +11,7 @@ issue...
 """
 
 
-class ResultReceiverCommunication(metaclass=SingletonMeta):
+class ResultReceiverCommunicator(metaclass=SingletonMeta):
     def __init__(self, context=None):
         self._context = context or zmq.Context()
         self._sock = None
