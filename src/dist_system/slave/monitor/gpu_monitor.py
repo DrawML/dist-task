@@ -9,7 +9,7 @@ SRC_DIR = os.path.dirname(os.sys.modules[__name__].__file__)
 
 
 async def _get_tf_gpu_list():
-    proc = await asyncio.create_subprocess_exec(['bash', SRC_DIR + '/get_tensorflow_gpus.sh'],
+    proc = await asyncio.create_subprocess_exec('bash', SRC_DIR + '/get_tensorflow_gpus.sh',
                             stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
     out, err = await proc.communicate()
     raw_info = out.decode()
