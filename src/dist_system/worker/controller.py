@@ -168,7 +168,7 @@ async def _do_tensorflow_test_task(tensorflow_test_task):
 async def _report_task_result(context: Context, task_info: TaskInformation):
     sock = context.socket(zmq.DEALER)
     sock.connect(task_info.result_receiver_address.to_zeromq_addr())
-    header, body = ResultReceiverCommunicatorWithWorker().communicate(
+    header, body = ResultReceiverCommunicator().communicate(
         task_info.result_receiver_address, 'task_result_req', {
             'status': 'complete',
             'task_type': task_info.task_type.to_str(),

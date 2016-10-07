@@ -119,7 +119,7 @@ async def run_polling_workers():
             FileManager().remove_files_using_key(leak_task)
 
             #TODO: How about re-try in another slaves?
-            header, body = ResultReceiverCommunicatorWithSlave().communicate('task_finish_req', {
+            header, body = ResultReceiverCommunicator().communicate('task_finish_req', {
                 'status': 'fail',
                 'task_token': leak_task.task_token.to_bytes()
             })

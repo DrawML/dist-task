@@ -28,7 +28,7 @@ async def run_worker(context: Context, serialized_data: bytes):
     SlaveMessageDispatcher(slave_conn.dispatch_msg)
     CloudDFSConnector(task_information.cloud_dfs_address.ip, task_information.cloud_dfs_address.port)
 
-    ResultReceiverCommunicatorWithWorker()
+    ResultReceiverCommunicator()
 
     await asyncio.wait([
         asyncio.ensure_future(slave_conn.run(task_information)),
