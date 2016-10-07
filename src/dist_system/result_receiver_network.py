@@ -19,7 +19,7 @@ class ResultReceiverCommunicator(metaclass=SingletonMeta):
     def communicate(self, result_receiver_address, msg_header, msg_body):
         self._connect(result_receiver_address)
         self._send_msg(msg_header, msg_body)
-        header, body = self._f_recv_msg()
+        header, body = self._recv_msg()
         self._close()
         return header, body
 
