@@ -37,7 +37,8 @@ class WorkerCreator(metaclass=SingletonMeta):
             'cloud_dfs_address': self._cloud_dfs_address.to_dict()
         })
         hex_data = serialized_data.hex()
-        proc = subprocess.Popen(["python3 -u " + self._worker_file_name + " " + hex_data], shell=True)
+        #proc = subprocess.Popen(["python3 -u " + self._worker_file_name + " " + hex_data], shell=True)
+        proc = subprocess.Popen(["python3", "-u", self._worker_file_name, hex_data])
         #proc = subprocess.Popen([self._worker_file_name, hex_data])
         return proc
 
@@ -107,11 +108,13 @@ async def run_polling_workers():
         await asyncio.sleep(POLLING_WORKERS_INTERVAL)
         expired_workers, leak_tasks = WorkerManager().purge()
         for expired_worker in expired_workers:
+            Logger().log("Expired Worker :", expired_worker)
             WorkerManager().del_worker(expired_worker)
         for leak_task in leak_tasks:
             TaskManager().del_task(leak_task)
             FileManager().remove_files_using_key(leak_task)
 
+            #TODO: How about re-try in another slaves?
             header, body = ResultReceiverCommunicatorWithSlave().communicate('task_finish_req', {
                 'status': 'fail',
                 'task_token': leak_task.task_token.to_bytes()
