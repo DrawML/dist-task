@@ -56,10 +56,13 @@ def preprocess_task(task):
             _, file_data = CloudDFSConnector().get_data_file(data_file_token)
             data_filename = FileManager().store(task, FileType.TYPE_DATA_FILE, file_data)
             data_filename_list.append(data_filename)
+            Logger().log("Data file name :", data_filename)
 
         executable_code_filename = FileManager().store(task, FileType.TYPE_EXECUTABLE_CODE_FILE,
                                                        task.job.executable_code)
+        Logger().log("Stored Executable Code file name :", executable_code_filename)
         result_filename = FileManager().reserve(task, FileType.TYPE_RESULT_FILE)
+        Logger().log("Reserved Result file name :", result_filename)
 
         task.job = DataProcessingTaskWorkerJob(data_file_num, data_filename_list,
                                                executable_code_filename, result_filename)
@@ -71,7 +74,9 @@ def preprocess_task(task):
                                                        task.job.executable_code)
 
         session_filename = FileManager().reserve(task, FileType.TYPE_SESSION_FILE)
+        Logger().log("Reserved Session file name :", session_filename)
         result_filename = FileManager().reserve(task, FileType.TYPE_RESULT_FILE)
+        Logger().log("Reserved Result file name :", result_filename)
 
         task.job = TensorflowTrainTaskWorkerJob(data_filename, executable_code_filename,
                                                 session_filename, result_filename)
@@ -84,7 +89,9 @@ def preprocess_task(task):
 
         _, file_data = CloudDFSConnector().get_data_file(task.job.session_file_token)
         session_filename = FileManager().store(task, FileType.TYPE_SESSION_FILE, task.job.file_data)
+        Logger().log("Stored Session file name :", session_filename)
         result_filename = FileManager().reserve(task, FileType.TYPE_RESULT_FILE)
+        Logger().log("Reserved Result file name :", result_filename)
 
         task.job = TensorflowTestTaskWorkerJob(data_filename, executable_code_filename,
                                                session_filename, result_filename)

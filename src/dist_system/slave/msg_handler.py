@@ -183,7 +183,7 @@ class WorkerMessageHandler(metaclass=SingletonMeta):
         pass
 
     def _h_task_finish_req(self, worker_identity, body):
-        Logger().log('task finish.')
+        Logger().log('** Task Finish.')
         try:
             worker = WorkerManager().find_worker(worker_identity)
             try:
