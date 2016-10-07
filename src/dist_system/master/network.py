@@ -24,12 +24,9 @@ class ClientRouter(metaclass=SingletonMeta):
             await self._process(msg)
 
     async def _process(self, msg):
-        # Logger().log("client router recv a message : {0}".format(msg))
+        Logger().log("client router recv a message : {0}".format(msg), level=2)
         addr, data = self._resolve_msg(msg)
-        try:
-            header, body = client_master.parse_msg_data(data)
-        except BaseException as e:
-            print(e)
+        header, body = client_master.parse_msg_data(data)
 
         # handle message
         self._msg_handler.handle_msg(addr, header, body)
@@ -43,11 +40,7 @@ class ClientRouter(metaclass=SingletonMeta):
     async def dispatch_msg_coro(self, client_session_identity, header, body):
         Logger().log("to client({0}), header={1}, body={2}".format(client_session_identity, header, body), level=2)
         addr = client_session_identity.addr
-        try:
-            data = client_master.make_msg_data(header, body)
-        except Exception as e:
-            print(traceback.format_exc())
-            raise
+        data = client_master.make_msg_data(header, body)
         msg = [addr, b'', data]
         await self._router.send_multipart(msg)
 
@@ -73,7 +66,7 @@ class SlaveRouter(metaclass=SingletonMeta):
             await self._process(msg)
 
     async def _process(self, msg):
-        # Logger().log("slave router recv a message : {0}".format(msg))
+        Logger().log("slave router recv a message : {0}".format(msg), level=2)
         addr, data = self._resolve_msg(msg)
         header, body = master_slave.parse_msg_data(data)
 
@@ -89,11 +82,7 @@ class SlaveRouter(metaclass=SingletonMeta):
     async def dispatch_msg_coro(self, slave_identity, header, body):
         Logger().log("to slave({0}), header={1}, body={2}".format(slave_identity, header, body), level=2)
         addr = slave_identity.addr
-        try:
-            data = master_slave.make_msg_data(header, body)
-        except Exception as e:
-            print(traceback.format_exc())
-            raise
+        data = master_slave.make_msg_data(header, body)
         msg = [addr, data]
         await self._router.send_multipart(msg)
 
