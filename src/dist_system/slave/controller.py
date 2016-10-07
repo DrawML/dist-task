@@ -71,8 +71,10 @@ def preprocess_task(task):
     elif task_type == TaskType.TYPE_TENSORFLOW_TRAIN_TASK:
         _, file_data = CloudDFSConnector().get_data_file(task.job.data_file_token)
         data_filename = FileManager().store(task, FileType.TYPE_DATA_FILE, file_data)
+        Logger().log("Stored Data file name :", data_filename)
         executable_code_filename = FileManager().store(task, FileType.TYPE_EXECUTABLE_CODE_FILE,
                                                        task.job.executable_code)
+        Logger().log("Stored Executable file name :", executable_code_filename)
 
         session_filename = FileManager().reserve(task, FileType.TYPE_SESSION_FILE)
         Logger().log("Reserved Session file name :", session_filename)
@@ -85,8 +87,10 @@ def preprocess_task(task):
     elif task_type == TaskType.TYPE_TENSORFLOW_TEST_TASK:
         _, file_data = CloudDFSConnector().get_data_file(task.job.data_file_token)
         data_filename = FileManager().store(task, FileType.TYPE_DATA_FILE, file_data)
+        Logger().log("Stored Data file name :", data_filename)
         executable_code_filename = FileManager().store(task, FileType.TYPE_EXECUTABLE_CODE_FILE,
                                                        task.job.executable_code)
+        Logger().log("Stored Executable file name :", executable_code_filename)
 
         _, file_data = CloudDFSConnector().get_data_file(task.job.session_file_token)
         session_filename = FileManager().store(task, FileType.TYPE_SESSION_FILE, task.job.file_data)
