@@ -6,7 +6,7 @@ from dist_system.library import SingletonMeta
 from dist_system.logger import Logger
 from dist_system.master.client import ClientSessionIdentity, ClientSession, ClientSessionManager, \
     ClientSessionValueError
-from dist_system.master.controller import Scheduler
+from dist_system.master.controller import Scheduler, delete_task
 from dist_system.master.msg_dispatcher import ClientMessageDispatcher, SlaveMessageDispatcher
 from dist_system.master.slave import SlaveManager, SlaveValueError, SlaveIdentity, Slave
 from dist_system.master.task import TaskManager, TaskStatus, TaskStatusValueError
@@ -48,7 +48,7 @@ class ClientMessageHandler(metaclass=SingletonMeta):
                             'task_token': task_token.to_bytes()
                         }
                     except:
-                        TaskManager().del_task(task)
+                        delete_task(task)
                         raise
                 except:
                     ClientSessionManager().del_session(session)
@@ -93,7 +93,7 @@ class ClientMessageHandler(metaclass=SingletonMeta):
             task = TaskManager().find_task(task_token)
 
             try:
-                TaskManager().del_task(task)
+                delete_task(task)
             finally:
                 slave = SlaveManager().find_slave_having_task(task)
                 slave.delete_task(task)
@@ -177,6 +177,7 @@ class SlaveMessageHandler(metaclass=SingletonMeta):
             error_code = body['error_code']
             # if a exception occurs in here, that means a invalid message.
             slave.delete_task(task)
+            slave.mark_failed_task(task)
             try:
                 self._free_resource(slave.alloc_info, task.allocated_resource)
             finally:
@@ -206,7 +207,7 @@ class SlaveMessageHandler(metaclass=SingletonMeta):
             TaskManager().change_task_status(task, TaskStatus.STATUS_COMPLETE)  # yes, there is no need of this code.
 
             try:
-                TaskManager().del_task(task)
+                delete_task(task)
             finally:
                 slave = SlaveManager().find_slave(slave_identity)
                 slave.delete_task(task)

@@ -33,6 +33,14 @@ async def run_heartbeat():
             Logger().log("Expired Slave : {0}".format(str(slave)))
 
 
+def delete_task(task):
+    TaskManager().del_task(task)
+    slaves = SlaveManager().slaves
+    for slave in slaves:
+        if task in slave.failed_tasks:
+            slave.unmark_failed_task(task)
+
+
 class Scheduler(metaclass=SingletonMeta):
     def invoke(self, invoke_log = True):
         # 현재 waiting하고 있는 task가 있는 지 보고 available한 slave 있는지 판단하여 task를 slave에 배치한다.
@@ -107,6 +115,11 @@ class Scheduler(metaclass=SingletonMeta):
             TaskType.TYPE_TENSORFLOW_TRAIN_TASK: self._schedule_tensorflow_task,
             TaskType.TYPE_TENSORFLOW_TEST_TASK: self._schedule_tensorflow_task,
         }
+        Logger("All Slaves :", slaves)
+        slaves = [slave for slave in slaves if slave.slave_info is not None]
+        Logger("Reported Slaves :", slaves)
+        slaves = [slave for slave in slaves if task not in slave.failed_tasks]
+        Logger("Unfailed Slaves :", slaves)
         return __schedule_dict[get_task_type_of_task(task)](slaves, task)
 
     def _schedule_sleep_task(self, slaves: Iterable, task) -> Slave:
@@ -153,7 +166,8 @@ class Scheduler(metaclass=SingletonMeta):
             raise NotAvailableSlaveError
 
         best_slave.alloc_info.alloc_cpu_count = best_slave.alloc_info.all_cpu_count
-        return best_slave, RunConfig(), AllocatedResource(alloc_cpu_count=best_slave.alloc_info.all_cpu_count)
+        #return best_slave, RunConfig(), AllocatedResource(alloc_cpu_count=best_slave.alloc_info.all_cpu_count)
+        return best_slave, RunConfig(cpu_count=1), AllocatedResource(alloc_cpu_count=1)
 
     def _schedule_gpu_to_task(self, slaves: Iterable, task) -> Slave:
         best_slave = None

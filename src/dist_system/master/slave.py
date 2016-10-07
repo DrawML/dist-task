@@ -37,6 +37,7 @@ class Slave(SlaveIdentity):
     def __init__(self, addr):
         super().__init__(addr)
         self._tasks = []
+        self._failed_tasks = []
         self._slave_info = None
         self._alloc_info = None
         self.heartbeat()
@@ -51,9 +52,19 @@ class Slave(SlaveIdentity):
     def delete_task(self, task):
         self._tasks.remove(task)
 
+    def mark_failed_task(self, task):
+        self._failed_tasks.append(task)
+
+    def unmark_failed_task(self, task):
+        self._failed_tasks.remove(task)
+
     @property
     def tasks(self):
         return tuple(self._tasks)
+
+    @property
+    def failed_tasks(self):
+        return tuple(self._failed_tasks)
 
     @staticmethod
     def make_slave_from_identity(slave_identity):
