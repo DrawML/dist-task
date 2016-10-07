@@ -63,6 +63,14 @@ class FileManager(metaclass=SingletonMeta):
         if not os.path.exists(dir):
             os.makedirs(dir)
 
+    def _ensure_path(self, path):
+        if os.path.exists(path):
+            try:
+                os.remove(path)
+            except OSError:  # if directory
+                import shutil
+                shutil.rmtree(path, ignore_errors=True)
+
     def _get_avail_file_no(self, file_type: FileType):
         pool = self._file_no_pool[file_type]
         if len(pool) < FileManager.__FILE_NO_CREATION_NUMBER:
@@ -85,6 +93,7 @@ class FileManager(metaclass=SingletonMeta):
         if not key in self._dic_key_files:
             self._dic_key_files[key] = []
         self._dic_key_files[key].append((file_type, file_no, file_path))
+        self._ensure_path(file_path)
         return file_path, file_no
 
     def store(self, key, file_type: FileType, file_data, data_type: FileDataType = None):
