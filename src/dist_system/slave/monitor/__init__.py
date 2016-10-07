@@ -24,5 +24,5 @@ async def monitor():
             svmem.total,
             svmem.available
         ),
-        monitor_tf_gpu()
+        await monitor_tf_gpu()
     )

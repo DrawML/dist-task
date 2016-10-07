@@ -18,19 +18,17 @@ from dist_system.task.tensorflow_test_task import TensorflowTestTaskMasterJob, T
 
 
 async def run_heartbeat():
-    # send "Heart Beat Req" using protocol.
-
     while True:
-        for slave in SlaveManager().slaves:
-            SlaveMessageDispatcher().dispatch_msg(slave, 'heart_beat_req', {})
-
-        await asyncio.sleep(SlaveManager.HEARTBEAT_INTERVAL)
-
         expired_slaves, leak_tasks = SlaveManager().purge()
         TaskManager().redo_leak_task(leak_tasks)
 
         for slave in expired_slaves:
             Logger().log("Expired Slave : {0}".format(str(slave)))
+
+        for slave in SlaveManager().slaves:
+            SlaveMessageDispatcher().dispatch_msg(slave, 'heart_beat_req', {})
+
+        await asyncio.sleep(SlaveManager.HEARTBEAT_INTERVAL)
 
 
 def delete_task(task):
@@ -166,6 +164,7 @@ class Scheduler(metaclass=SingletonMeta):
             raise NotAvailableSlaveError
 
         best_slave.alloc_info.alloc_cpu_count = best_slave.alloc_info.all_cpu_count
+        #TODO: must be modified.
         #return best_slave, RunConfig(), AllocatedResource(alloc_cpu_count=best_slave.alloc_info.all_cpu_count)
         return best_slave, RunConfig(cpu_count=1), AllocatedResource(alloc_cpu_count=1)
 

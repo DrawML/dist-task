@@ -75,7 +75,7 @@ class Slave(SlaveIdentity):
 
     def live(self):
         self._liveness -= 1
-        return self._liveness > 0
+        return self._liveness >= 0
 
     @property
     def slave_info(self):
@@ -95,7 +95,7 @@ class Slave(SlaveIdentity):
 
 
 class SlaveManager(metaclass=SingletonMeta):
-    HEARTBEAT_LIVENESS = 3
+    HEARTBEAT_LIVENESS = 2
     HEARTBEAT_INTERVAL = 1
 
     def __init__(self):

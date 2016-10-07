@@ -1,16 +1,17 @@
 #!/usr/bin/python3
 import os
 import subprocess
+import asyncio
 
 from dist_system.information import TensorflowGpuInformation
 
 SRC_DIR = os.path.dirname(os.sys.modules[__name__].__file__)
 
 
-def _get_tf_gpu_list():
-    proc = subprocess.Popen(['bash', SRC_DIR + '/get_tensorflow_gpus.sh'],
-                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    out, err = proc.communicate()
+async def _get_tf_gpu_list():
+    proc = await asyncio.create_subprocess_exec(['bash', SRC_DIR + '/get_tensorflow_gpus.sh'],
+                            stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+    out, err = await proc.communicate()
     raw_info = out.decode()
     raw_info = raw_info.strip().split('\n')
     info_list = [(x[1:len(x) - 1], y[1:len(y) - 1]) for x, y in zip(raw_info[::2], raw_info[1::2])]
@@ -82,8 +83,8 @@ def _get_tf_gpu_info_list(cuda_device_info_list, tf_gpu_list):
     return tf_gpu_info_list
 
 
-def monitor_tf_gpu():
-    tf_gpu_list = _get_tf_gpu_list()
+async def monitor_tf_gpu():
+    tf_gpu_list = await _get_tf_gpu_list()
 
     cuda_device_info_list = _get_cuda_device_info_list()
     tf_gpu_info_list = _get_tf_gpu_info_list(cuda_device_info_list, tf_gpu_list)
