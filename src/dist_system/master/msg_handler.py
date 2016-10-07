@@ -10,7 +10,7 @@ from dist_system.master.controller import Scheduler, delete_task
 from dist_system.master.msg_dispatcher import ClientMessageDispatcher, SlaveMessageDispatcher
 from dist_system.master.slave import SlaveManager, SlaveValueError, SlaveIdentity, Slave
 from dist_system.master.task import TaskManager, TaskStatus, TaskStatusValueError
-from dist_system.result_receiver import ResultReceiverAddress
+from dist_system.address import ResultReceiverAddress
 from dist_system.task import TaskToken, TaskType, TaskValueError, TaskTypeValueError
 from dist_system.task.functions import make_task_with_task_type
 

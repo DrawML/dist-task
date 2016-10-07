@@ -7,7 +7,7 @@ from dist_system.protocol.slave_worker import make_msg_data
 from dist_system.slave.file import FileManager, FileType
 from dist_system.slave.monitor import monitor
 from dist_system.slave.msg_dispatcher import MasterMessageDispatcher
-from dist_system.slave.result_receiver import ResultReceiverCommunicatorWithSlave
+from dist_system.result_receiver_network import ResultReceiverCommunicator
 from dist_system.slave.task import TaskManager
 from dist_system.slave.worker import WorkerManager
 from dist_system.task import TaskType

@@ -2,7 +2,7 @@ from queue import Queue
 
 from dist_system.client import RequestMessage, Client
 from dist_system.client.main import main
-from dist_system.result_receiver import ResultReceiverAddress
+from dist_system.address import ResultReceiverAddress
 
 if __name__ == '__main__':
     msg_queue = Queue()

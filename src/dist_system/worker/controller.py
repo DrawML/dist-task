@@ -6,7 +6,7 @@ import zmq
 from zmq.asyncio import Context
 
 from dist_system.logger import Logger
-from dist_system.result_receiver import ResultReceiverAddress
+from dist_system.address import ResultReceiverAddress
 from dist_system.task import Task, TaskType, TaskToken, TaskTypeValueError
 from dist_system.task.functions import make_task_with_task_type
 from dist_system.task.sleep_task import SleepTask, SleepTaskResult
@@ -14,7 +14,7 @@ from dist_system.task.data_processing_task import DataProcessingTask, DataProces
 from dist_system.task.tensorflow_train_task import TensorflowTrainTask, TensorflowTrainTaskResult
 from dist_system.task.tensorflow_test_task import TensorflowTestTask, TensorflowTestTaskResult
 from dist_system.worker.msg_dispatcher import SlaveMessageDispatcher
-from dist_system.worker.result_receiver import ResultReceiverCommunicatorWithWorker
+from dist_system.result_receiver_network import ResultReceiverCommunicator
 from dist_system.address import SlaveAddress
 from dist_system.cloud_dfs import CloudDFSConnector, CloudDFSAddress
 

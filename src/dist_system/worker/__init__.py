@@ -4,12 +4,12 @@ import sys
 from zmq.asyncio import Context, ZMQEventLoop
 
 from dist_system.logger import Logger
-from dist_system.worker.network import SlaveConnection, ResultReceiverCommunicationIO
+from dist_system.worker.network import SlaveConnection
 from dist_system.protocol import slave_worker
 from dist_system.worker.controller import TaskInformation, do_task
 from dist_system.worker.msg_dispatcher import SlaveMessageDispatcher
 from dist_system.worker.msg_handler import SlaveMessageHandler
-from dist_system.worker.result_receiver import ResultReceiverCommunicatorWithWorker
+from dist_system.result_receiver_network import ResultReceiverCommunicator
 from dist_system.cloud_dfs import CloudDFSConnector
 
 
@@ -27,14 +27,8 @@ async def run_worker(context: Context, serialized_data: bytes):
     slave_conn = SlaveConnection(context, task_information.slave_address.to_zeromq_addr(), SlaveMessageHandler())
     SlaveMessageDispatcher(slave_conn.dispatch_msg)
     CloudDFSConnector(task_information.cloud_dfs_address.ip, task_information.cloud_dfs_address.port)
-    result_receiver_communication_io = ResultReceiverCommunicationIO()
 
-    ResultReceiverCommunicatorWithWorker(
-        result_receiver_communication_io.connect,
-        result_receiver_communication_io.send_msg,
-        result_receiver_communication_io.recv_msg,
-        result_receiver_communication_io.close,
-    )
+    ResultReceiverCommunicatorWithWorker()
 
     await asyncio.wait([
         asyncio.ensure_future(slave_conn.run(task_information)),

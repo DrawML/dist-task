@@ -96,30 +96,3 @@ class WorkerRouter(metaclass=SingletonMeta):
         future = asyncio.ensure_future(self.dispatch_msg_coro(worker_identity, header, body))
         if f_callback is not None:
             future.add_done_callback(f_callback)
-
-
-class ResultReceiverCommunicationIO(metaclass=SingletonMeta):
-    def __init__(self, context=None):
-        self._context = context or zmq.Context()
-        self._sock = None
-
-    def connect(self, result_receiver_address):
-        assert self._sock is None
-        self._result_receiver_address = result_receiver_address
-        self._sock = self._context.socket(zmq.REQ)
-        self._sock.connect(result_receiver_address.to_zeromq_addr())
-
-    def send_msg(self, msg_header, msg_body):
-        assert self._sock is not None
-        data = any_result_receiver.make_msg_data(msg_header, msg_body)
-        self._sock.send(data)
-
-    def recv_msg(self):
-        assert self._sock is not None
-        header, body = any_result_receiver.parse_msg_data(self._sock.recv())
-        return header, body
-
-    def close(self):
-        assert self._sock is not None
-        self._sock.close()
-        self._sock = None

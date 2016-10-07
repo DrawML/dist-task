@@ -21,5 +21,9 @@ class Address(object):
         return "{0}://{1}:{2}".format(self._type, self._ip, self._port)
 
 
+class ResultReceiverAddress(Address):
+    pass
+
+
 class SlaveAddress(Address):
     pass

@@ -6,7 +6,7 @@ from abc import abstractmethod, ABCMeta
 
 from dist_system.information import AllocatedResource
 from dist_system.library import AutoIncrementEnum
-from dist_system.result_receiver import ResultReceiverAddress
+from dist_system.address import ResultReceiverAddress
 
 
 class TaskTypeValueError(ValueError):

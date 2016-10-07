@@ -2,7 +2,7 @@ import traceback
 
 from dist_system.library import SingletonMeta
 from dist_system.logger import Logger
-from dist_system.result_receiver import ResultReceiverAddress
+from dist_system.address import ResultReceiverAddress
 from dist_system.slave.controller import WorkerCreator, preprocess_task
 from dist_system.slave.file import FileManager
 from dist_system.slave.msg_dispatcher import MasterMessageDispatcher, WorkerMessageDispatcher

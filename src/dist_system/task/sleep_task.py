@@ -1,4 +1,4 @@
-from dist_system.result_receiver import ResultReceiverAddress
+from dist_system.address import ResultReceiverAddress
 from dist_system.task import TaskJob, TaskResult, Task, TaskToken
 
 
