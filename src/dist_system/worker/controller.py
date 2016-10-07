@@ -77,6 +77,7 @@ async def _do_data_processing_task(data_processing_task):
     job = data_processing_task.job
 
     Logger().log("-------before data processing task--------")
+    Logger().log("* JOB :", job.to_dict())
     proc = await asyncio.create_subprocess_exec('python3', job.executable_code_filename, str(job.data_file_num),
                                                 *job.data_filenames, job.result_filename,
                                                 stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
@@ -103,6 +104,7 @@ async def _do_tensorflow_train_task(tensorflow_train_task):
     job = tensorflow_train_task.job
 
     Logger().log("-------before tensorflow TRAIN task--------")
+    Logger().log("* JOB :", job.to_dict())
     proc = await asyncio.create_subprocess_exec('python3', job.executable_code_filename, job.data_filename,
                                                 job.session_filename, job.result_filename,
                                                 stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
@@ -127,7 +129,7 @@ async def _do_tensorflow_train_task(tensorflow_train_task):
         with open(job.session_filename, 'rb') as f:
             session_file_data = f.read()
     except OSError as e:
-        Logger().log("There is no session file :", job.result_filename)
+        Logger().log("There is no session file :", job.session_filename)
         # handling if there is no file.
         # TODO: it can occur a bug...
         session_file_data = b''
@@ -142,6 +144,7 @@ async def _do_tensorflow_test_task(tensorflow_test_task):
     job = tensorflow_test_task.job
 
     Logger().log("-------before tensorflow TEST task--------")
+    Logger().log("* JOB :", job.to_dict())
     proc = await asyncio.create_subprocess_exec('python3', job.executable_code_filename, job.data_filename,
                                                 job.session_filename, job.result_filename,
                                                 stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
@@ -150,9 +153,13 @@ async def _do_tensorflow_test_task(tensorflow_test_task):
 
     # exception handling is needed about cloud_dfs??
 
-    # file open mode what???
-    with open(job.result_filename, 'rt') as f:
-        result_file_data = f.read()
+    try:
+        with open(job.result_filename, 'rt') as f:
+            result_file_data = f.read()
+    except OSError as e:
+        Logger().log("There is no result file :", job.result_filename)
+        # handling if there is no file.
+        result_file_data = ''
     result_file_token = CloudDFSConnector().put_data_file(job.result_filename, result_file_data, 'text')
 
     tensorflow_test_task.result = TensorflowTestTaskResult(stdout.decode(), stderr.decode(), result_file_token)
