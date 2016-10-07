@@ -12,6 +12,7 @@ from dist_system.master.msg_dispatcher import SlaveMessageDispatcher, ClientMess
 from dist_system.master.msg_handler import (ClientMessageHandler, SlaveMessageHandler)
 from dist_system.master.slave import SlaveManager
 from dist_system.master.task import TaskManager
+from dist_system.result_receiver_network import ResultReceiverCommunicator
 
 
 async def run_master(context: Context, client_router_addr, slave_router_addr):
@@ -26,6 +27,8 @@ async def run_master(context: Context, client_router_addr, slave_router_addr):
 
     ClientMessageDispatcher(client_router.dispatch_msg)
     SlaveMessageDispatcher(slave_router.dispatch_msg)
+
+    ResultReceiverCommunicator()
 
     await asyncio.wait([
         asyncio.ensure_future(client_router.run()),

@@ -15,6 +15,7 @@ from dist_system.task.data_processing_task import DataProcessingTaskMasterJob, D
 from dist_system.task.functions import get_task_type_of_task
 from dist_system.task.tensorflow_train_task import TensorflowTrainTaskMasterJob, TensorflowTrainTaskSlaveJob
 from dist_system.task.tensorflow_test_task import TensorflowTestTaskMasterJob, TensorflowTestTaskSlaveJob
+from dist_system.result_receiver_network import ResultReceiverCommunicator
 
 
 async def run_heartbeat():
@@ -37,6 +38,24 @@ def delete_task(task):
     for slave in slaves:
         if task in slave.failed_tasks:
             slave.unmark_failed_task(task)
+
+
+def remove_impossible_tasks():
+    tasks = TaskManager().waiting_tasks
+    slaves = SlaveManager().slaves
+
+    for task in tasks:
+        possible_slaves = [slave for slave in slaves if task not in slave.failed_tasks]
+        if len(possible_slaves) == 0:
+            # task is impossible.
+            TaskManager().del_task(task)
+            header, body = ResultReceiverCommunicator().communicate(
+                task.result_receiver_address,
+                'task_finish_req', {
+                    'status': 'fail',
+                    'task_token': task.task_token.to_bytes()
+                })
+            # nothing to do using response message...
 
 
 class Scheduler(metaclass=SingletonMeta):
