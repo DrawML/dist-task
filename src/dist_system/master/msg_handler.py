@@ -176,6 +176,7 @@ class SlaveMessageHandler(metaclass=SingletonMeta):
         elif status == 'fail':
             error_code = body['error_code']
             # if a exception occurs in here, that means a invalid message.
+            TaskManager().change_task_status(task, TaskStatus.STATUS_WAITING)
             slave.delete_task(task)
             slave.mark_failed_task(task)
             try:
