@@ -65,7 +65,6 @@ class AsyncController(object):
 
             for task in tasks:
                 possible_slaves = [slave for slave in slaves if task not in slave.failed_tasks]
-                print(possible_slaves)
                 if len(possible_slaves) == 0:
                     # task is impossible.
                     Logger().log("Removed impossible Task :", task)
