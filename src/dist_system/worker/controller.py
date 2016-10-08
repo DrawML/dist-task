@@ -182,7 +182,7 @@ async def _do_tensorflow_test_task(tensorflow_test_task):
 
 
 async def _report_task_failure(task):
-    header, body = ResultReceiverCommunicator().communicate(
+    header, body = await ResultReceiverCommunicator().communicate(
         task.result_receiver_address, 'task_result_req', {
             'status': 'fail',
             'task_token': task.task_token.to_bytes(),
@@ -193,7 +193,7 @@ async def _report_task_failure(task):
 
 
 async def _report_task_result(context: Context, task_info: TaskInformation):
-    header, body = ResultReceiverCommunicator().communicate(
+    header, body = await ResultReceiverCommunicator().communicate(
         task_info.result_receiver_address, 'task_result_req', {
             'status': 'complete',
             'task_type': task_info.task_type.to_str(),

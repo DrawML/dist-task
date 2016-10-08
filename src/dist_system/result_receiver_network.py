@@ -1,3 +1,5 @@
+import asyncio
+
 import zmq
 
 from dist_system.protocol import any_result_receiver
@@ -16,16 +18,16 @@ class ResultReceiverCommunicator(metaclass=SingletonMeta):
         self._context = context or zmq.Context()
         self._sock = None
 
-    def communicate(self, result_receiver_address, msg_header, msg_body):
+    async def communicate(self, result_receiver_address, msg_header, msg_body):
         self._connect(result_receiver_address)
-        self._send_msg(msg_header, msg_body)
-        header, body = self._recv_msg()
+        await self._send_msg(msg_header, msg_body)
+        header, body = await self._recv_msg()
         self._close()
         return header, body
 
-    def notify(self, result_receiver_address, msg_header, msg_body):
+    async def notify(self, result_receiver_address, msg_header, msg_body):
         self._connect(result_receiver_address)
-        self._send_msg(msg_header, msg_body)
+        await self._send_msg(msg_header, msg_body)
         self._close()
 
     def _connect(self, result_receiver_address):
@@ -35,15 +37,15 @@ class ResultReceiverCommunicator(metaclass=SingletonMeta):
         self._sock.connect(result_receiver_address.to_zeromq_addr())
         Logger().log("Connect to", result_receiver_address.to_zeromq_addr())
 
-    def _send_msg(self, msg_header, msg_body):
+    async def _send_msg(self, msg_header, msg_body):
         assert self._sock is not None
         data = any_result_receiver.make_msg_data(msg_header, msg_body)
         Logger().log("To result receiver, header={0}, body={1}".format(msg_header, msg_body))
-        self._sock.send(data)
+        await self._sock.send(data)
 
-    def _recv_msg(self):
+    async def _recv_msg(self):
         assert self._sock is not None
-        header, body = any_result_receiver.parse_msg_data(self._sock.recv())
+        header, body = any_result_receiver.parse_msg_data(await self._sock.recv())
         Logger().log("From result receiver, header={0}, body={1}".format(header, body))
         return header, body
 

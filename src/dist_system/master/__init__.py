@@ -6,7 +6,7 @@ from zmq.asyncio import Context, ZMQEventLoop
 from dist_system.logger import Logger
 from dist_system.master.network import ClientRouter, SlaveRouter
 from dist_system.master.client import ClientSessionManager
-from dist_system.master.controller import Scheduler
+from dist_system.master.controller import Scheduler, AsyncController, purge_impossible_tasks
 from dist_system.master.controller import run_heartbeat
 from dist_system.master.msg_dispatcher import SlaveMessageDispatcher, ClientMessageDispatcher
 from dist_system.master.msg_handler import (ClientMessageHandler, SlaveMessageHandler)
@@ -21,6 +21,7 @@ async def run_master(context: Context, client_router_addr, slave_router_addr):
     SlaveManager()
     ClientSessionManager()
     Scheduler()
+    AsyncController()
 
     client_router = ClientRouter(context, client_router_addr, ClientMessageHandler())
     slave_router = SlaveRouter(context, slave_router_addr, SlaveMessageHandler())
@@ -33,7 +34,8 @@ async def run_master(context: Context, client_router_addr, slave_router_addr):
     await asyncio.wait([
         asyncio.ensure_future(client_router.run()),
         asyncio.ensure_future(slave_router.run()),
-        asyncio.ensure_future(run_heartbeat())
+        asyncio.ensure_future(run_heartbeat()),
+        asyncio.ensure_future(purge_impossible_tasks()),
     ])
 
 

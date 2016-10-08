@@ -32,6 +32,15 @@ async def run_heartbeat():
         await asyncio.sleep(SlaveManager.HEARTBEAT_INTERVAL)
 
 
+async def purge_impossible_tasks():
+
+    PURGE_TASKS_INTERVAL = 3
+
+    while True:
+        await AsyncController.remove_impossible_tasks()
+        await asyncio.sleep(PURGE_TASKS_INTERVAL)
+
+
 def delete_task(task):
     TaskManager().del_task(task)
     slaves = SlaveManager().slaves
@@ -40,23 +49,35 @@ def delete_task(task):
             slave.unmark_failed_task(task)
 
 
-def remove_impossible_tasks():
-    tasks = TaskManager().waiting_tasks
-    slaves = SlaveManager().slaves
+class AsyncController(object):
 
-    for task in tasks:
-        possible_slaves = [slave for slave in slaves if task not in slave.failed_tasks]
-        if len(possible_slaves) == 0:
-            # task is impossible.
-            TaskManager().del_task(task)
-            header, body = ResultReceiverCommunicator().communicate(
-                task.result_receiver_address,
-                'task_finish_req', {
-                    'status': 'fail',
-                    'task_token': task.task_token.to_bytes(),
-                    'error_code': 'impossible'
-                })
-            # nothing to do using response message...
+    _doing_remove_impossible_tasks = False
+
+    @staticmethod
+    async def remove_impossible_tasks():
+        if AsyncController._doing_remove_impossible_tasks:
+            return
+        AsyncController._doing_remove_impossible_tasks = True
+
+        try:
+            tasks = TaskManager().waiting_tasks
+            slaves = SlaveManager().slaves
+
+            for task in tasks:
+                possible_slaves = [slave for slave in slaves if task not in slave.failed_tasks]
+                if len(possible_slaves) == 0:
+                    # task is impossible.
+                    TaskManager().del_task(task)
+                    header, body = await ResultReceiverCommunicator().communicate(
+                        task.result_receiver_address,
+                        'task_finish_req', {
+                            'status': 'fail',
+                            'task_token': task.task_token.to_bytes(),
+                            'error_code': 'impossible'
+                        })
+                    # nothing to do using response message...
+        except:
+            AsyncController._doing_remove_impossible_tasks = False
 
 
 class Scheduler(metaclass=SingletonMeta):
