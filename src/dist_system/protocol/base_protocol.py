@@ -35,15 +35,25 @@ class BaseProtocol:
             if key == 'task':
                 return outer_body['task_type']
             elif key == 'result':
-                return outer_body['task_type']
+                if key in outer_body:
+                    return outer_body['task_type']
+                else:
+                    return 'empty'
             else:
                 return key
 
         def handle_exception_case(key, meta, outer_body, outer_data):
-            if key == 'task' or key == 'result':
+            if key == 'task':
                 adj_key = get_adjust_key_name(key, outer_body)
                 except_fields.append(key)
                 return meta[adj_key](**outer_body[key])
+            elif key == 'result':
+                adj_key = get_adjust_key_name(key, outer_body)
+                except_fields.append(key)
+                if key in outer_body:
+                    return meta[adj_key](**outer_body[key])
+                else:  # for accepting empty.
+                    return meta[adj_key]()
             else:
                 raise ValueError
 

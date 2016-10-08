@@ -9,6 +9,7 @@ message_table = {
             'data_processing_task': arr_proto.TaskResultRequest.DataProcessingTask,
             'tensorflow_train_task': arr_proto.TaskResultRequest.TensorflowTrainTask,
             'tensorflow_test_task': arr_proto.TaskResultRequest.TensorflowTestTask,
+            'empty': arr_proto.TaskResultRequest.Empty,
         }
     },
     'task_result_res': {

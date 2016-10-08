@@ -196,7 +196,7 @@ async def _report_task_result(context: Context, task_info: TaskInformation):
     header, body = await ResultReceiverCommunicator().communicate(
         task_info.result_receiver_address, 'task_result_req', {
             'status': 'complete',
-            'task_type': task_info.task_type.to_str(),
+            'task_type': task_info.task_type.to_str(),  # This is needed because design of protocol module.
             'task_token': task_info.task_token.to_bytes(),
             'result': task_info.task.result.to_dict()
         })
