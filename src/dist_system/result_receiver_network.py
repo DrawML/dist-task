@@ -1,6 +1,4 @@
-import asyncio
-
-import zmq
+import zmq.asyncio
 
 from dist_system.protocol import any_result_receiver
 from dist_system.library import SingletonMeta
@@ -15,7 +13,7 @@ issue...
 
 class ResultReceiverCommunicator(metaclass=SingletonMeta):
     def __init__(self, context=None):
-        self._context = context or zmq.Context()
+        self._context = context or zmq.asyncio.Context()
         self._sock = None
 
     async def communicate(self, result_receiver_address, msg_header, msg_body):
