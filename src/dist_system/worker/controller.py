@@ -19,6 +19,10 @@ from dist_system.address import SlaveAddress
 from dist_system.cloud_dfs import CloudDFSConnector, CloudDFSAddress
 
 
+class TaskFailureError(Exception):
+    pass
+
+
 class TaskInformation(object):
     def __init__(self, result_receiver_address: ResultReceiverAddress,
                  task_token: TaskToken, task_type: TaskType, task: Task,
@@ -82,7 +86,11 @@ async def _do_data_processing_task(data_processing_task):
                                                 *job.data_filenames, job.result_filename,
                                                 stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
     stdout, stderr = await proc.communicate()
+    return_code = proc.returncode
+    Logger().log("* RETURN CODE :", return_code)
     Logger().log("-------after data processing task--------")
+    if return_code != 0:
+        raise TaskFailureError("Return is {0}.".format(return_code))
 
     # exception handling is needed about cloud_dfs??
 
@@ -109,7 +117,11 @@ async def _do_tensorflow_train_task(tensorflow_train_task):
                                                 job.session_filename, job.result_filename,
                                                 stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
     stdout, stderr = await proc.communicate()
+    return_code = proc.returncode
+    Logger().log("* RETURN CODE :", return_code)
     Logger().log("-------after tensorflow TRAIN task--------")
+    if return_code != 0:
+        raise TaskFailureError("Return is {0}.".format(return_code))
 
     # exception handling is needed about cloud_dfs??
 
@@ -149,7 +161,11 @@ async def _do_tensorflow_test_task(tensorflow_test_task):
                                                 job.session_filename, job.result_filename,
                                                 stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
     stdout, stderr = await proc.communicate()
+    return_code = proc.returncode
+    Logger().log("* RETURN CODE :", return_code)
     Logger().log("-------after tensorflow TEST task--------")
+    if return_code != 0:
+        raise TaskFailureError("Return is {0}.".format(return_code))
 
     # exception handling is needed about cloud_dfs??
 
@@ -165,9 +181,18 @@ async def _do_tensorflow_test_task(tensorflow_test_task):
     tensorflow_test_task.result = TensorflowTestTaskResult(stdout.decode(), stderr.decode(), result_file_token)
 
 
+async def _report_task_failure(task):
+    header, body = ResultReceiverCommunicator().communicate(
+        task.result_receiver_address, 'task_result_req', {
+            'status': 'fail',
+            'task_token': task.task_token.to_bytes(),
+            'error_code': 'running_error'
+        })
+    # nothing to do using response message...
+    SlaveMessageDispatcher().dispatch_msg('task_finish_req', {})
+
+
 async def _report_task_result(context: Context, task_info: TaskInformation):
-    sock = context.socket(zmq.DEALER)
-    sock.connect(task_info.result_receiver_address.to_zeromq_addr())
     header, body = ResultReceiverCommunicator().communicate(
         task_info.result_receiver_address, 'task_result_req', {
             'status': 'complete',
@@ -176,7 +201,6 @@ async def _report_task_result(context: Context, task_info: TaskInformation):
             'result': task_info.task.result.to_dict()
         })
     # nothing to do using response message...
-
     SlaveMessageDispatcher().dispatch_msg('task_finish_req', {})
 
 
@@ -187,18 +211,23 @@ async def _report_task_result(context: Context, task_info: TaskInformation):
 
 async def do_task(context: Context, task_info: TaskInformation):
     try:
-        if task_info.task_type == TaskType.TYPE_SLEEP_TASK:
-            await _do_sleep_task(task_info.task)
-        elif task_info.task_type == TaskType.TYPE_DATA_PROCESSING_TASK:
-            await _do_data_processing_task(task_info.task)
-        elif task_info.task_type == TaskType.TYPE_TENSORFLOW_TRAIN_TASK:
-            await _do_tensorflow_train_task(task_info.task)
-        elif task_info.task_type == TaskType.TYPE_TENSORFLOW_TEST_TASK:
-            await _do_tensorflow_test_task(task_info.task)
+        try:
+            if task_info.task_type == TaskType.TYPE_SLEEP_TASK:
+                await _do_sleep_task(task_info.task)
+            elif task_info.task_type == TaskType.TYPE_DATA_PROCESSING_TASK:
+                await _do_data_processing_task(task_info.task)
+            elif task_info.task_type == TaskType.TYPE_TENSORFLOW_TRAIN_TASK:
+                await _do_tensorflow_train_task(task_info.task)
+            elif task_info.task_type == TaskType.TYPE_TENSORFLOW_TEST_TASK:
+                await _do_tensorflow_test_task(task_info.task)
+            else:
+                raise TaskTypeValueError("Invalid Task Type.")
+        except TaskFailureError as e:
+            Logger().log("Task Fail.", e)
+            await _report_task_failure(task_info.task)
         else:
-            raise TaskTypeValueError("Invalid Task Type.")
-
-        await _report_task_result(context, task_info)
+            Logger().log("Task Complete.")
+            await _report_task_result(context, task_info)
     except Exception as e:
         Logger().log("Unknown Exception occurs!\n" + traceback.format_exc())
         raise

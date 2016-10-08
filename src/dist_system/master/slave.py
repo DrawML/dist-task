@@ -95,7 +95,7 @@ class Slave(SlaveIdentity):
 
 
 class SlaveManager(metaclass=SingletonMeta):
-    HEARTBEAT_LIVENESS = 2
+    HEARTBEAT_LIVENESS = 5
     HEARTBEAT_INTERVAL = 1
 
     def __init__(self):

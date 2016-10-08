@@ -53,7 +53,8 @@ def remove_impossible_tasks():
                 task.result_receiver_address,
                 'task_finish_req', {
                     'status': 'fail',
-                    'task_token': task.task_token.to_bytes()
+                    'task_token': task.task_token.to_bytes(),
+                    'error_code': 'impossible'
                 })
             # nothing to do using response message...
 
@@ -182,7 +183,8 @@ class Scheduler(metaclass=SingletonMeta):
         if best_slave is None:
             raise NotAvailableSlaveError
 
-        best_slave.alloc_info.alloc_cpu_count = best_slave.alloc_info.all_cpu_count
+        #best_slave.alloc_info.alloc_cpu_count = best_slave.alloc_info.all_cpu_count
+        best_slave.alloc_info.alloc_cpu_count += 1
         #TODO: must be modified.
         #return best_slave, RunConfig(), AllocatedResource(alloc_cpu_count=best_slave.alloc_info.all_cpu_count)
         return best_slave, RunConfig(cpu_count=1), AllocatedResource(alloc_cpu_count=1)

@@ -192,14 +192,15 @@ class WorkerMessageHandler(metaclass=SingletonMeta):
                 try:
                     TaskManager().del_task(worker.task)
                 finally:
-                    FileManager().remove_files_using_key(worker.task)
-
+                    try:
+                        FileManager().remove_files_using_key(worker.task)
+                    finally:
+                        MasterMessageDispatcher().dispatch_msg('task_finish_req', {
+                            'task_token': worker.task.task_token.to_bytes()
+                        })
             res_body = {
                 'status': 'success',
             }
-            MasterMessageDispatcher().dispatch_msg('task_finish_req', {
-                'task_token': worker.task.task_token.to_bytes()
-            })
         except:
             res_body = {
                 'status': 'fail',

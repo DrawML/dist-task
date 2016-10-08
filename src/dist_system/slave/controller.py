@@ -123,9 +123,13 @@ async def run_polling_workers():
                 leak_task.result_receiver_address,
                 'task_finish_req', {
                     'status': 'fail',
-                    'task_token': leak_task.task_token.to_bytes()
+                    'task_token': leak_task.task_token.to_bytes(),
+                    'error_code': 'system_error'
                 })
             # nothing to do using response message...
+            MasterMessageDispatcher().dispatch_msg('task_finish_req', {
+                'task_token': leak_task.task_token.to_bytes()
+            })
 
 
 async def monitor_information():
