@@ -103,7 +103,7 @@ async def _do_data_processing_task(data_processing_task):
         # handling if there is no file.
         result_file_data = ''
 
-    result_file_token = CloudDFSConnector().put_data_file(job.result_filename, result_file_data, 'text')
+    result_file_token = CloudDFSConnector().put_data_file(job.result_filename, result_file_data)
 
     data_processing_task.result = DataProcessingTaskResult(stdout.decode(), stderr.decode(), result_file_token)
 
@@ -134,7 +134,7 @@ async def _do_tensorflow_train_task(tensorflow_train_task):
         # handling if there is no file.
         result_file_data = ''
 
-    result_file_token = CloudDFSConnector().put_data_file(job.result_filename, result_file_data, 'text')
+    result_file_token = CloudDFSConnector().put_data_file(job.result_filename, result_file_data)
 
     # file open mode what???
     try:
@@ -146,7 +146,7 @@ async def _do_tensorflow_train_task(tensorflow_train_task):
         # TODO: it can occur a bug...
         session_file_data = b''
 
-    session_file_token = CloudDFSConnector().put_data_file(job.session_filename, session_file_data, 'binary')
+    session_file_token = CloudDFSConnector().put_data_file(job.session_filename, session_file_data)
 
     tensorflow_train_task.result = TensorflowTrainTaskResult(stdout.decode(), stderr.decode(),
                                                        session_file_token,  result_file_token)
@@ -176,7 +176,7 @@ async def _do_tensorflow_test_task(tensorflow_test_task):
         Logger().log("There is no result file :", job.result_filename)
         # handling if there is no file.
         result_file_data = ''
-    result_file_token = CloudDFSConnector().put_data_file(job.result_filename, result_file_data, 'text')
+    result_file_token = CloudDFSConnector().put_data_file(job.result_filename, result_file_data)
 
     tensorflow_test_task.result = TensorflowTestTaskResult(stdout.decode(), stderr.decode(), result_file_token)
 
