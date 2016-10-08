@@ -52,7 +52,8 @@ class ResultMessageHandler(metaclass=SingletonMeta):
                 }
             elif status == 'fail':
                 error_code = body['error_code']
-                task = TaskManager().del_task(task_token)
+                task = TaskManager().find_task(task_token)
+                TaskManager().del_task(task_token)
 
                 callback = task.callback
                 callback_args['status'] = 'error'
