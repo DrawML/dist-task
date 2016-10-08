@@ -95,6 +95,7 @@ class Slave(SlaveIdentity):
 
 
 class SlaveManager(metaclass=SingletonMeta):
+    #TODO: must be modify this more bigger.
     HEARTBEAT_LIVENESS = 5
     HEARTBEAT_INTERVAL = 1
 
