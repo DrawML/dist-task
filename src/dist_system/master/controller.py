@@ -67,7 +67,9 @@ class AsyncController(object):
                 possible_slaves = [slave for slave in slaves if task not in slave.failed_tasks]
                 if len(possible_slaves) == 0:
                     # task is impossible.
+                    Logger().log("Removed impossible Task :", task)
                     TaskManager().del_task(task)
+                    #TODO: blocking if resut receiver is strange.
                     header, body = await ResultReceiverCommunicator().communicate(
                         task.result_receiver_address,
                         'task_finish_req', {
@@ -76,7 +78,7 @@ class AsyncController(object):
                             'error_code': 'impossible'
                         })
                     # nothing to do using response message...
-        except:
+        finally:
             AsyncController._doing_remove_impossible_tasks = False
 
 
@@ -154,11 +156,11 @@ class Scheduler(metaclass=SingletonMeta):
             TaskType.TYPE_TENSORFLOW_TRAIN_TASK: self._schedule_tensorflow_task,
             TaskType.TYPE_TENSORFLOW_TEST_TASK: self._schedule_tensorflow_task,
         }
-        Logger("All Slaves :", slaves)
+        Logger().log("All Slaves :", slaves)
         slaves = [slave for slave in slaves if slave.slave_info is not None]
-        Logger("Reported Slaves :", slaves)
+        Logger().log("Reported Slaves :", slaves)
         slaves = [slave for slave in slaves if task not in slave.failed_tasks]
-        Logger("Unfailed Slaves :", slaves)
+        Logger().log("Unfailed Slaves :", slaves)
         return __schedule_dict[get_task_type_of_task(task)](slaves, task)
 
     def _schedule_sleep_task(self, slaves: Iterable, task) -> Slave:

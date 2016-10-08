@@ -25,6 +25,9 @@ message TaskResultRequest {
         string result_file_token = 3;
     }
 
+    message Empty {
+    }
+
     string status = 1;
     string error_code = 2;
     bytes task_token = 3;
@@ -33,6 +36,7 @@ message TaskResultRequest {
         DataProcessingTask data_processing_task = 11;
         TensorflowTrainTask tensorflow_train_task = 12;
         TensorflowTestTask tensorflow_test_task = 13;
+        Empty empty = 14;
     }
 }
 
