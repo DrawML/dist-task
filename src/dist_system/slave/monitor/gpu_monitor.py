@@ -7,7 +7,7 @@ SRC_DIR = os.path.dirname(os.sys.modules[__name__].__file__)
 
 
 async def _get_tf_gpu_list():
-    proc = await asyncio.create_subprocess_exec('bash', SRC_DIR + '/get_tensorflow_gpus.sh',
+    proc = await asyncio.create_subprocess_exec('/bin/bash', SRC_DIR + '/get_tensorflow_gpus.sh',
                             stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
     out, err = await proc.communicate()
     raw_info = out.decode()
@@ -31,6 +31,7 @@ async def _get_tf_gpu_list():
 
 def _get_cuda_device_info_list():
     try:
+        import pycuda.autoinit  # shit!! must! must!
         import pycuda.driver as cuda
     except ImportError:
         return []
@@ -83,7 +84,7 @@ def _get_tf_gpu_info_list(cuda_device_info_list, tf_gpu_list):
 
 async def monitor_tf_gpu():
     tf_gpu_list = await _get_tf_gpu_list()
-
+    print(tf_gpu_list)
     cuda_device_info_list = _get_cuda_device_info_list()
     tf_gpu_info_list = _get_tf_gpu_info_list(cuda_device_info_list, tf_gpu_list)
 
