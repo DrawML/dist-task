@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 
-PROJECT_DIR="$(dirname "$(pwd)")"
+PROJECT_DIR=$(dirname "$(pwd)")
 PROTOCOL_MODULE="$PROJECT_DIR/src/dist_system/protocol/pb"
-COMPILE_SCRIPT=compile_proto.sh
-OUTPUT_PATH=output
+OUTPUT_PATH="$(pwd)"/output
 
 if [ -n "$1" ]
 then
@@ -12,22 +11,30 @@ else
 	output_path=$OUTPUT_PATH
 fi
 
-if [ ! -e "$COMPILE_SCRIPT" ]
-then
-    echo "There is no compile script."
-    exit -1
-fi
-
 if [ ! -d "$PROTOCOL_MODULE" ]
 then
     echo "There is no 'pb' directory in protocol module."
     exit -1
 fi
 
-source "$COMPILE_SCRIPT" "$output_path" || {
-    echo "Compiling fail"
-    exit -1
-}
+if [ ! -e "$output_path" ]
+then
+    mkdir "$output_path"
+fi
+
+if [ ! -d "$output_path" ]
+then
+	echo "Make sure that '$output_path' directory is valid"
+	exit -1;
+fi
+
+shopt -s nullglob
+for proto_file in *.proto
+do
+	echo "Compile $proto_file..."
+	protoc --python_out="$output_path" "$proto_file"
+done
+
 
 echo "Compile done"
 
