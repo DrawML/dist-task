@@ -222,11 +222,8 @@ class Scheduler(metaclass=SingletonMeta):
         if best_slave is None:
             raise NotAvailableSlaveError
 
-        #best_slave.alloc_info.alloc_cpu_count = best_slave.alloc_info.all_cpu_count
-        best_slave.alloc_info.alloc_cpu_count += 1
-        #TODO: must be modified.
-        #return best_slave, RunConfig(), AllocatedResource(alloc_cpu_count=best_slave.alloc_info.all_cpu_count)
-        return best_slave, RunConfig(cpu_count=1), AllocatedResource(alloc_cpu_count=1)
+        best_slave.alloc_info.alloc_cpu_count = best_slave.alloc_info.all_cpu_count
+        return best_slave, RunConfig(), AllocatedResource(alloc_cpu_count=best_slave.alloc_info.all_cpu_count)
 
     def _schedule_gpu_to_task(self, slaves: Iterable, task) -> Slave:
         best_slave = None
