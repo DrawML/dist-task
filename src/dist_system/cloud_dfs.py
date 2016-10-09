@@ -1,3 +1,5 @@
+import asyncio
+
 from cloud_dfs.connector import CloudDFSConnector as BaseCloudDFSConnector
 from cloud_dfs.connector import Error, NotFoundError, ParamError, UnknownError, UnprocessableError
 from dist_system.library import SingletonMeta
@@ -28,4 +30,13 @@ class CloudDFSAddress(object):
 
 
 class CloudDFSConnector(BaseCloudDFSConnector, metaclass=SingletonMeta):
-    pass
+
+    async def put_data_file_async(self, *args, **kwargs):
+        loop = asyncio.get_event_loop()
+        f = loop.run_in_executor(None, lambda: self.put_data_file(*args, **kwargs))
+        return await f
+
+    async def get_data_file_async(self, *args, **kwargs):
+        loop = asyncio.get_event_loop()
+        f = loop.run_in_executor(None, lambda: self.put_data_file(*args, **kwargs))
+        return await f
