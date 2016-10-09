@@ -38,5 +38,5 @@ class CloudDFSConnector(BaseCloudDFSConnector, metaclass=SingletonMeta):
 
     async def get_data_file_async(self, *args, **kwargs):
         loop = asyncio.get_event_loop()
-        f = loop.run_in_executor(None, lambda: self.put_data_file(*args, **kwargs))
+        f = loop.run_in_executor(None, lambda: self.get_data_file(*args, **kwargs))
         return await f
