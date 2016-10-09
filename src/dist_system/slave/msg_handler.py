@@ -1,3 +1,4 @@
+import asyncio
 import traceback
 
 from dist_system.library import SingletonMeta
@@ -16,20 +17,22 @@ class MasterMessageHandler(metaclass=SingletonMeta):
     def __init__(self):
         pass
 
-    def handle_msg(self, header, body):
+    # TODO: asyncio is used only here among message handlers. Consider better design later.
+    async def handle_msg(self, header, body):
         msg_name = header
         Logger().log("from master, header={0}, body={1}".format(header, body), level=2)
         try:
-            MasterMessageHandler.__handler_dict[msg_name](self, body)
+            # 'await' is only for task_register_reg
+            await MasterMessageHandler.__handler_dict[msg_name](self, body)
         except Exception:
             Logger().log("Unknown Exception occurs! Pass it for continuous running.\n{0}".
                 format(traceback.format_exc()))
         Logger().log("finish of handling master message", level=2)
 
-    def _h_heart_beat_req(self, body):
+    async def _h_heart_beat_req(self, body):
         MasterMessageDispatcher().dispatch_msg('heart_beat_res', {})
 
-    def _h_slave_register_res(self, body):
+    async def _h_slave_register_res(self, body):
         import sys
         try:
             status = body['status']
@@ -49,7 +52,7 @@ class MasterMessageHandler(metaclass=SingletonMeta):
             Logger().log('\n', traceback.format_exc())
             sys.exit(1)
 
-    def _h_task_register_req(self, body):
+    async def _h_task_register_req(self, body):
         Logger().log("* TASK REGISTER")
         task_token = TaskToken.from_bytes(body['task_token'])
         try:
@@ -63,7 +66,7 @@ class MasterMessageHandler(metaclass=SingletonMeta):
             TaskManager().add_task(task)
             try:
                 TaskManager().change_task_status(task, TaskStatus.STATUS_PREPROCESSING)
-                preprocess_task(task)
+                await preprocess_task(task)
                 TaskManager().change_task_status(task, TaskStatus.STATUS_PROCESSING)
                 proc = WorkerCreator().create(result_receiver_address, task_token, task_type, task)
                 WorkerManager().add_worker(Worker(proc, task))
@@ -88,7 +91,7 @@ class MasterMessageHandler(metaclass=SingletonMeta):
             # send "Task Register Res" to master using protocol.
             MasterMessageDispatcher().dispatch_msg('task_register_res', res_body)
 
-    def _h_task_cancel_req(self, body):
+    async def _h_task_cancel_req(self, body):
         task_token = TaskToken.from_bytes(body['task_token'])
         try:
             try:
@@ -122,7 +125,7 @@ class MasterMessageHandler(metaclass=SingletonMeta):
         finally:
             MasterMessageDispatcher().dispatch_msg('task_cancel_res', res_body)
 
-    def _h_task_finish_res(self, body):
+    async def _h_task_finish_res(self, body):
         # no specific handling.
         pass
 

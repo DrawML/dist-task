@@ -43,7 +43,8 @@ class WorkerCreator(metaclass=SingletonMeta):
         return proc
 
 
-def preprocess_task(task):
+# In current, there is no synchronization problem.
+async def preprocess_task(task):
     Logger().log("* PREPROCESS OF TASK")
     task_type = get_task_type_of_task(task)
 
@@ -54,7 +55,7 @@ def preprocess_task(task):
         data_file_num = task.job.data_file_num
         data_filename_list = []
         for data_file_token in task.job.data_file_tokens:
-            _, file_data = CloudDFSConnector().get_data_file(data_file_token)
+            _, file_data = await CloudDFSConnector().get_data_file_async(data_file_token)
             data_filename = FileManager().store(task, FileType.TYPE_DATA_FILE, file_data)
             data_filename_list.append(data_filename)
             Logger().log("Data file name :", data_filename)
@@ -69,7 +70,7 @@ def preprocess_task(task):
                                                executable_code_filename, result_filename)
 
     elif task_type == TaskType.TYPE_TENSORFLOW_TRAIN_TASK:
-        _, file_data = CloudDFSConnector().get_data_file(task.job.data_file_token)
+        _, file_data = await CloudDFSConnector().get_data_file_async(task.job.data_file_token)
         data_filename = FileManager().store(task, FileType.TYPE_DATA_FILE, file_data)
         Logger().log("Stored Data file name :", data_filename)
         executable_code_filename = FileManager().store(task, FileType.TYPE_EXECUTABLE_CODE_FILE,
@@ -85,14 +86,14 @@ def preprocess_task(task):
                                                 session_filename, result_filename)
 
     elif task_type == TaskType.TYPE_TENSORFLOW_TEST_TASK:
-        _, file_data = CloudDFSConnector().get_data_file(task.job.data_file_token)
+        _, file_data = await CloudDFSConnector().get_data_file_async(task.job.data_file_token)
         data_filename = FileManager().store(task, FileType.TYPE_DATA_FILE, file_data)
         Logger().log("Stored Data file name :", data_filename)
         executable_code_filename = FileManager().store(task, FileType.TYPE_EXECUTABLE_CODE_FILE,
                                                        task.job.executable_code)
         Logger().log("Stored Executable file name :", executable_code_filename)
 
-        _, file_data = CloudDFSConnector().get_data_file(task.job.session_file_token)
+        _, file_data = await CloudDFSConnector().get_data_file_async(task.job.session_file_token)
         session_filename = FileManager().store(task, FileType.TYPE_SESSION_FILE, file_data)
         Logger().log("Stored Session file name :", session_filename)
         result_filename = FileManager().reserve(task, FileType.TYPE_RESULT_FILE)

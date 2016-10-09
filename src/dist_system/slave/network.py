@@ -22,17 +22,18 @@ class MasterConnection(metaclass=SingletonMeta):
 
         while True:
             msg = await self._dealer.recv_multipart()
-            self._process(msg)
+            # TODO: Processing message using asyncio can occur synchronization issue potentially.
+            await self._process(msg)
 
     async def _register(self):
         await self.dispatch_msg_coro('slave_register_req', {})
 
-    def _process(self, msg):
+    async def _process(self, msg):
         data = self._resolve_msg(msg)
         header, body = master_slave.parse_msg_data(data)
 
         # handle message
-        self._msg_handler.handle_msg(header, body)
+        await self._msg_handler.handle_msg(header, body)
 
     def _resolve_msg(self, msg):
         return msg[0]
