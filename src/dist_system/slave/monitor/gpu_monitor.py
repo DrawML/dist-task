@@ -84,7 +84,6 @@ def _get_tf_gpu_info_list(cuda_device_info_list, tf_gpu_list):
 
 async def monitor_tf_gpu():
     tf_gpu_list = await _get_tf_gpu_list()
-    print(tf_gpu_list)
     cuda_device_info_list = _get_cuda_device_info_list()
     tf_gpu_info_list = _get_tf_gpu_info_list(cuda_device_info_list, tf_gpu_list)
 
