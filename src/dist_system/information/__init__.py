@@ -30,7 +30,8 @@ class TensorflowGpuInformation(object):
     @staticmethod
     def from_dict(dict_: dict):
         return TensorflowGpuInformation(dict_['pci_bus_id'], dict_['name'], dict_['tf_device'],
-                                        dict_['compute_capability_major'], dict_['compute_capability_minor'],
+                                        dict_['compute_capability_major'],
+                                        dict_.get('compute_capability_minor', 0),
                                         dict_['mem_total'], dict_['mem_free'])
 
 
