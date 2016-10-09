@@ -55,7 +55,9 @@ def check_system_busy():
     task_cnt = len(TaskManager().all_tasks)
     calc_unit_cnt = 0
     for slave in SlaveManager().slaves:
-        calc_unit_cnt += len(slave.slave_info.tf_gpu_info_list) + 1
+        calc_unit_cnt += 1
+        if slave.slave_info is not None:
+            calc_unit_cnt += len(slave.slave_info.tf_gpu_info_list)
     capability = calc_unit_cnt * SYSTEM_CAPABILITY_CONSTANT
 
     return capability <= calc_unit_cnt
@@ -189,8 +191,10 @@ class Scheduler(metaclass=SingletonMeta):
     def _schedule_tensorflow_task(self, slaves: Iterable, task) -> Slave:
         Logger().log('**** Schedule of tensorflow task')
         try:
+            Logger().log('******* Try GPU')
             return self._schedule_gpu_to_task(slaves, task)
         except NotAvailableSlaveError:
+            Logger().log('******* Fail. So Try CPU')
             return self._schedule_cpu_to_task(slaves, task)
 
     def _schedule_cpu_to_task(self, slaves: Iterable, task) -> Slave:
