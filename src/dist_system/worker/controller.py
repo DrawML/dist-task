@@ -90,7 +90,8 @@ async def _do_data_processing_task(data_processing_task):
     Logger().log("* RETURN CODE :", return_code)
     Logger().log("-------after data processing task--------")
     if return_code != 0:
-        raise TaskFailureError("Return is {0}.".format(return_code))
+        raise TaskFailureError("Return Code is {0}.\nStdout is {1}\nStderr is {2}".
+                               format(return_code, stdout, stderr))
 
     # exception handling is needed about cloud_dfs??
 
@@ -121,7 +122,8 @@ async def _do_tensorflow_train_task(tensorflow_train_task):
     Logger().log("* RETURN CODE :", return_code)
     Logger().log("-------after tensorflow TRAIN task--------")
     if return_code != 0:
-        raise TaskFailureError("Return is {0}.".format(return_code))
+        raise TaskFailureError("Return Code is {0}.\nStdout is {1}\nStderr is {2}".
+                               format(return_code, stdout, stderr))
 
     # exception handling is needed about cloud_dfs??
 
@@ -165,7 +167,8 @@ async def _do_tensorflow_test_task(tensorflow_test_task):
     Logger().log("* RETURN CODE :", return_code)
     Logger().log("-------after tensorflow TEST task--------")
     if return_code != 0:
-        raise TaskFailureError("Return is {0}.".format(return_code))
+        raise TaskFailureError("Return Code is {0}.\nStdout is {1}\nStderr is {2}".
+                               format(return_code, stdout, stderr))
 
     # exception handling is needed about cloud_dfs??
 
