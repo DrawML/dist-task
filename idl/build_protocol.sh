@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 
-PROJECT_DIR=$(dirname "$(pwd)")
+FILE_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PROJECT_DIR="$(dirname "$FILE_DIR")"
 PROTOCOL_MODULE="$PROJECT_DIR/src/dist_system/protocol/pb"
-OUTPUT_PATH="$(pwd)"/output
+OUTPUT_PATH="$FILE_DIR"/output
 
 if [ -n "$1" ]
 then
@@ -28,6 +29,12 @@ then
 	exit -1;
 fi
 
+pushd "$(pwd)" > /dev/null
+cd "$FILE_DIR" || {
+    echo "Where is '$FILE_DIR'?"
+    exit -1
+}
+
 shopt -s nullglob
 for proto_file in *.proto
 do
@@ -40,6 +47,7 @@ echo "Compile done"
 
 cd "$output_path" || {
     echo "Where is '$output_path'?"
+    popd
     exit -1
 }
 
@@ -49,3 +57,5 @@ do
     echo "Move '$output_file' to protocol module path..."
     mv "$output_file" "$PROTOCOL_MODULE"
 done
+
+popd > /dev/null
