@@ -6,7 +6,7 @@ from dist_system.library import SingletonMeta
 from dist_system.logger import Logger
 from dist_system.master.client import ClientSessionIdentity, ClientSession, ClientSessionManager, \
     ClientSessionValueError
-from dist_system.master.controller import Scheduler, delete_task
+from dist_system.master.controller import Scheduler, delete_task, check_system_busy
 from dist_system.master.msg_dispatcher import ClientMessageDispatcher, SlaveMessageDispatcher
 from dist_system.master.slave import SlaveManager, SlaveValueError, SlaveIdentity, Slave
 from dist_system.master.task import TaskManager, TaskStatus, TaskStatusValueError
@@ -37,6 +37,15 @@ class ClientMessageHandler(metaclass=SingletonMeta):
             task_type = TaskType.from_str(body['task_type'])
             task = make_task_with_task_type(task_type, body['task'], 'master',
                                             task_token, result_receiver_address)
+
+            if check_system_busy():
+                # the system is busy.
+                res_body = {
+                    'status': 'fail',
+                    'error_code': 'busy',
+                }
+                return
+
             try:
                 session = ClientSession.make_session_from_identity(session_identity, task)
                 ClientSessionManager().add_session(session)

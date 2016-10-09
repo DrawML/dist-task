@@ -49,6 +49,18 @@ def delete_task(task):
             slave.unmark_failed_task(task)
 
 
+def check_system_busy():
+    SYSTEM_CAPABILITY_CONSTANT = 2
+
+    task_cnt = len(TaskManager().all_tasks)
+    calc_unit_cnt = 0
+    for slave in SlaveManager().slaves:
+        calc_unit_cnt += len(slave.slave_info.tf_gpu_info_list) + 1
+    capability = calc_unit_cnt * SYSTEM_CAPABILITY_CONSTANT
+
+    return capability <= calc_unit_cnt
+
+
 class AsyncController(object):
 
     _doing_remove_impossible_tasks = False
