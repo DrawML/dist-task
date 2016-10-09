@@ -1,6 +1,4 @@
-#!/usr/bin/python3
 import os
-import subprocess
 import asyncio
 
 from dist_system.information import TensorflowGpuInformation

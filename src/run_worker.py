@@ -1,4 +1,3 @@
-#!/usr/bin/python3
 import sys
 
 from dist_system.worker import main
