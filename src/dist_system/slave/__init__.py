@@ -7,7 +7,7 @@ from zmq.asyncio import Context, ZMQEventLoop
 from dist_system.slave.network import MasterConnection, WorkerRouter
 from dist_system.library import coroutine_with_no_exception, default_coroutine_exception_callback
 from dist_system.logger import Logger
-from dist_system.slave.controller import monitor_information, run_polling_workers, WorkerCreator
+from dist_system.slave.controller import monitor_information, run_polling_workers, WorkerCreator, aggressive_heartbeat
 from dist_system.slave.file import FileManager
 from dist_system.slave.msg_dispatcher import MasterMessageDispatcher, WorkerMessageDispatcher
 from dist_system.slave.msg_handler import MasterMessageHandler, WorkerMessageHandler
@@ -37,6 +37,7 @@ async def run_slave(context: Context, master_addr, worker_router_addr, slave_add
         asyncio.ensure_future(worker_router.run()),  # must be first.
         asyncio.ensure_future(master_conn.run()),
         asyncio.ensure_future(run_polling_workers()),
+        asyncio.ensure_future(aggressive_heartbeat()),
         asyncio.ensure_future(coroutine_with_no_exception(monitor_information(), default_coroutine_exception_callback))
     ])
 

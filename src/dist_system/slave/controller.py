@@ -20,6 +20,13 @@ from dist_system.cloud_dfs import CloudDFSConnector, CloudDFSAddress
 import dist_system.cloud_dfs as cloud_dfs
 
 
+async def aggressive_heartbeat():
+    AGGRESSIVE_HEARTBEAT_INTERVAL = 1
+    while True:
+        await asyncio.sleep(AGGRESSIVE_HEARTBEAT_INTERVAL)
+        MasterMessageDispatcher().dispatch_msg('heart_beat_res', {})
+
+
 class WorkerCreator(metaclass=SingletonMeta):
     def __init__(self, worker_file_name, slave_address: SlaveAddress, cloud_dfs_address: CloudDFSAddress):
         self._worker_file_name = worker_file_name
