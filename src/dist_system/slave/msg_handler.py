@@ -105,19 +105,25 @@ class MasterMessageHandler(metaclass=SingletonMeta):
                         worker = WorkerManager().find_worker_having_task(task)
                         try:
                             WorkerManager().del_worker(worker)
+
+                            res_body = {
+                                'task_token': task_token.to_bytes(),
+                                'status': 'success',
+                            }
                         finally:
                             # 여기서 worker를 지우므로 worker로 부터 Task Cancel Res는 받을 수 없다.
+                            # 내부에서 예외가 뜰 수도 있다. 그러나 무시해도 된다.
                             WorkerMessageDispatcher().dispatch_msg(worker, 'task_cancel_req', {})
             except TaskValueError:
                 res_body = {
-                    'task_token': task_token,
+                    'task_token': task_token.to_bytes(),
                     'status': 'fail',
                     'error_code': 'invalid_token'
                 }
                 raise
         except:
             res_body = {
-                'task_token': task_token,
+                'task_token': task_token.to_bytes(),
                 'status': 'fail',
                 'error_code': 'unknown'
             }
@@ -166,12 +172,18 @@ class WorkerMessageHandler(metaclass=SingletonMeta):
                 'status': 'success',
             }
         except TaskValueError:
+            MasterMessageDispatcher().dispatch_msg('task_finish_req', {
+                'task_token': task_token.to_bytes()
+            })
             res_body = {
                 'status': 'fail',
                 'error_code': 'invalid_token'
             }
             raise
         except:
+            MasterMessageDispatcher().dispatch_msg('task_finish_req', {
+                'task_token': task_token.to_bytes()
+            })
             res_body = {
                 'status': 'fail',
                 'error_code': 'unknown'
