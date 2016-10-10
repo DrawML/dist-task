@@ -6,7 +6,7 @@ from dist_system.library import SingletonMeta
 from dist_system.logger import Logger
 from dist_system.master.client import ClientSessionIdentity, ClientSession, ClientSessionManager, \
     ClientSessionValueError
-from dist_system.master.controller import Scheduler, delete_task, check_system_busy
+from dist_system.master.controller import Scheduler, delete_task, check_system_busy, free_resource
 from dist_system.master.msg_dispatcher import ClientMessageDispatcher, SlaveMessageDispatcher
 from dist_system.master.slave import SlaveManager, SlaveValueError, SlaveIdentity, Slave
 from dist_system.master.task import TaskManager, TaskStatus, TaskStatusValueError
@@ -106,6 +106,7 @@ class ClientMessageHandler(metaclass=SingletonMeta):
             finally:
                 slave = SlaveManager().find_slave_having_task(task)
                 slave.delete_task(task)
+                free_resource(slave.alloc_info, task.allocated_resource)
 
                 SlaveMessageDispatcher().dispatch_msg(slave, 'task_cancel_req', {
                     'task_token': task_token.to_bytes()
@@ -189,7 +190,7 @@ class SlaveMessageHandler(metaclass=SingletonMeta):
             slave.delete_task(task)
             slave.mark_failed_task(task)
             try:
-                self._free_resource(slave.alloc_info, task.allocated_resource)
+                free_resource(slave.alloc_info, task.allocated_resource)
             finally:
                 try:
                     TaskManager().redo_leak_task(task)
@@ -221,7 +222,7 @@ class SlaveMessageHandler(metaclass=SingletonMeta):
             finally:
                 slave = SlaveManager().find_slave(slave_identity)
                 slave.delete_task(task)
-                self._free_resource(slave.alloc_info, task.allocated_resource)
+                free_resource(slave.alloc_info, task.allocated_resource)
 
             res_body = {
                 'task_token': task_token.to_bytes(),
@@ -283,14 +284,3 @@ class SlaveMessageHandler(metaclass=SingletonMeta):
         "task_finish_req": _h_task_finish_req,
         "slave_information_req": _h_slave_information_req
     }
-
-    def _free_resource(self, alloc_info: AllocationInformation, allocated_resource: AllocatedResource):
-
-        Logger().log("Free Resource :", allocated_resource)
-
-        if alloc_info.alloc_cpu_count < allocated_resource.alloc_cpu_count:
-            raise ValueError('Invalid allocated resource. (alloc_cpu_count)')
-
-        alloc_info.alloc_cpu_count -= allocated_resource.alloc_cpu_count
-        if allocated_resource.alloc_tf_gpu_info is not None:
-            allocated_resource.alloc_tf_gpu_info.available = True

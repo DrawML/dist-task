@@ -2,7 +2,7 @@ import asyncio
 import random
 from typing import Iterable
 
-from dist_system.information import AllocatedResource
+from dist_system.information import AllocatedResource, AllocationInformation
 from dist_system.library import SingletonMeta
 from dist_system.logger import Logger
 from dist_system.master.msg_dispatcher import SlaveMessageDispatcher
@@ -47,6 +47,19 @@ def delete_task(task):
     for slave in slaves:
         if task in slave.failed_tasks:
             slave.unmark_failed_task(task)
+
+
+def free_resource(alloc_info: AllocationInformation, allocated_resource: AllocatedResource):
+
+    Logger().log("Free Resource :", allocated_resource)
+
+    if alloc_info.alloc_cpu_count < allocated_resource.alloc_cpu_count:
+        raise ValueError('Invalid allocated resource. (alloc_cpu_count)')
+
+    alloc_info.alloc_cpu_count -= allocated_resource.alloc_cpu_count
+    if allocated_resource.alloc_tf_gpu_info is not None:
+        allocated_resource.alloc_tf_gpu_info.available = True
+
 
 
 def check_system_busy():
