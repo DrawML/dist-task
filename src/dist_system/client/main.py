@@ -159,7 +159,7 @@ class TaskDeliverer(metaclass=SingletonMeta):
             else:
                 pass
         elif isinstance(msg, CancelMessage):
-            register_task_cancel(self._context, self._master_addr, msg)
+            await register_task_cancel(self._context, self._master_addr, msg)
 
 
 async def register_sleep_task(context: Context, master_addr, result_receiver_address, msg: RequestMessage):
