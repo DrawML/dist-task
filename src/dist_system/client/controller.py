@@ -28,7 +28,9 @@ async def register_task_to_master(context, master_addr, result_receiver_address,
         callback_args['body'] = 'dist-task Internal Error'
 
         asyncio.get_event_loop().call_soon_threadsafe(functools.partial(callback, **callback_args))
-        raise Exception('Task Register Fail')
+        Logger().log('Task Register Fail')
+        conn.close()
+        return
 
     status = body['status']
     task_token = TaskToken.from_bytes(body['task_token'])
@@ -52,8 +54,7 @@ async def register_task_to_master(context, master_addr, result_receiver_address,
         callback_args['body'] = error_code
 
         asyncio.get_event_loop().call_soon_threadsafe(functools.partial(callback, **callback_args))
-
-        raise Exception('Task Register Fail')
+        Logger().log('Task Register Fail')
     else:
         # invalid message
         callback_args = dict()
@@ -61,7 +62,7 @@ async def register_task_to_master(context, master_addr, result_receiver_address,
         callback_args['body'] = 'dist-task Internal Error'
 
         asyncio.get_event_loop().call_soon_threadsafe(functools.partial(callback, **callback_args))
-        raise Exception('Task Register Fail')
+        Logger().log('Task Register Fail')
 
     conn.close()
 

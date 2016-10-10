@@ -51,8 +51,10 @@ class TaskManager(CommonTaskManager, metaclass=SingletonMeta):
             if len(targets) == 1:
                 return targets[0]
             elif len(targets) > 1:
-                raise TaskValueError("Same Tasks exist.")
+                Logger().log(" * TaskManager:: Same Tasks exist.")
             else:
-                raise TaskValueError("Exist, but not found.")
+                Logger().log(" * TaskManager:: Exist, but not found.")
         else:
-            raise TaskValueError("Non-existent Task.")
+            Logger().log("* TaskManager:: Non-existent Task.")
+
+        return None

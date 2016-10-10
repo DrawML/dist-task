@@ -46,8 +46,9 @@ class MasterConnection(object):
         try:
             header, body = client_master.parse_msg_data(data)
         except BaseException as e:
-            print(e)
-            raise
+            Logger().log(e)
+            return
+
         return header, body
 
     def _resolve_msg(self, msg):
@@ -208,15 +209,23 @@ async def register_data_proc_task(context: Context, master_addr, result_receiver
 
 async def register_task_cancel(context: Context, master_addr, msg: CancelMessage):
     if TaskManager().check_task_existence_by_exp_id(msg.experiment_id):
+        Logger().log("cancel phase - check_task_existence_by_exp_id")
         task = TaskManager().find_task_by_exp_id(msg.experiment_id)
+
+        if task is None:
+            Logger().log("cancel phase - exist task, but unknown error")
+            return
+
         asyncio.ensure_future(coroutine_with_no_exception(
             cancel_task_to_master(context, master_addr, task),
             default_coroutine_exception_callback)
         )
+        Logger().log("cancel phase - request to cancel")
     elif TaskSyncManager().check_pending_exp_id(msg.experiment_id):
+        Logger().log("cancel phase - check_pending_exp_id")
         TaskSyncManager().reserve_cancel(msg.experiment_id)
     else:
-        raise Exception('Task Cancel Fail')
+        Logger().log("cancel phase - not exist task...")
 
 
 async def run_client(context: Context, master_addr, result_router_addr, result_receiver_address, msg_queue):
